@@ -103,12 +103,81 @@ ggplot(percentage_long, aes(x = year, y = percentage, color = last_letter, group
 
 # Question 2.9
 
-Reliability and validity: Discuss validity, reliability, and selection in the context of measurements
-on a topic of interest to you. Be specific: make a pen-on-paper sketch of data from multiple
-measurements to demonstrate reliability, sketch true and measured values to demonstrate validity,
-and sketch observed and complete data to demonstrate selection.
+Graphing parallel time series: The mortality data in Section 2.4 are accessible from this site at
+the U.S. Centers for Disease Control and Prevention: wonder.cdc.gov. Download mortality data
+from this source but choose just one particular cause of death, and then make graphs similar to
+those in Section 2.4, breaking down trends in death rate by age, sex, and region of the country
 
 ```{r}
+data_path <- "./Other Data/Mortality/Underlying_Cause_of_Death_2018_2022_Single_Race.csv"
+
+# Initial Data Prep
+#data <- read.delim("C:\\Users\\mstoebe\\Downloads\\Underlying Cause of Death, 2018-2022, Single Race (1).txt", sep = "\t", header = TRUE)
+#filtered_data <- data[!is.na(data$`Year.Code`) & data$`Year.Code` != "", ]
+#write.csv(filtered_data, data_path)
+
+data <- read.csv(data_path)
+
+data$Crude.Rate <- as.numeric(data$Crude.Rate)
+
+filtered_data <- data[!is.na(data$Crude.Rate), ]
+
+# Convert Population and Deaths to numeric, setting non-numeric values to NA
+filtered_data$Population <- as.numeric(gsub(",", "", filtered_data$Population))
+filtered_data$Deaths <- as.numeric(gsub(",", "", filtered_data$Deaths))
+filtered_data$Single.Year.Ages <- as.numeric(gsub("[^0-9]", "", filtered_data$`Single.Year.Ages`))
+filtered_data$Age.Bracket <- floor(filtered_data$Single.Year.Ages / 10) * 10
+filtered_data$Age.Bracket <- factor(filtered_data$Age.Bracket, 
+                                    levels = seq(0, 90, by = 10), 
+                                    labels = paste(seq(0, 90, by = 10), seq(9, 99, by = 10), sep = "-"))
+
+
+summary_by_year <- aggregate(cbind(Deaths, Population) ~ Year, data = filtered_data, sum, na.rm = TRUE)
+summary_by_year$Crude.Rate <- (summary_by_year$Deaths / summary_by_year$Population) * 100000
+
+
+ggplot(summary_by_year, aes_string(x = "Year", y = "Crude.Rate")) +
+  geom_line() + 
+  labs(title = "Crude Death Rate for Tummy Aches by Year",
+       x = "Year",
+       y = "Crude Death Rate per 100,000") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+features <- c("Age.Bracket","Gender.Code", "Single.Race.6", "Census.Region.Code" )
+
+
+for (feature in features) {
+  formula <- as.formula(paste("cbind(Deaths, Population) ~ Year +", feature))
+  summary_by_feature <- aggregate(formula, data = filtered_data, sum, na.rm = TRUE)
+  summary_by_feature$Crude.Rate <- (summary_by_feature$Deaths / summary_by_feature$Population) * 100000
+
+  p <- ggplot(summary_by_feature, aes_string(x = "Year", y = "Crude.Rate", color = feature)) +
+    geom_line() +
+    geom_point() +
+    labs(title = paste("Crude Death Rate by Year and", feature),
+         x = "Year",
+         y = "Crude Death Rate per 100,000",
+         color = feature) +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))
+
+  
+  # Print the plot
+  print(p)  
+
+}
+
+
+average_age_by_year <- aggregate(Single.Year.Ages ~ Year, data = filtered_data, mean, na.rm = TRUE)
+ggplot(average_age_by_year, aes(x = Year, y = Single.Year.Ages)) +
+  geom_line() + 
+  geom_point() +
+  labs(title = "Average Age by Year",
+       x = "Year",
+       y = "Average Age") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
