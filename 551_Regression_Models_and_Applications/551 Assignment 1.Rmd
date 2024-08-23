@@ -110,6 +110,5 @@ and sketch observed and complete data to demonstrate selection.
 
 ```{r}
 
-df <- read.csv("my_folder/data.csv")
 ```
 
