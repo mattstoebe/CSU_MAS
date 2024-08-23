@@ -1,0 +1,115 @@
+---
+title: "STAA 551 Assignment 1"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+# Assignment Description
+Use R Markdown to complete your assignment.
+
+All problem numbers refer to Regression and Other Stories by Gelman, Hill, and Vehtari
+Submission is a PDF file upload. 
+There is only one attempt for this assignment, so make sure you upload the correct file
+
+- Chapter 2: 2.3, 2.9
+- Chapter 3: 3.6--3.9
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+install.packages(c(
+  "dplyr", 
+  "tidyr", 
+  "ggplot2"
+))
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+```
+
+# Question 2.3
+
+```{r pressure, echo=FALSE}
+
+allnames <- read.csv("./ROS-Examples-master/Names/data/allnames_clean.csv")
+
+female_data <- filter(allnames, sex == "F")
+
+female_data$last_letter <- substr(female_data$name, nchar(female_data$name), nchar(female_data$name))
+
+grouped_data <- group_by(female_data, last_letter)
+
+
+summarized_data <- summarise(grouped_data, across(matches("^X\\d"), sum, na.rm = TRUE))
+
+
+total_sums <- colSums(summarized_data[, -1])  # Exclude the first column (last_letter)
+
+percentage_data <- summarized_data
+
+for (col in names(summarized_data[-1])) {
+  percentage_data[[col]] <- 100 * (percentage_data[[col]] / total_sums[col])
+}
+
+percentage_long <- pivot_longer(percentage_data, cols = starts_with("X"), 
+                                names_to = "year", 
+                                values_to = "percentage")
+percentage_long <- percentage_long %>%
+  mutate(year = as.numeric(sub("^X", "", year)))
+
+
+top_labels_2010 <- percentage_long %>%
+  filter(year == 2010) %>%
+  arrange(desc(percentage)) %>%
+  slice_head(n = 5)  # Get the top 3 lines based on percentage
+
+top_labels_1910 <- percentage_long %>%
+  filter(year == 1910) %>%
+  arrange(desc(percentage)) %>%
+  slice_head(n = 5)  # Get the top 3 lines based on percentage
+
+
+
+ggplot(percentage_long, aes(x = year, y = percentage, color = last_letter, group = last_letter)) +
+  geom_line(size = 1) +
+  labs(title = "Last Letters of girl's names",
+       x = "Year",
+       y = "Percentage",
+       color = "Last Letter") +
+  scale_x_continuous(breaks = seq(1880, 2010, by = 10)) +  # Show labels for every 10 years
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+
+  geom_text(data = top_labels_2010,
+            aes(label = last_letter),
+            vjust = -0.5, hjust = 1.5, color = "black") +
+  
+  # Optional: Add custom annotations or vertical lines as needed
+  geom_vline(xintercept = 2010, linetype = "dashed", color = "black") +
+
+  geom_text(data = top_labels_1910,
+            aes(label = last_letter),
+            vjust = -0.5, hjust = 1.5, color = "black") +
+  
+  # Optional: Add custom annotations or vertical lines as needed
+  geom_vline(xintercept = 1910, linetype = "dashed", color = "black")
+
+```
+
+
+
+# Question 2.9
+
+Reliability and validity: Discuss validity, reliability, and selection in the context of measurements
+on a topic of interest to you. Be specific: make a pen-on-paper sketch of data from multiple
+measurements to demonstrate reliability, sketch true and measured values to demonstrate validity,
+and sketch observed and complete data to demonstrate selection.
+
+```{r}
+
+df <- read.csv("my_folder/data.csv")
+```
+
