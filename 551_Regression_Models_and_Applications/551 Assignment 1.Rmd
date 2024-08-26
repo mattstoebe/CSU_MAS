@@ -181,3 +181,142 @@ ggplot(average_age_by_year, aes(x = Year, y = Single.Year.Ages)) +
 
 ```
 
+#Question 3.6
+
+Linear transformations: A test is graded from 0 to 50, with an average score of 35 and a standard
+deviation of 10. For comparison to other tests, it would be convenient to rescale to a mean of
+100 and standard deviation of 15.
+(a) Labeling the original test scores as x and the desired rescaled test score as y, come up with a
+linear transformation, that is, values of a and b so that the rescaled scores y = a + bx have a
+mean of 100 and a standard deviation of 15.
+(b) What is the range of possible values of this rescaled score y?
+(c) Plot the line showing y vs. x
+
+
+```{r}
+
+
+# Solution (a): Determine the linear transformation
+x_mean <- 35
+x_stdev <- 10
+y_mean <- 100
+y_stdev <- 15
+
+
+b <- y_stdev / x_stdev
+a <- y_mean - b * x_mean
+
+
+cat("The linear transformation is: y =", a, "+", b, "* x\n")
+
+# Solution (b): Determine the range of the new test scores
+x_min <- 0
+x_max <- 50
+
+y_min <- a + b * x_min
+y_max <- a + b * x_max
+
+cat("The range of the rescaled test scores is from", y_min, "to", y_max, "\n")
+
+# Solution (c): Plot y vs. x
+data <- data.frame(x = seq(0, 50, by = 1))
+
+# Apply the linear transformation to get y values
+data$y <- a + b * data$x
+
+# Plot y vs. x with centered title
+ggplot(data, aes(x = x, y = y)) +
+  geom_line(color = "blue") +
+  labs(title = "Rescaled Test Score vs. Original Test Score",
+       x = "Original Test Score (x)",
+       y = "Rescaled Test Score (y)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+```
+
+
+#Question 3.7
+
+## Solution 
+You could also use -1.5 for your slope because the equation for slope is y_stdev = abs(b) * x_stdev
+
+In 3.6, we assumed that the transformation would be postive, but it is also possible to do a negative transformation. The primary issue with this is that the interpretation of the scores changes as the lowest test scores now become the highest and the highest test scores become the lowest. 
+
+
+#Question 3.8
+
+We know the correlation means and standard deviation which means that we can get the summed mean and standard deviation.
+
+The new mean = (x_mean + y_mean) /2 = (69.1 + 63.7) /2 = 66.4
+
+New STDEV = 
+
+
+```{r}
+mean_x <- 69.1  # Mean height of husbands
+mean_y <- 63.7  # Mean height of wives
+sd_x <- 2.9     # Standard deviation of husbands' heights
+sd_y <- 2.7     # Standard deviation of wives' heights
+rho <- 0.3      # Correlation between husbands' and wives' heights
+
+# Mean of the average height
+new_mean <- (mean_x + mean_y) / 2
+
+var <- sd_x^2 + sd_y^2 + 2*rho*sd_x*sd_y
+
+new_sd = sqrt(var)
+
+cat("Average height for husbands and wives:", new_mean, "inches\n")
+cat("Standard deviation of the average height for husbands and wives:", new_sd, "inches\n")
+
+```
+
+
+
+#Question 3.9
+
+Answered using the study below on how price controlls affected price volitility
+https://link.springer.com/article/10.1007/s00181-020-01953-w
+
+
+```{r}
+
+# Load the necessary library
+library(ggplot2)
+
+# Define parameters
+control_mean <- 100
+treated_mean <- 100
+control_sd <- 10
+treated_sd <- control_sd * 0.6  # 60% reduction in variability for liberalized prices
+
+# Adjust control SD for inflation
+control_sd_inflation <- control_sd + inflation_impact
+
+# Generate sequences of prices
+x <- seq(50, 150, length.out = 100)
+
+# Calculate the normal distribution for both groups
+control_density <- dnorm(x, mean = control_mean, sd = control_sd_inflation)
+treated_density <- dnorm(x, mean = treated_mean, sd = treated_sd)
+
+# Create a data frame for plotting
+data <- data.frame(
+  x = c(x, x),
+  density = c(control_density, treated_density),
+  group = factor(rep(c("Price Control", "Liberalized Prices"), each = 100))
+)
+
+# Plot the distributions
+ggplot(data, aes(x = x, y = density, color = group)) +
+  geom_line(size = 1) +
+  labs(title = "Impact of Price Controls on Price Variability",
+       x = "Price",
+       y = "Density") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+```
