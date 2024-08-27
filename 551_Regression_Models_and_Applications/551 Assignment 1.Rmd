@@ -54,6 +54,7 @@ for (col in names(summarized_data[-1])) {
   percentage_data[[col]] <- 100 * (percentage_data[[col]] / total_sums[col])
 }
 
+
 percentage_long <- pivot_longer(percentage_data, cols = starts_with("X"), 
                                 names_to = "year", 
                                 values_to = "percentage")
