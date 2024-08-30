@@ -2,7 +2,9 @@
 title: "STAA 551 Assignment 1"
 author: "Matthew Stoebe"
 date: "`r Sys.Date()`"
-output: word_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 # Assignment Description
@@ -18,11 +20,6 @@ There is only one attempt for this assignment, so make sure you upload the corre
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-install.packages(c(
-  "dplyr", 
-  "tidyr", 
-  "ggplot2"
-))
 
 library(dplyr)
 library(tidyr)
@@ -32,7 +29,7 @@ library(ggplot2)
 
 # Question 2.3
 
-```{r pressure, echo=FALSE}
+```{r pressure}
 
 allnames <- read.csv("./ROS-Examples-master/Names/data/allnames_clean.csv")
 
@@ -292,6 +289,7 @@ control_mean <- 100
 treated_mean <- 100
 control_sd <- 10
 treated_sd <- control_sd * 0.6  # 60% reduction in variability for liberalized prices
+inflation_impact <- 0
 
 # Adjust control SD for inflation
 control_sd_inflation <- control_sd + inflation_impact
