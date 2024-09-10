@@ -27,9 +27,56 @@ population estimates?
 the national average under each design. Assume that the national population is 15% Latino,
 that the items of interest are yes/no questions with approximately equal proportions of each
 response, and (unrealistically) that the surveys have no problems with nonresponse.
+
+####Code
 ```{r}
 
+# Set up parameters
+p_yes <- 0.5          # Proportion of 'yes' responses (assumed to be 50%)
+n_total <- 1000       # Total sample size for both options
+
+# Option (a) - Simple Random Sample
+n_latino_a <- 150     # Sample size for Latinos in option (a)
+n_nonlatino_a <- 850  # Sample size for Non-Latinos in option (a)
+
+# Option (b) - Oversampling Latinos
+n_latino_b <- 300     # Sample size for Latinos in option (b)
+n_nonlatino_b <- 700  # Sample size for Non-Latinos in option (b)
+
+# Function to calculate the standard error for the comparison between two groups
+standard_error_comparison <- function(p1, p2, n1, n2) {
+  sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2)
+}
+
+# Function to calculate the standard error for the total population
+standard_error_total <- function(p, n) {
+  sqrt((p * (1 - p)) / n)
+}
+
+# Standard errors for Latino vs Non-Latino comparison in both options
+se_comparison_a <- standard_error_comparison(p1 = p_yes, p2 = p_yes, n1 = n_latino_a, n2 = n_nonlatino_a)
+se_comparison_b <- standard_error_comparison(p1 = p_yes, p2 = p_yes, n1 = n_latino_b, n2 = n_nonlatino_b)
+
+# Standard errors for the total population in both options (same for both since n_total = 1000)
+se_total_a <- standard_error_total(p = p_yes, n = n_total)
+se_total_b <- standard_error_total(p = p_yes, n = n_total)
+
+# Print results
+cat("Option (a) - Simple Random Sample:\n")
+cat("SE (Latino vs Non-Latino comparison):", round(se_comparison_a, 4), "\n")
+cat("SE (Total Population):", round(se_total_a, 4), "\n\n")
+
+cat("Option (b) - Oversampling Latinos:\n")
+cat("SE (Latino vs Non-Latino comparison):", round(se_comparison_b, 4), "\n")
+cat("SE (Total Population):", round(se_total_b, 4), "\n")
+
+
 ```
+####Answer
+For the national opinion survey, Option (a) (simple random sample of 1000 Americans) provides a more accurate estimate for the total population average with a standard error of 0.0158. However, Option (b) (oversampling Latinos with 300 Latinos and 700 non-Latinos) offers more accurate comparisons between Latinos and non-Latinos, with a smaller standard error of 0.034 compared to 0.043 in Option (a).
+
+The difference arises because Option (b) increases the Latino sample size, reducing the standard error for group comparisons. However, for overall population estimates, both options have the same total sample size, so their standard errors are equal for that purpose.
+
 
 ##Chapter 5: 
 ###5.2, 
@@ -40,8 +87,42 @@ women’s log weights are approximately normally distributed with mean 4.96 and 
 deviation 0.20. Suppose 10 adults selected at random step on an elevator with a capacity of 1750
 pounds. What is the probability that their total weight exceeds this limit?
 
+####Code
 
 ```{r}
+mean_log_men <- 5.13
+sd_log_men <- .17
+mean_log_women <- 4.96
+sd_log_women <- .20
+
+weight_limit <- 1750
+
+n_individuals <-10
+
+# Proportion of men and women (assume 50/50 split)
+prop_men <- 0.5
+n_men <- round(n_individuals * prop_men)
+n_women <- n_individuals - n_men
+
+n_sim <- 10000
+
+exceeds_limit <- replicate(n_sim, {
+  
+  #rlnorm to avoid having to transform from log
+  men_weights <- rlnorm(n_men, meanlog = mean_log_men, sdlog = sd_log_men)
+  women_weights <- rlnorm(n_women, meanlog = mean_log_women, sdlog = sd_log_women)
+  
+  # Calculate the total weight
+  total_weight <- sum(men_weights) + sum(women_weights)
+  
+  # Check if the total weight exceeds the elevator limit
+  return(total_weight > weight_limit)
+})
+
+prob_exceed <- mean(exceeds_limit)
+
+# Print the result
+cat("Estimated probability that the total weight exceeds the elevator's capacity:", prob_exceed, "\n")
 
 ```
 
@@ -54,9 +135,37 @@ at 40 000, with a standard error of 10 000. Assuming these two sources of uncert
 independent, use simulation to estimate the total amount of money saved by the new product
 (that is, savings per unit, multiplied by size of the market).
 
+####Code
+
 ```{r}
+mean_savings_per_unit <- 5
+sd_savings_per_unit <- 4
+mean_market_size <- 40000
+sd_market_size <- 10000
+
+# Number of simulations
+n_sim <- 100000
+
+total_savings <- replicate(n_sim, {
+  
+  # Simulate savings per unit and market size
+  simulated_savings_per_unit <- rnorm(1, mean = mean_savings_per_unit, sd = sd_savings_per_unit)
+  simulated_market_size <- rnorm(1, mean = mean_market_size, sd = sd_market_size)
+  
+  # Calculate total savings
+  simulated_savings_per_unit * simulated_market_size
+})
+
+# Summary of the results
+cat("Mean total savings:", mean(total_savings), "\n")
+cat("Standard deviation of total savings:", sd(total_savings), "\n")
+
+# Plot the distribution of total savings
+hist(total_savings, breaks = 50, main = "Distribution of Total Savings", 
+     xlab = "Total Savings", col = "blue", border = "white")
 
 ```
+
 
 ###5.10
 Inference for a ratio of parameters: A (hypothetical) study compares the costs and effectiveness
@@ -76,9 +185,143 @@ a scatterplot of these draws.
 (b) Use simulation to come up with an estimate, 50% interval, and 95% interval for the incremental
 cost-effectiveness ratio.
 (c) Repeat, changing the standard error on the difference in effectiveness to 2.0.
+
+####Code a
 ```{r}
+# Parameters
+mean_cost_diff <- 600
+se_cost_diff <- 400
+df_cost <- 50  # degrees of freedom for cost difference
+
+mean_effect_diff <- 3.0
+se_effect_diff <- 1.0
+df_effect <- 100  # degrees of freedom for effectiveness difference
+
+n_sim <- 1000  # Number of simulations
+
+# Simulate cost differences from a t-distribution
+cost_diff_sim <- mean_cost_diff + rt(n_sim, df = df_cost) * se_cost_diff
+
+# Simulate effectiveness differences from a t-distribution
+effect_diff_sim <- mean_effect_diff + rt(n_sim, df = df_effect) * se_effect_diff
+
+# (a) Scatterplot of cost differences vs. effectiveness differences
+plot(cost_diff_sim, effect_diff_sim,
+     xlab = "Cost Difference",
+     ylab = "Effectiveness Difference",
+     main = "Scatterplot of Simulated Cost and Effectiveness Differences",
+     col = "blue", pch = 16)
+
+icer_sim <- cost_diff_sim / effect_diff_sim
+icer_filtered <- icer_sim[abs(icer_sim) < 1000]
+
+
+hist(icer_filtered, 
+     breaks = 50, 
+     main = "Histogram of Incremental Cost-Effectiveness Ratio (ICER)", 
+     xlab = "ICER", 
+     col = "lightblue", 
+     border = "white")
 
 ```
+####Code b
+```{r}
+icer_sim <- cost_diff_sim / effect_diff_sim
+
+# Calculate the mean and standard deviation of ICER
+mean_icer <- mean(icer_sim)
+sd_icer <- sd(icer_sim)
+
+# Standard error of ICER
+se_icer <- sd_icer / sqrt(n_sim)
+
+# 50% and 95% confidence intervals
+z_50 <- 0.674  # z-value for 50% confidence
+z_95 <- 1.96   # z-value for 95% confidence
+
+# 50% confidence interval
+ci_50_lower <- mean_icer - z_50 * se_icer
+ci_50_upper <- mean_icer + z_50 * se_icer
+
+# 95% confidence interval
+ci_95_lower <- mean_icer - z_95 * se_icer
+ci_95_upper <- mean_icer + z_95 * se_icer
+
+# Print results
+cat("Estimated mean ICER:", mean_icer, "\n")
+cat("50% confidence interval for ICER:", ci_50_lower, "to", ci_50_upper, "\n")
+cat("95% confidence interval for ICER:", ci_95_lower, "to", ci_95_upper, "\n")
+
+```
+####Code c
+```{r}
+set.seed(123)  # For reproducibility
+
+# Parameters
+mean_cost_diff <- 600
+se_cost_diff <- 400
+df_cost <- 50  # degrees of freedom for cost difference
+
+mean_effect_diff <- 3.0
+se_effect_diff_2 <- 2.0  # New standard error for effectiveness
+df_effect <- 100  # degrees of freedom for effectiveness difference
+
+n_sim <- 1000  # Number of simulations
+
+# Simulate cost differences from a t-distribution
+cost_diff_sim <- mean_cost_diff + rt(n_sim, df = df_cost) * se_cost_diff
+
+# Simulate effectiveness differences with new SE from a t-distribution
+effect_diff_sim_2 <- mean_effect_diff + rt(n_sim, df = df_effect) * se_effect_diff_2
+
+# Calculate the ICER with the new effectiveness differences
+icer_sim_2 <- cost_diff_sim / effect_diff_sim_2
+
+# Calculate the mean and standard deviation of the new ICER
+mean_icer_2 <- mean(icer_sim_2)
+sd_icer_2 <- sd(icer_sim_2)
+
+# Standard error of new ICER
+se_icer_2 <- sd_icer_2 / sqrt(n_sim)
+
+# z-values for 50% and 95% confidence intervals
+z_50 <- 0.674
+z_95 <- 1.96
+
+# 50% confidence interval for the new ICER
+ci_50_lower_2 <- mean_icer_2 - z_50 * se_icer_2
+ci_50_upper_2 <- mean_icer_2 + z_50 * se_icer_2
+
+# 95% confidence interval for the new ICER
+ci_95_lower_2 <- mean_icer_2 - z_95 * se_icer_2
+ci_95_upper_2 <- mean_icer_2 + z_95 * se_icer_2
+
+# Print results for the new scenario
+cat("With SE = 2.0\n")
+cat("Estimated mean ICER:", mean_icer_2, "\n")
+cat("50% confidence interval for ICER:", ci_50_lower_2, "to", ci_50_upper_2, "\n")
+cat("95% confidence interval for ICER:", ci_95_lower_2, "to", ci_95_upper_2, "\n")
+
+# Remove extreme ICER values for plotting
+icer_filtered_2 <- icer_sim_2[effect_diff_sim_2 > 0 & abs(icer_sim_2) < 1000]
+
+# (1) Scatterplot of cost differences vs. effectiveness differences with SE = 2.0
+plot(cost_diff_sim, effect_diff_sim_2,
+     xlab = "Cost Difference",
+     ylab = "Effectiveness Difference",
+     main = "Scatterplot of Cost vs. Effectiveness Differences (SE = 2.0)",
+     col = "blue", pch = 16)
+
+# (2) Histogram of the new ICER with SE = 2.0
+hist(icer_filtered_2, 
+     breaks = 50, 
+     main = "Histogram of ICER (SE = 2.0)", 
+     xlab = "ICER", 
+     col = "lightblue", 
+     border = "white")
+
+```
+
 
 ##Chapter 6: 
 ###6.2, 
