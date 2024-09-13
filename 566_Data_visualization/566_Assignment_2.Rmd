@@ -1,0 +1,27 @@
+---
+title: "566_Assignment_2"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+life_exp <- read.csv("Life Expectancy Data.csv")
+life_exp_filtered <- life_exp %>%
+  filter(Population >= 30000000)
+
+ggplot(life_exp_filtered, aes(x = LifeExpectancy, y = Country, color = Status)) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = LifeExpectancy - sd(LifeExpectancy),
+                     xmax = LifeExpectancy + sd(LifeExpectancy))) +
+  labs(x = "Life Expectancy", y = "Country", title = "Life Expectancy by Country with Standard Deviation") +
+  theme_minimal()
+
+```
+

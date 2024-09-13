@@ -335,6 +335,33 @@ it out on some values of a, b, n, σ.
 
 ```{r}
 
+simulate_regression <- function(a,b,n,sigma){
+  x <- runif(n, min=0, max=100)
+  
+  error <- rnorm(n, mean=0,  sd = sigma)
+  
+  y <- a + b*x + error
+  
+  model <- lm(y~x)
+  
+  plot(x, y, main = "Scatterplot with Fitted Regression Line",
+       xlab = "x", ylab = "y", pch = 19, col = "blue")
+  abline(model, col = "red", lwd = 2)
+  
+  # Return the data as a data frame
+  data <- data.frame(x = x, y = y)
+ 
+   return(data)
+}
+
+
+simulate_regression(5,2,100,10)
+
+simulate_regression(10,2,1000,30)
+
+
+
+
 ```
 
 ###6.3
@@ -343,7 +370,93 @@ of data points, n. What happens to the parameter estimates and uncertainties whe
 the number of observations?
 ```{r}
 
+simulate_regression_no_charts <- function(a,b,n,sigma){
+  x <- runif(n, min=0, max=100)
+  
+  error <- rnorm(n, mean=0,  sd = sigma)
+  
+  y <- a + b*x + error
+  
+  model <- lm(y~x)
+ # Commenting out charts so that i can run a better sensitivity test
+  
+  #plot(x, y, main = "Scatterplot with Fitted Regression Line",
+  #   xlab = "x", ylab = "y", pch = 19, col = "blue")
+  #abline(model, col = "red", lwd = 2)
+  
+  # Return the data as a data frame
+  data <- data.frame(x = x, y = y)
+ 
+   return(data)
+}
+
+# True parameters
+a <- 5
+b <- 7
+signma <- 10
+
+# Different sample sizes
+n_values <- round(seq(10,10010, length.out= 100))
+
+results <- data.frame(
+  n = integer(),
+  est_intercept = numeric(),
+  se_intercept = numeric(),
+  est_slope = numeric(),
+  se_slope = numeric()
+)
+
+for (n in n_values) {
+  # Simulate data using the function from Exercise 6.2
+  data <- simulate_regression_no_charts(a, b, n, signma)
+  
+  # Fit the linear model
+  model <- lm(y ~ x, data = data)
+  summary_model <- summary(model)
+  
+  # Extract estimates and standard errors
+  est_intercept <- summary_model$coefficients["(Intercept)", "Estimate"]
+  se_intercept <- summary_model$coefficients["(Intercept)", "Std. Error"]
+  est_slope <- summary_model$coefficients["x", "Estimate"]
+  se_slope <- summary_model$coefficients["x", "Std. Error"]
+  
+  # Store the results
+  results <- rbind(
+    results,
+    data.frame(
+      n = n,
+      est_intercept = est_intercept,
+      se_intercept = se_intercept,
+      est_slope = est_slope,
+      se_slope = se_slope
+    )
+  )
+}
+
+# Display the results
+print(results)
+
+# Plot the standard error of the intercept as a function of n
+plot(results$n, results$se_intercept, type = "l", col = "blue", lwd = 2,
+     xlab = "Sample Size (n)", ylab = "Standard Error",
+     main = "Standard Error of Intercept vs Sample Size")
+
+# Add grid lines for better readability
+grid()
+
+# Plot the standard error of the slope as a function of n
+plot(results$n, results$se_slope, type = "l", col = "red", lwd = 2,
+     xlab = "Sample Size (n)", ylab = "Standard Error",
+     main = "Standard Error of Slope vs Sample Size")
+
+# Add grid lines for better readability
+grid()
+
+
+
 ```
+
+Answer: While the slope and intercept do increase or vary throughout the samples, the main difference is that the standard error for both go down dramatically as the number of samples goes up. that said there is a point of diminishing returns as standard error plateaus 
 
 ##Chapter 7: 
 
@@ -356,6 +469,39 @@ deviation 3.
 (b) Graph a scatterplot of the data and the regression line.
 (c) Use the text function in R to add the formula of the fitted line to the graph.
 ```{r}
+
+set.seed(123)  # For reproducibility
+
+# Parameters
+n <- 100
+a <- 5
+b <- 7
+sigma <- 3
+
+# (a) Simulate the data
+x <- runif(n, min = 0, max = 50)
+error <- rnorm(n, mean = 0, sd = sigma)
+y <- a + b * x + error
+
+# Fit the regression model
+model <- lm(y ~ x)
+summary_model <- summary(model)
+print(summary_model)
+
+# (b) Graph a scatterplot of the data and the regression line
+plot(x, y, main = "Scatterplot with Fitted Regression Line",
+     xlab = "x", ylab = "y", pch = 19, col = "red")
+abline(model, col = "blue", lwd = 2)
+
+# (c) Add the formula of the fitted line to the graph
+coefficients <- coef(model)
+formula_text <- paste0("y = ", round(coefficients[1], 2),
+                       " + ", round(coefficients[2], 2), " * x")
+# Position the text on the plot
+text_x <- min(x) + 7
+text_y <- max(y)- 10
+text(text_x, text_y, labels = formula_text, col = "blue", cex = 1.2)
+
 
 ```
 
