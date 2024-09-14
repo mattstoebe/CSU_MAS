@@ -2,10 +2,12 @@
 title: "551 Assignment 2"
 author: "Matthew Stoebe"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
-```{r setup, include=FALSE, echo=FALSE}
+```{r setup, include=FALSE, echo=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -31,17 +33,17 @@ response, and (unrealistically) that the surveys have no problems with nonrespon
 ####Code
 ```{r}
 
-# Set up parameters
-p_yes <- 0.5          # Proportion of 'yes' responses (assumed to be 50%)
-n_total <- 1000       # Total sample size for both options
+#parameters
+p_yes <- 0.5          
+n_total <- 1000       
 
 # Option (a) - Simple Random Sample
-n_latino_a <- 150     # Sample size for Latinos in option (a)
-n_nonlatino_a <- 850  # Sample size for Non-Latinos in option (a)
+n_latino_a <- 150     
+n_nonlatino_a <- 850 
 
 # Option (b) - Oversampling Latinos
-n_latino_b <- 300     # Sample size for Latinos in option (b)
-n_nonlatino_b <- 700  # Sample size for Non-Latinos in option (b)
+n_latino_b <- 300     
+n_nonlatino_b <- 700  
 
 # Function to calculate the standard error for the comparison between two groups
 standard_error_comparison <- function(p1, p2, n1, n2) {
@@ -61,7 +63,6 @@ se_comparison_b <- standard_error_comparison(p1 = p_yes, p2 = p_yes, n1 = n_lati
 se_total_a <- standard_error_total(p = p_yes, n = n_total)
 se_total_b <- standard_error_total(p = p_yes, n = n_total)
 
-# Print results
 cat("Option (a) - Simple Random Sample:\n")
 cat("SE (Latino vs Non-Latino comparison):", round(se_comparison_a, 4), "\n")
 cat("SE (Total Population):", round(se_total_a, 4), "\n\n")
@@ -226,36 +227,30 @@ hist(icer_filtered,
 ```
 ####Code b
 ```{r}
+
+# Calculate the ICER from the simulated cost and effectiveness differences
 icer_sim <- cost_diff_sim / effect_diff_sim
 
-# Calculate the mean and standard deviation of ICER
+# Calculate the point estimate (mean) of ICER
 mean_icer <- mean(icer_sim)
-sd_icer <- sd(icer_sim)
 
-# Standard error of ICER
-se_icer <- sd_icer / sqrt(n_sim)
+# Calculate the 50% confidence interval 
+ci_50_lower <- quantile(icer_sim, 0.25)
+ci_50_upper <- quantile(icer_sim, 0.75)
 
-# 50% and 95% confidence intervals
-z_50 <- 0.674  # z-value for 50% confidence
-z_95 <- 1.96   # z-value for 95% confidence
-
-# 50% confidence interval
-ci_50_lower <- mean_icer - z_50 * se_icer
-ci_50_upper <- mean_icer + z_50 * se_icer
-
-# 95% confidence interval
-ci_95_lower <- mean_icer - z_95 * se_icer
-ci_95_upper <- mean_icer + z_95 * se_icer
+# Calculate the 95% confidence interval 
+ci_95_lower <- quantile(icer_sim, 0.025)
+ci_95_upper <- quantile(icer_sim, 0.975)
 
 # Print results
-cat("Estimated mean ICER:", mean_icer, "\n")
+cat("Estimated median ICER:", mean_icer, "\n")
 cat("50% confidence interval for ICER:", ci_50_lower, "to", ci_50_upper, "\n")
 cat("95% confidence interval for ICER:", ci_95_lower, "to", ci_95_upper, "\n")
+
 
 ```
 ####Code c
 ```{r}
-set.seed(123)  # For reproducibility
 
 # Parameters
 mean_cost_diff <- 600
@@ -263,50 +258,43 @@ se_cost_diff <- 400
 df_cost <- 50  # degrees of freedom for cost difference
 
 mean_effect_diff <- 3.0
-se_effect_diff_2 <- 2.0  # New standard error for effectiveness
 df_effect <- 100  # degrees of freedom for effectiveness difference
 
-n_sim <- 1000  # Number of simulations
+n_sim <- 1000  
 
-# Simulate cost differences from a t-distribution
-cost_diff_sim <- mean_cost_diff + rt(n_sim, df = df_cost) * se_cost_diff
+se_effect_diff <- 2.0
 
-# Simulate effectiveness differences with new SE from a t-distribution
-effect_diff_sim_2 <- mean_effect_diff + rt(n_sim, df = df_effect) * se_effect_diff_2
+# Simulate new effectiveness differences
+effect_diff_sim <- mean_effect_diff + rt(n_sim, df = df_effect) * se_effect_diff
 
-# Calculate the ICER with the new effectiveness differences
-icer_sim_2 <- cost_diff_sim / effect_diff_sim_2
+# Calculate the new ICER
+icer_sim <- cost_diff_sim / effect_diff_sim
 
-# Calculate the mean and standard deviation of the new ICER
-mean_icer_2 <- mean(icer_sim_2)
-sd_icer_2 <- sd(icer_sim_2)
+# Remove infinite and NaN values
+icer_sim <- icer_sim[is.finite(icer_sim)]
 
-# Standard error of new ICER
-se_icer_2 <- sd_icer_2 / sqrt(n_sim)
+# Calculate the median ICER
+mean_icer <- mean(icer_sim)
 
-# z-values for 50% and 95% confidence intervals
-z_50 <- 0.674
-z_95 <- 1.96
+# Calculate the 50% confidence interval
+ci_50_lower <- quantile(icer_sim, 0.25)
+ci_50_upper <- quantile(icer_sim, 0.75)
 
-# 50% confidence interval for the new ICER
-ci_50_lower_2 <- mean_icer_2 - z_50 * se_icer_2
-ci_50_upper_2 <- mean_icer_2 + z_50 * se_icer_2
+# Calculate the 95% confidence interval
+ci_95_lower <- quantile(icer_sim, 0.025)
+ci_95_upper <- quantile(icer_sim, 0.975)
 
-# 95% confidence interval for the new ICER
-ci_95_lower_2 <- mean_icer_2 - z_95 * se_icer_2
-ci_95_upper_2 <- mean_icer_2 + z_95 * se_icer_2
-
-# Print results for the new scenario
-cat("With SE = 2.0\n")
-cat("Estimated mean ICER:", mean_icer_2, "\n")
-cat("50% confidence interval for ICER:", ci_50_lower_2, "to", ci_50_upper_2, "\n")
-cat("95% confidence interval for ICER:", ci_95_lower_2, "to", ci_95_upper_2, "\n")
+# Print results
+cat("With SE of effectiveness difference = 2.0\n")
+cat("Estimated median ICER:", mean_icer, "\n")
+cat("50% confidence interval for ICER:", ci_50_lower, "to", ci_50_upper, "\n")
+cat("95% confidence interval for ICER:", ci_95_lower, "to", ci_95_upper, "\n")
 
 # Remove extreme ICER values for plotting
-icer_filtered_2 <- icer_sim_2[effect_diff_sim_2 > 0 & abs(icer_sim_2) < 1000]
+icer_filtered_2 <- icer_sim[effect_diff_sim > 0 & abs(icer_sim) < 1000]
 
 # (1) Scatterplot of cost differences vs. effectiveness differences with SE = 2.0
-plot(cost_diff_sim, effect_diff_sim_2,
+plot(cost_diff_sim, effect_diff_sim,
      xlab = "Cost Difference",
      ylab = "Effectiveness Difference",
      main = "Scatterplot of Cost vs. Effectiveness Differences (SE = 2.0)",
@@ -390,12 +378,12 @@ simulate_regression_no_charts <- function(a,b,n,sigma){
    return(data)
 }
 
-# True parameters
+#parameters
 a <- 5
 b <- 7
 signma <- 10
 
-# Different sample sizes
+#sample sizes
 n_values <- round(seq(10,10010, length.out= 100))
 
 results <- data.frame(
@@ -407,10 +395,9 @@ results <- data.frame(
 )
 
 for (n in n_values) {
-  # Simulate data using the function from Exercise 6.2
   data <- simulate_regression_no_charts(a, b, n, signma)
   
-  # Fit the linear model
+  # Fit the model
   model <- lm(y ~ x, data = data)
   summary_model <- summary(model)
   
@@ -433,23 +420,18 @@ for (n in n_values) {
   )
 }
 
-# Display the results
 print(results)
 
-# Plot the standard error of the intercept as a function of n
 plot(results$n, results$se_intercept, type = "l", col = "blue", lwd = 2,
      xlab = "Sample Size (n)", ylab = "Standard Error",
      main = "Standard Error of Intercept vs Sample Size")
 
-# Add grid lines for better readability
 grid()
 
-# Plot the standard error of the slope as a function of n
 plot(results$n, results$se_slope, type = "l", col = "red", lwd = 2,
      xlab = "Sample Size (n)", ylab = "Standard Error",
      main = "Standard Error of Slope vs Sample Size")
 
-# Add grid lines for better readability
 grid()
 
 
@@ -470,30 +452,24 @@ deviation 3.
 (c) Use the text function in R to add the formula of the fitted line to the graph.
 ```{r}
 
-set.seed(123)  # For reproducibility
-
 # Parameters
 n <- 100
 a <- 5
 b <- 7
 sigma <- 3
 
-# (a) Simulate the data
 x <- runif(n, min = 0, max = 50)
 error <- rnorm(n, mean = 0, sd = sigma)
 y <- a + b * x + error
 
-# Fit the regression model
 model <- lm(y ~ x)
 summary_model <- summary(model)
 print(summary_model)
 
-# (b) Graph a scatterplot of the data and the regression line
 plot(x, y, main = "Scatterplot with Fitted Regression Line",
      xlab = "x", ylab = "y", pch = 19, col = "red")
 abline(model, col = "blue", lwd = 2)
 
-# (c) Add the formula of the fitted line to the graph
 coefficients <- coef(model)
 formula_text <- paste0("y = ", round(coefficients[1], 2),
                        " + ", round(coefficients[2], 2), " * x")
@@ -515,5 +491,42 @@ groups of elections, and determine the standard error for this difference.
 that the resulting estimate and standard error are the same as above.
 
 ```{r}
+
+election_data = read.table("ROS-Examples-master/ElectionsEconomy/data/hibbs.dat", header=TRUE)
+
+
+election_data$x <- ifelse(election_data$growth > 2,1,0)
+
+mean_vote_low <- mean(election_data$vote[election_data$x == 0], na.rm = TRUE)
+
+mean_vote_high <- mean(election_data$vote[election_data$x == 1], na.rm=TRUE)
+
+diff_means <- mean_vote_high - mean_vote_low
+
+# Number of observations in each group
+n_low <- sum(election_data$x == 0)
+n_high <- sum(election_data$x == 1)
+
+
+# Standard deviation for each group
+sd_low <- sd(election_data$vote[election_data$x == 0], na.rm = TRUE)
+sd_high <- sd(election_data$vote[election_data$x == 1], na.rm = TRUE)
+
+# Standard error of the difference
+se_diff <- sqrt((sd_low^2 / n_low) + (sd_high^2 / n_high))
+
+cat("Difference in mean vote share:", diff_means, "\n")
+cat("Standard error of the difference:", se_diff, "\n\n")
+
+
+model <- lm(vote~x, data=election_data)
+
+estimate = coef(model)['x']
+
+se_estimate <- summary(model)$coefficients["x", "Std. Error"]
+
+cat("Regression estimate for x:", estimate, "\n")
+cat("Standard error of the estimate:", se_estimate, "\n\n")
+
 
 ```

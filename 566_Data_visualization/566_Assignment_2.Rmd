@@ -5,57 +5,40 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(echo = TRUE)
-
 library(ggplot2)
 library(dplyr)
-install.packages("socviz")
-
+library(forcats)
+library(ggrepel)
 ```
 
 
 ```{r}
-# Load necessary libraries
-library(ggplot2)
-library(dplyr)
-library(socviz)  # Load this library to access the gss_sm dataset
+library(socviz) 
 
-# Load the dataset
 data("gss_sm")
 
 
 gss_sm_summary <- gss_sm %>%
   group_by(bigregion, religion) %>%
   summarise(n = n(), .groups = 'drop') %>%
-  group_by(bigregion) %>%  # Ensure that the relative frequency is calculated per region
+  group_by(bigregion) %>%  #Group by region
   mutate(freq = n / sum(n))  # Calculating the relative frequency per region
 
 # Plotting
 gss_sm_plot <- ggplot(gss_sm_summary, aes(x = freq, y = fct_reorder(religion, freq), fill = religion)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~bigregion, scales = "free_y", ncol = 2) +  # Create a 2-column facet layout
-  labs(x = "Frequency", y = "Religion", title = "Relative Frequencies of Religion by Big Region") +
+  facet_wrap(~bigregion, scales = "free_y", ncol = 2) +  # Create a 2-column layout
+  labs(x = "Frequency", y = "Religion") +
   theme_minimal() +
   theme(
         # Adjust the background to grey
         panel.background = element_rect(fill = "grey90", color = NA),
         panel.grid.major = element_line(color = "white"),
-        panel.grid.minor = element_blank(),
-        
-        # Remove y-axis labels from the right two quadrants
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.text.y = element_blank(),  # Remove all y-axis labels initially
-        axis.ticks.y = element_blank(),  # Remove y-axis ticks
-        axis.line.y.left = element_line(color = "black"),  # Keep y-axis line on the left
-        axis.text.y.left = element_text(),  # Re-enable y-axis labels for left side
-        axis.ticks.y.left = element_line(),  # Re-enable y-axis ticks for left side
-
-        # Customize the title and strip text
-        strip.text = element_text(size = 12, face = "bold"),
-        plot.title = element_text(hjust = 0.5, size = 16, face = "bold")
+        panel.grid.minor = element_blank()
   ) +
-  scale_fill_brewer(palette = "Set3")  # Make bars colorful with a color palette
+  scale_fill_brewer(palette = "Set3")  
 
 # Display the plot
 print(gss_sm_plot)
@@ -83,8 +66,6 @@ life_exp_avg <- life_exp %>%
 # Reorder Country factor by average life expectancy
 life_exp_avg$Country <- factor(life_exp_avg$Country, levels = life_exp_avg$Country)
 
-### Step 3: Plotting Ordered Life Expectancy with Averages
-
 # Plot life expectancy with error bars (one standard deviation), ordered by average life expectancy
 ggplot(life_exp_avg, aes(x = avg_life_expectancy, y = Country, color = Status)) +
   geom_point() +
@@ -103,16 +84,20 @@ ggplot(life_exp_avg, aes(x = avg_life_expectancy, y = Country, color = Status)) 
 
 ```{r}
 
+# Assuming life_exp_avg contains the data with columns avg_GDP, avg_life_expectancy, and Country
 ggplot(life_exp_avg, aes(x = avg_GDP, y = avg_life_expectancy)) +
   geom_point() +
-  geom_text(aes(label = Country), vjust = -0.5, hjust = 0.5, size = 3) +  # Adjust text position here
+  geom_text_repel(aes(label = Country), size = 3, box.padding = 0.35, point.padding = 0.5, max.overlaps = 10) +  # Using ggrepel
   labs(x = "Average GDP", y = "Average Life Expectancy", title = "Average GDP vs Life Expectancy by Country") +
   theme_minimal() +
   theme(
     panel.background = element_rect(fill = "grey90", color = NA),  # Set the panel background to light grey
     plot.background = element_rect(fill = "grey90", color = NA),   # Set the plot background to light grey
     panel.grid.major = element_line(color = "white"),              # Set major grid lines to white
-    panel.grid.minor = element_blank()                             # Remove minor grid lines
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold")  # Center the title and adjust the style
+
+    # Remove minor grid lines
   )
 ```
 
