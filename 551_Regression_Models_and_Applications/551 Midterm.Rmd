@@ -1,0 +1,40 @@
+---
+title: "Regression 551 Midterm"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+install.packages("faraway")
+
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+# Introduction
+
+In this analysis, we examine data on educational expenditures, teacher salaries, student-teacher ratios, SAT participation rates, and SAT scores from various states in the United States for the year 1994-95. The goal is to explore relationships between these variables and understand how educational expenditure relates to SAT verbal scores.
+
+We use the `gruber.csv` dataset, which contains the relevant data for this analysis.
+
+#Question 1
+- Discuss issues of reliability and validity for this example, giving two sentences for each.
+
+1. Reliability: The reliability of this data depends on the consistency of data collection methods across all states. Since educational expenditure and SAT scores are likely collected and reported using standardized procedures, we can assume the data is reliable.
+
+2. Validity: The validity of the data pertains to how well the variables measure what they are intended to measure. For example, the percentage of students taking the SAT varies by state, which may affect the validity of using average SAT scores to compare educational achievement across states.
+
+```{r}
+data_path <- "./Other Data/Midterm/gruber.csv"
+
+data <- read.csv(data_path)
+
+# Display the first few rows
+head(data)
+pairs(data[, c("expend", "ratio", "salary", "takers", "verbal", "math", "total")],
+      main = "Scatterplot Matrix of Education Data")
+```
+
