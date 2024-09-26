@@ -225,52 +225,58 @@ group_3 <- c(4.8249, 2.2516, 1.5609, 2.0452, 1.0959)
 all_data <- c(group_1, group_2, group_3)
 
 N <- length(all_data)
-
-n = 5
+n <- length(group_1)  # Number of data points per group
 
 # Rank the combined data
 ranks <- rank(all_data)
 
 # Split the ranks back into their respective groups
-ranked_group_1 <- ranks[1:5]
-ranked_group_2 <- ranks[6:10]
-ranked_group_3 <- ranks[11:15]
+ranked_group_1 <- ranks[1:n]
+ranked_group_2 <- ranks[(n+1):(2*n)]
+ranked_group_3 <- ranks[(2*n+1):(3*n)]
 
-KW_obs = 
-  (12/(N*(N+1))) * sum(
-        (mean(ranked_group_1) - (N+1)/2)^2,
-        (mean(ranked_group_2) - (N+1)/2)^2,
-        (mean(ranked_group_3) - (N+1)/2)^2
-)
+# Calculate the observed Kruskal-Wallis statistic
+KW_obs <- 
+  (12 / (N * (N + 1))) * sum(
+    n * (mean(ranked_group_1) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_2) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_3) - (N + 1) / 2)^2
+  )
 
-KW_stats = c()
+# Initialize vector to store permuted Kruskal-Wallis statistics
+KW_stats <- numeric(10000)
 
 # Perform 10,000 random permutations
 for (k in 1:10000) {
   
-  # Shuffle the data randomly
-  permuted_data <- sample(ranks)
+  # Shuffle the ranks randomly
+  permuted_ranks <- sample(ranks)
   
-  # Split the permuted data into three groups
-  group_1_perm <- permuted_data[1:n]
-  group_2_perm <- permuted_data[(n+1):(2*n)]
-  group_3_perm <- permuted_data[(2*n+1):(3*n)]
+  # Split the permuted ranks into three groups
+  group_1_perm <- permuted_ranks[1:n]
+  group_2_perm <- permuted_ranks[(n+1):(2*n)]
+  group_3_perm <- permuted_ranks[(2*n+1):(3*n)]
   
-  KW = 
-  (12/(N*(N+1))) * sum(
-        (mean(group_1_perm) - (N+1)/2)^2,
-        (mean(group_2_perm) - (N+1)/2)^2,
-        (mean(group_3_perm) - (N+1)/2)^2
-  )
-  KW_stats[k] = KW
-
+  # Calculate the permuted Kruskal-Wallis statistic
+  KW_perm <- 
+    (12 / (N * (N + 1))) * sum(
+      n * (mean(group_1_perm) - (N + 1) / 2)^2,
+      n * (mean(group_2_perm) - (N + 1) / 2)^2,
+      n * (mean(group_3_perm) - (N + 1) / 2)^2
+    )
+  
+  # Store the permuted statistic
+  KW_stats[k] <- KW_perm
 }
 
-hist(KW_stats)
+# Plot the histogram of permuted Kruskal-Wallis statistics
+hist(KW_stats, main = "Distribution of Permuted KW Statistics", xlab = "KW Statistic", breaks = 50)
+abline(v = KW_obs, col = "red", lwd = 2, lty = 2)
 
+# Calculate the percentage of permuted statistics greater than the observed KW statistic
 percentage_greater <- mean(KW_stats > KW_obs) * 100
 
-# Output the observed F-statistic and the percentage
+# Output the observed KW statistic and the percentage
 cat("Observed KW-statistic:", KW_obs, "\n")
 cat("Percentage of generated KW-statistics greater than the observed KW-statistic:", percentage_greater, "%\n")
 
@@ -279,6 +285,72 @@ cat("Percentage of generated KW-statistics greater than the observed KW-statisti
 #Question 5
 An agronomist gave scores fro 0 to 5 to denote insect damage to wheat plants that were treated with four insecticides. The data are given in the following table. Use the Kruskal-Wallis test with ties to test whether or not there is a difference among the treatments
 ```{r}
+
+t1 <- c(0,2,1,3,1,1)
+t2 <- c(2,1,3,1,3,4)
+t3 <- c(1,3,4,2,2,1)
+t4 <- c(3,4,2,5,3,4)
+
+all_data <- c(t1, t2, t3, t4)
+
+N <- length(all_data)
+
+ranks <- rank(all_data, ties.method = "average")
+
+n <- length(t1)  # since all groups have the same size, you can use any group's length
+
+# Split the ranks back into their respective groups
+ranked_group_1 <- ranks[1:n]
+ranked_group_2 <- ranks[(n+1):(2*n)]
+ranked_group_3 <- ranks[(2*n+1):(3*n)]
+ranked_group_4 <- ranks[(3*n+1):(4*n)]
+
+KW_obs <- 
+  (12 / (N * (N + 1))) * sum(
+    n * (mean(ranked_group_1) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_2) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_3) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_4) - (N + 1) / 2)^2
+  )
+
+KW_obs <- 
+  (12 / (N * (N + 1))) * sum(
+    n * (mean(ranked_group_1) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_2) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_3) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_4) - (N + 1) / 2)^2
+  )
+
+KW_stats <- numeric(10000)
+
+for (k in 1:10000) {
+  permuted_ranks <- sample(ranks)
+  
+  perm_ranked_group_1 <- permuted_ranks[1:n]
+  perm_ranked_group_2 <- permuted_ranks[(n+1):(2*n)]
+  perm_ranked_group_3 <- permuted_ranks[(2*n+1):(3*n)]
+  perm_ranked_group_4 <- permuted_ranks[(3*n+1):(4*n)]
+ 
+  KW_perm <- 
+    (12 / (N * (N + 1))) * sum(
+      n * (mean(perm_ranked_group_1) - (N + 1) / 2)^2,
+      n * (mean(perm_ranked_group_2) - (N + 1) / 2)^2,
+      n * (mean(perm_ranked_group_3) - (N + 1) / 2)^2,
+      n * (mean(perm_ranked_group_4) - (N + 1) / 2)^2
+    )
+
+  KW_stats[k] <- KW_perm
+}
+
+
+# Plot the histogram of permuted Kruskal-Wallis statistics
+hist(KW_stats, main = "Distribution of Permuted KW Statistics", xlab = "KW Statistic", breaks = 50)
+abline(v = KW_obs, col = "red", lwd = 2, lty = 2)
+
+percentage_greater <- mean(KW_stats >= KW_obs)
+
+print(paste("Observed Kruskal-Wallis statistic:", round(KW_obs,2)))
+print(paste("Percentage of permuted statistics greater than observed:", percentage_greater * 100, "%"))
 
 ```
 

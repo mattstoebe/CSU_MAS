@@ -1,0 +1,64 @@
+---
+title: "566_Assignment_4"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+```
+
+Reproduce the following plot based on the dataset gem.csv (uploaded on Canvas).
+
+Instruction: For each subgroup, fit a linear model with log(price) as the dependent variable and carat as the independent variable. Plot the confidence interval for the slope based on a 2SD calculation. In geom_pointrange(), do not use position_dodge().
+
+
+```{r}
+# Load your data
+gem_data <- read.csv("gem.csv")
+
+# Convert 'cut' to a factor with the desired order
+gem_data$cut <- factor(gem_data$cut, levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"))
+
+# Fit linear models for each combination of Cut and Grade
+models <- gem_data %>%
+  group_by(cut, color) %>%  # Assuming 'color' corresponds to 'Grade'
+  do(model = lm(log(price) ~ carat, data = .))
+
+# Extract slope estimates and their standard deviations
+model_results <- models %>%
+  summarise(
+    cut = cut,
+    color = color,
+    slope = coef(model)[2],
+    se = summary(model)$coefficients[2, 2]
+  ) %>%
+  ungroup()
+
+# Calculate 2SD intervals
+model_results <- model_results %>%
+  mutate(
+    ymin = slope - 2 * se,
+    ymax = slope + 2 * se
+  )
+
+# Create the plot
+ggplot(model_results, aes(x = cut, y = slope, ymin = ymin, ymax = ymax, color = color)) +
+  geom_pointrange() +
+  labs(x = "Cut", y = "Slope") +
+  theme_minimal() +
+  theme(
+    panel.background = element_rect(fill = "lightgrey", color = NA), # Grey background for the plot area
+    panel.grid.major = element_line(color = "white"),           # White major grid lines
+    panel.grid.minor = element_line(color = "white"),           # White minor grid lines
+    axis.line = element_line(color = "white"),                  # White axis lines
+    axis.text = element_text(color = "black"),                  # Black axis text
+    axis.title = element_text(color = "black")                  # Black axis titles
+    )
+```
