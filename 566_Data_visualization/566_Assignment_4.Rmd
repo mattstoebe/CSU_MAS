@@ -20,10 +20,7 @@ Instruction: For each subgroup, fit a linear model with log(price) as the depend
 
 
 ```{r}
-# Load your data
 gem_data <- read.csv("gem.csv")
-
-# Convert 'cut' to a factor with the desired order
 gem_data$cut <- factor(gem_data$cut, levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"))
 
 # Fit linear models for each combination of Cut and Grade
@@ -48,17 +45,16 @@ model_results <- model_results %>%
     ymax = slope + 2 * se
   )
 
-# Create the plot
 ggplot(model_results, aes(x = cut, y = slope, ymin = ymin, ymax = ymax, color = color)) +
   geom_pointrange() +
   labs(x = "Cut", y = "Slope") +
   theme_minimal() +
   theme(
-    panel.background = element_rect(fill = "lightgrey", color = NA), # Grey background for the plot area
-    panel.grid.major = element_line(color = "white"),           # White major grid lines
-    panel.grid.minor = element_line(color = "white"),           # White minor grid lines
-    axis.line = element_line(color = "white"),                  # White axis lines
-    axis.text = element_text(color = "black"),                  # Black axis text
-    axis.title = element_text(color = "black")                  # Black axis titles
+    panel.background = element_rect(fill = "lightgrey", color = NA),
+    panel.grid.major = element_line(color = "white"),
+    panel.grid.minor = element_line(color = "white"),
+    axis.line = element_line(color = "white"),
+    axis.text = element_text(color = "black"),
+    axis.title = element_text(color = "black")
     )
 ```
