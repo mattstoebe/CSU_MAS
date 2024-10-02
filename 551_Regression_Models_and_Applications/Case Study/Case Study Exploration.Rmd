@@ -7,10 +7,87 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+install.packages("car")
+
+library(corrplot)
+library(car)
+library(psych)
+library(tidyverse)
 ```
 
 ```{r}
-df <- read.csv("./LPGA.csv")
+# Load necessary libraries
+library(tidyverse)   # For data manipulation and visualization
+
+# Read the CSV file
+lpga_data <- read.csv("LPGA.csv")
+
+# View the first few rows
+head(lpga_data)
+
+# Check data structure
+str(lpga_data)
+
+# Convert percentage columns to numeric if they are not already
+lpga_data$pctfrwy <- as.numeric(lpga_data$pctfrwy)
+lpga_data$pctgrn <- as.numeric(lpga_data$pctgrn)
+
+# Summary of quantitative variables
+summary(lpga_data)
+
+# Detailed descriptive statistics
+library(psych)
+describe(lpga_data[, sapply(lpga_data, is.numeric)])
+
+# Histogram for each quantitative variable
+lpga_data %>%
+  select(-Golfer) %>%
+  gather(key = "variable", value = "value") %>%
+  ggplot(aes(x = value)) +
+  geom_histogram(bins = 20, fill = "skyblue", color = "black") +
+  facet_wrap(~ variable, scales = "free") +
+  theme_minimal()
+
+predictors <- names(lpga_data)[!(names(lpga_data) %in% c("Golfer", "przrnd"))]
+
+for (var in predictors) {
+  p <- ggplot(lpga_data, aes(x = .data[[var]], y = przrnd)) +
+    geom_point(color = "blue") +
+    geom_smooth(method = "lm", se = FALSE, color = "red") +
+    labs(title = paste("przrnd vs", var), x = var, y = "Prize Money per Round") +
+    theme_minimal()
+  
+  print(p)
+}
+# Correlation matrix of quantitative variables
+numeric_vars <- lpga_data %>% select(-Golfer)
+cor_matrix <- cor(numeric_vars)
+
+corrplot(cor_matrix, method = "ellipse")
+
+
+```
+
+```{r}
+# Fit a multiple linear regression model with all predictors
+initial_model <- lm(przrnd ~ . - Golfer, data = lpga_data)
+
+# Summary of the model
+summary(initial_model)
+
+```
+
+```{r}
+# Plot residuals to check assumptions
+par(mfrow = c(2, 2))
+plot(initial_model)
+par(mfrow = c(1, 1))  # Reset plotting area
+
+# Q-Q plot
+qqnorm(residuals(initial_model))
+qqline(residuals(initial_model), col = "red")
+
 
 ```
 
