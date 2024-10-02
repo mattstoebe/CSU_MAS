@@ -128,9 +128,9 @@ Residual Standard Deviation: 0.532. This indicates the typical deviation of obse
 
 Residual standard error: 0.524. This model has a slightly lower residual standard error, indicating a better fit than the previous two models.
 
-11.5
+#11.5
 
-11.5 Residuals and predictions: The folder Pyth contains outcome y and predictors x1, x2 for 40 data points, with a further 20 points with the predictors but no observed outcome. Save the file to your working directory, then read it into R using read.table().
+Residuals and predictions: The folder Pyth contains outcome y and predictors x1, x2 for 40 data points, with a further 20 points with the predictors but no observed outcome. Save the file to your working directory, then read it into R using read.table().
 (a) Use R to fit a linear regression model predicting y from x1, x2, using the first 40 data points in the file. Summarize the inferences and check the fit of your model.
 (b) Display the estimated model graphically as in Figure 11.2.
 (c) Make a residual plot for this model. Do the assumptions appear to be met?
@@ -188,108 +188,464 @@ print(predictions)
 
 ```
 
-12.6
+#12.6
+12.6 Logarithmic transformations: The folder Pollution contains mortality rates and various
+environmental factors from 60 U.S. metropolitan areas (see McDonald and Schwing, 1973). For
+this exercise we shall model mortality rate given nitric oxides, sulfur dioxide, and hydrocarbons
+as inputs. This model is an extreme oversimplification, as it combines all sources of mortality
+and does not adjust for crucial factors such as age and smoking. We use it to illustrate log
+transformations in regression.
+(a) Create a scatterplot of mortality rate versus level of nitric oxides. Do you think linear regression will fit these data well? Fit the regression and evaluate a residual plot from the regression.
+(b) Find an appropriate transformation that will result in data more appropriate for linear regression. Fit a regression to the transformed data and evaluate the new residual plot.
+(c) Interpret the slope coefficient from the model you chose in (b)
+(d) Now fit a model predicting mortality rate using levels of nitric oxides, sulfur dioxide, and hydrocarbons as inputs. Use appropriate transformations when helpful. Plot the fitted regression model and interpret the coefficients.
+(e) Cross validate: fit the model you chose above to the first half of the data and then predict for the second half. You used all the data to construct the model in (d), so this is not really cross validation, but it gives a sense of how the steps of cross validation can be implemented.
+
 ```{r}
 # Load necessary libraries
 library(ggplot2)
+library(dplyr)
 
+# ===============================
+# Load and Inspect the Dataset
+# ===============================
 
-# Load the dataset with the provided column names
+# Define column names
 column_names <- c("prec", "jant", "jult", "ovr65", "popn", "educ", "hous", "dens", 
                   "nonw", "wwdrk", "poor", "hc", "nox", "so2", "humid", "mort")
 
-data <- read.csv("./Other Data/HW_3/pollution.csv", header=TRUE, col.names = column_names)
+# Load the dataset
+data <- read.csv("./Other Data/HW_3/pollution.csv", header = TRUE, col.names = column_names)
 
-# Inspect the dataset
+# Inspect the first few rows of the dataset
 head(data)
 
-# Scatterplot of mortality rate vs nitric oxides (nox)
+# ===============================
+# Part (a): Scatterplot and Linear Regression
+# ===============================
+
+# Create scatterplot of mortality rate vs nitric oxides (nox)
 ggplot(data, aes(x = nox, y = mort)) +
-  geom_point() +
-  labs(title = "Mortality Rate vs Nitric Oxides", x = "Nitric Oxides", y = "Mortality Rate") +
+  geom_point(color = "darkblue") +
+  labs(title = "Mortality Rate vs Nitric Oxides (NOx)",
+       x = "Nitric Oxides (NOx)",
+       y = "Mortality Rate") +
   theme_minimal()
 
-# Fit a linear regression model to the untransformed data
-model <- lm(mort ~ nox, data = data)
+# Interpretation:
+# - Observe the scatterplot to assess the relationship between NOx and mortality rate.
+# - Look for patterns, such as linearity, curvature, or heteroscedasticity.
+
+# Fit a simple linear regression model: mort ~ nox
+linear_model <- lm(mort ~ nox, data = data)
 
 # Summary of the linear regression model
-summary(model)
+summary(linear_model)
 
-# Residual plot for the untransformed model
-residuals <- resid(model)
-fitted_values <- fitted(model)
-
-ggplot(data.frame(fitted = fitted_values, residuals = residuals), aes(x = fitted, y = residuals)) +
-  geom_point() +
+# Residuals vs Fitted Values Plot
+ggplot(data, aes(x = fitted(linear_model), y = resid(linear_model))) +
+  geom_point(color = "darkgreen") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  labs(title = "Residuals vs Fitted Values (Untransformed Model)", x = "Fitted Values", y = "Residuals") +
+  labs(title = "Residuals vs Fitted Values (Linear Model)",
+       x = "Fitted Values",
+       y = "Residuals") +
   theme_minimal()
 
-### (b) Logarithmic Transformation and Residual Plot
+# Interpretation:
+# - Check for randomness in residuals.
+# - Patterns indicate potential model inadequacies (e.g., non-linearity).
 
-# Apply logarithmic transformation
-data$log_mort <- log(data$mort)
-data$log_nox <- log(data$nox)
+# ===============================
+# Part (b): Logarithmic Transformation and Regression
+# ===============================
 
-# Fit the model using the transformed data
-log_model <- lm(log_mort ~ log_nox, data = data)
+# Check for zero or negative values before log transformation
+if(any(data$mort <= 0) | any(data$nox <= 0)) {
+  stop("Mortality rate and NOx levels must be positive for log transformation.")
+}
 
-# Summary of the log-log model
-summary(log_model)
+# Apply logarithmic transformation to both response and predictor
+data <- data %>%
+  mutate(log_mort = log(mort),
+         log_nox = log(nox))
 
-# Residual plot for the transformed model
-log_residuals <- resid(log_model)
-log_fitted_values <- fitted(log_model)
-
-ggplot(data.frame(fitted = log_fitted_values, residuals = log_residuals), aes(x = fitted, y = residuals)) +
-  geom_point() +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  labs(title = "Residuals vs Fitted Values (Log-Transformed Model)", x = "Fitted Values", y = "Residuals") +
+# Create scatterplot of log-transformed variables
+ggplot(data, aes(x = log_nox, y = log_mort)) +
+  geom_point(color = "purple") +
+  labs(title = "Log-Log Scatterplot: Mortality Rate vs NOx",
+       x = "Log Nitric Oxides (log NOx)",
+       y = "Log Mortality Rate (log Mort)") +
   theme_minimal()
 
-### (c) Interpretation of the Slope Coefficient
+# Fit a linear regression model on log-transformed data
+log_linear_model <- lm(log_mort ~ log_nox, data = data)
 
-cat("The slope coefficient from the log-transformed model represents the percentage change in mortality rate for a 1% increase in nitric oxides level.")
+# Summary of the log-log regression model
+summary(log_linear_model)
 
-### (d) Multiple Regression with Transformed Data
+# Residuals vs Fitted Values Plot for Log-Transformed Model
+ggplot(data, aes(x = fitted(log_linear_model), y = resid(log_linear_model))) +
+  geom_point(color = "orange") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Log-Log Model)",
+       x = "Fitted Values (log scale)",
+       y = "Residuals") +
+  theme_minimal()
 
-# Apply log transformations to all relevant variables
-data$log_so2 <- log(data$so2)
-data$log_hc <- log(data$hc)
+# Interpretation:
+# - Assess improvement in residual patterns after transformation.
+# - Reduced heteroscedasticity and better linearity indicate a better fit.
 
-# Fit the multiple regression model using the transformed data
+# ===============================
+# Part (c): Interpretation of the Slope Coefficient
+# ===============================
+
+# Extract slope coefficient
+slope_coef <- coef(log_linear_model)["log_nox"]
+
+# Interpretation statement
+cat(sprintf("Interpretation of Slope Coefficient:\nA 1%% increase in nitric oxides (NOx) level is associated with approximately %.2f%% increase in mortality rate, holding other factors constant.\n", 
+            slope_coef * 100))
+
+# ===============================
+# Part (d): Multiple Regression with Transformed Data
+# ===============================
+
+# Check for zero or negative values in additional predictors
+if(any(data$so2 <= 0) | any(data$hc <= 0)) {
+  stop("SO2 and HC levels must be positive for log transformation.")
+}
+
+# Apply logarithmic transformation to additional predictors
+data <- data %>%
+  mutate(log_so2 = log(so2),
+         log_hc = log(hc))
+
+# Fit multiple linear regression model on log-transformed data
 multi_log_model <- lm(log_mort ~ log_nox + log_so2 + log_hc, data = data)
 
 # Summary of the multiple regression model
 summary(multi_log_model)
 
-# Plot fitted regression model
-ggplot(data, aes(x = log_nox, y = log_mort)) +
-  geom_point() +
-  geom_smooth(method = "lm", formula = y ~ log_nox + log_so2 + log_hc, se = FALSE, color = "blue") +
-  labs(title = "Log-Transformed Multiple Regression Model", x = "Log Nitric Oxides", y = "Log Mortality Rate") +
+# Residuals vs Fitted Values Plot for Multiple Log-Transformed Model
+ggplot(data, aes(x = fitted(multi_log_model), y = resid(multi_log_model))) +
+  geom_point(color = "brown") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Multiple Log-Log Model)",
+       x = "Fitted Values (log scale)",
+       y = "Residuals") +
   theme_minimal()
 
-### (e) Cross-Validation
+# Interpretation:
+# - Each coefficient represents the percentage change in mortality rate for a 1% change in the predictor, holding other variables constant.
+# - Assess the significance and magnitude of each predictor.
 
-# Split the data into two halves
-first_half <- data[1:30, ]
-second_half <- data[31:60, ]
+# Optional: Visualize the relationship for each predictor separately
+# Note: Visualizing multiple predictors simultaneously is complex; consider partial plots or other diagnostic tools.
 
-# Fit the model to the first half of the data
+# ===============================
+# Part (e): Cross-Validation
+# ===============================
+
+# Split the data into first half and second half
+set.seed(123) # For reproducibility
+n <- nrow(data)
+half <- floor(n / 2)
+
+# Ensure data is shuffled before splitting to avoid any ordering bias
+data_shuffled <- data %>% sample_frac(1)
+
+first_half <- data_shuffled[1:half, ]
+second_half <- data_shuffled[(half + 1):n, ]
+
+# Fit the multiple regression model on the first half
 cv_model <- lm(log_mort ~ log_nox + log_so2 + log_hc, data = first_half)
 
-# Predict for the second half
-cv_predictions <- predict(cv_model, newdata = second_half)
+# Predict on the second half
+cv_predictions_log <- predict(cv_model, newdata = second_half)
 
-# Output predictions
-print(cv_predictions)
+# Convert predictions back to the original scale
+cv_predictions <- exp(cv_predictions_log)
+
+# Actual mortality rates in the second half
+actual_mort <- second_half$mort
+
+# Calculate prediction errors (e.g., Mean Absolute Error)
+mae <- mean(abs(cv_predictions - actual_mort))
+rmse <- sqrt(mean((cv_predictions - actual_mort)^2))
+
+# Output prediction results and error metrics
+cat("Cross-Validation Predictions:\n")
+print(data.frame(Actual = actual_mort, Predicted = cv_predictions))
+
+cat(sprintf("\nPrediction Error Metrics:\nMean Absolute Error (MAE): %.2f\nRoot Mean Squared Error (RMSE): %.2f\n", mae, rmse))
+
+# Optional: Plot Actual vs Predicted Mortality Rates
+ggplot(data.frame(Actual = actual_mort, Predicted = cv_predictions), aes(x = Actual, y = Predicted)) +
+  geom_point(color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Actual vs Predicted Mortality Rates",
+       x = "Actual Mortality Rate",
+       y = "Predicted Mortality Rate") +
+  theme_minimal()
 
 ```
 
 
-12.15
+#12.15
 ```{r}
+# Load libraries
+library(ggplot2)
+library(dplyr)
+library(rstanarm)
+library(loo)
+library(bayesplot)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Define the path to the dataset
+data_path <- "./Other Data/HW_3/portugese_language.csv"  # Ensure the correct path and filename
+
+# Load the dataset
+data <- read.csv(data_path, header = TRUE)
+
+# Inspect the first few rows
+head(data)
+
+# Check the structure of the dataset
+str(data)
+
+# Define the predictors as per Section 12.7
+predictors <- c("school", "sex", "age", "address", "famsize", "Pstatus",
+               "Medu", "Fedu", "traveltime", "studytime", "failures",
+               "schoolsup", "famsup", "paid", "activities", "nursery",
+               "higher", "internet", "romantic", "famrel", "freetime",
+               "goout", "Dalc", "Walc", "health", "absences")
+
+# Define the outcome variable
+outcome <- "G3port"  # Assuming the Portuguese grade column is named 'G3port'
+
+# Subset the data to include only relevant columns and remove rows with missing values
+data_G3port <- data %>%
+  select(all_of(c(outcome, predictors))) %>%
+  filter(!is.na(.data[[outcome]]))  # Remove rows where outcome is NA
+
+# Check for missing values in predictors
+sum(is.na(data_G3port))
+
+# List of categorical predictors
+categorical_vars <- c("school", "sex", "address", "famsize", "Pstatus",
+                      "schoolsup", "famsup", "paid", "activities", "nursery",
+                      "higher", "internet", "romantic")
+
+# Convert categorical variables to factors
+data_G3port[categorical_vars] <- lapply(data_G3port[categorical_vars], as.factor)
+
+# Inspect the data structure after conversion
+str(data_G3port)
+
+# Check for non-positive values in outcome and predictors
+if(any(data_G3port[[outcome]] <= 0)){
+  stop("Outcome variable contains non-positive values. Log transformation is not possible.")
+}
+
+# Similarly, check for predictors if you plan to log-transform any
+# For this analysis, we'll follow the original Section 12.7 approach without log transformations
+
+# Fit a Bayesian linear regression model without standardizing predictors
+# Using default priors
+fit0 <- stan_glm(as.formula(paste(outcome, "~ .")),
+                 data = data_G3port,
+                 family = gaussian(),
+                 prior = normal(0, 2.5),
+                 prior_intercept = normal(0, 5),
+                 chains = 4,
+                 iter = 2000,
+                 seed = 123)
+
+# Summarize the model
+summary(fit0)
+
+# Standardize the predictors (mean = 0, SD = 1)
+datastd_G3port <- data_G3port
+
+# Standardize numerical predictors
+numeric_vars <- predictors[!(predictors %in% categorical_vars)]
+datastd_G3port[numeric_vars] <- scale(datastd_G3port[numeric_vars])
+
+# Fit the Bayesian linear regression model with standardized predictors
+fit1 <- stan_glm(as.formula(paste(outcome, "~ .")),
+                data = datastd_G3port,
+                family = gaussian(),
+                prior = normal(0, 2.5),
+                prior_intercept = normal(0, 5),
+                chains = 4,
+                iter = 2000,
+                seed = 123)
+
+# Summarize the model
+summary(fit1)
+
+# Define the number of predictors
+p <- length(predictors)
+n <- nrow(datastd_G3port)
+
+# Assume a prior guess that the proportion of explained variance is near 0.3
+# Calculate the prior scale for coefficients
+prior_scale <- sd(datastd_G3port[[outcome]]) * sqrt(0.3 / p)
+
+# Fit the model with scaled normal priors
+fit2 <- stan_glm(as.formula(paste(outcome, "~ .")),
+                data = datastd_G3port,
+                family = gaussian(),
+                prior = normal(0, prior_scale),
+                prior_intercept = normal(0, 5),
+                chains = 4,
+                iter = 2000,
+                seed = 123)
+
+# Summarize the model
+summary(fit2)
+
+# Define parameters for the regularized horseshoe prior
+p <- length(predictors)
+n <- nrow(datastd_G3port)
+p0 <- 6  # Expected number of relevant predictors
+
+# Calculate slab scale
+slab_scale <- sqrt(0.3 / p0) * sd(datastd_G3port[[outcome]])
+
+# Calculate global scale
+global_scale <- (p0 / (p - p0)) / sqrt(n)
+
+# Fit the model with regularized horseshoe prior
+fit3 <- stan_glm(as.formula(paste(outcome, "~ .")),
+                data = datastd_G3port,
+                family = gaussian(),
+                prior = hs(global_scale = global_scale, slab_scale = slab_scale),
+                prior_intercept = normal(0, 5),
+                chains = 4,
+                iter = 2000,
+                seed = 123)
+
+# Summarize the model
+summary(fit3)
+
+# Calculate Bayesian R^2 for all models
+bayes_R2_fit0 <- bayes_R2(fit0)
+bayes_R2_fit1 <- bayes_R2(fit1)
+bayes_R2_fit2 <- bayes_R2(fit2)
+bayes_R2_fit3 <- bayes_R2(fit3)
+
+# Display Bayesian R^2
+print(bayes_R2_fit0)
+print(bayes_R2_fit1)
+print(bayes_R2_fit2)
+print(bayes_R2_fit3)
+
+# Calculate LOO for all models
+loo_fit0 <- loo(fit0)
+loo_fit1 <- loo(fit1)
+loo_fit2 <- loo(fit2)
+loo_fit3 <- loo(fit3)
+
+# Extract LOO R^2
+loo_R2_fit0 <- loo_R2(loo_fit0)
+loo_R2_fit1 <- loo_R2(loo_fit1)
+loo_R2_fit2 <- loo_R2(loo_fit2)
+loo_R2_fit3 <- loo_R2(loo_fit3)
+
+# Display LOO R^2
+print(loo_R2_fit0)
+print(loo_R2_fit1)
+print(loo_R2_fit2)
+print(loo_R2_fit3)
+
+# Compare models using LOO
+loo_compare_models <- loo_compare(loo_fit0, loo_fit1, loo_fit2, loo_fit3)
+print(loo_compare_models)
+
+# Plot posterior distributions for Model 1 (standardized predictors)
+mcmc_areas(as.matrix(fit1), prob = 0.95) +
+  ggtitle("Posterior Distributions of Coefficients (Standardized Predictors)")
+
+# Plot posterior distributions for Model 2 (scaled normal priors)
+mcmc_areas(as.matrix(fit2), prob = 0.95) +
+  ggtitle("Posterior Distributions of Coefficients (Scaled Normal Priors)")
+
+# Plot posterior distributions for Model 3 (regularized horseshoe prior)
+mcmc_areas(as.matrix(fit3), prob = 0.95) +
+  ggtitle("Posterior Distributions of Coefficients (Regularized Horseshoe Prior)")
+
+# Split the data into two halves
+half_index <- floor(nrow(datastd_G3port) / 2)
+data_shuffled <- datastd_G3port %>% sample_frac(1)  # Shuffle the data
+
+first_half <- data_shuffled[1:half_index, ]
+second_half <- data_shuffled[(half_index + 1):nrow(data_shuffled), ]
+
+# Fit the best model (e.g., Model 3) on the first half
+cv_model <- stan_glm(as.formula(paste(outcome, "~ .")),
+                    data = first_half,
+                    family = gaussian(),
+                    prior = hs(global_scale = global_scale, slab_scale = slab_scale),
+                    prior_intercept = normal(0, 5),
+                    chains = 4,
+                    iter = 2000,
+                    seed = 123)
+
+# Predict on the second half
+cv_predictions_log <- predict(cv_model, newdata = second_half)
+
+# If the model was fitted on standardized data, reverse the transformation
+# Since outcome was not standardized, predictions are on the original scale
+
+# Actual outcomes
+actual_mort <- second_half[[outcome]]
+
+# Calculate prediction errors
+mae <- mean(abs(cv_predictions_log - actual_mort))
+rmse <- sqrt(mean((cv_predictions_log - actual_mort)^2))
+
+# Display prediction results and error metrics
+cat("Cross-Validation Predictions (Model 3):\n")
+print(data.frame(Actual = actual_mort, Predicted = cv_predictions_log))
+
+cat(sprintf("\nPrediction Error Metrics:\nMean Absolute Error (MAE): %.2f\nRoot Mean Squared Error (RMSE): %.2f\n", mae, rmse))
+
+# Optional: Plot Actual vs Predicted
+ggplot(data.frame(Actual = actual_mort, Predicted = cv_predictions_log), aes(x = Actual, y = Predicted)) +
+  geom_point(color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Actual vs Predicted Portuguese Grades",
+       x = "Actual Grade",
+       y = "Predicted Grade") +
+  theme_minimal()
+
+cat("\nSummary of Analyses:\n")
+cat("1. **Model 0** (Unstandardized Predictors): Bayesian R² =", round(median(bayes_R2_fit0$Estimate), 3),
+    ", LOO R² =", round(median(loo_R2_fit0$Estimate), 3), "\n")
+cat("2. **Model 1** (Standardized Predictors): Bayesian R² =", round(median(bayes_R2_fit1$Estimate), 3),
+    ", LOO R² =", round(median(loo_R2_fit1$Estimate), 3), "\n")
+cat("3. **Model 2** (Scaled Normal Priors): Bayesian R² =", round(median(bayes_R2_fit2$Estimate), 3),
+    ", LOO R² =", round(median(loo_R2_fit2$Estimate), 3), "\n")
+cat("4. **Model 3** (Regularized Horseshoe Prior): Bayesian R² =", round(median(bayes_R2_fit3$Estimate), 3),
+    ", LOO R² =", round(median(loo_R2_fit3$Estimate), 3), "\n\n")
+
+cat("**Model Comparison:**\n")
+print(loo_compare_models)
+
+cat("\n**Cross-Validation Error Metrics for Model 3:**\n")
+cat(sprintf("Mean Absolute Error (MAE): %.2f\n", mae))
+cat(sprintf("Root Mean Squared Error (RMSE): %.2f\n", rmse))
+
+cat("\n**Interpretations:**\n")
+cat("- **Model 0** shows initial fit without standardizing predictors. The Bayesian R² and LOO R² indicate the proportion of variance explained by the model.\n")
+cat("- **Model 1** improves interpretability by standardizing predictors, ensuring all have equal variance.\n")
+cat("- **Model 2** introduces scaled normal priors based on the number of predictors, aiming to control overfitting.\n")
+cat("- **Model 3** employs a regularized horseshoe prior, effectively shrinking less relevant coefficients towards zero and highlighting the most important predictors.\n")
+cat("- **Cross-Validation** demonstrates the predictive performance of the best model (Model 3) on unseen data, with MAE and RMSE providing quantitative measures of error.\n")
 
 ```
 
