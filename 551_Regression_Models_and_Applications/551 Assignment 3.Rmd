@@ -7,6 +7,289 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+install.packages('broom')
 ```
 
+#10.6:
+
+Regression models with interactions: The folder Beauty contains data (use file beauty.csv) from Hamermesh and Parker (2005) on student evaluations of instructors’ beauty and teaching quality for several courses at the University of Texas. The teaching evaluations were conducted at the end of the semester, and the beauty judgments were made later, by six students who had not attended the classes and were not aware of the course evaluations.
+(a) Run a regression using beauty (the variable beauty) to predict course evaluations (eval), adjusting for various other predictors. Graph the data and fitted model, and explain the meaning of each of the coefficients along with the residual standard deviation. Plot the residuals versus fitted values.
+
+(b) Fit some other models, including beauty and also other predictors. Consider at least one model with interactions. For each model, explain the meaning of each of its estimated
+coefficients.
+
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(broom) # for tidy model summaries
+
+# Load the data
+df <- read.csv("./Other Data/HW_3/beauty.csv")
+
+# Inspect the first few rows of the data
+head(df)
+
+# Model 1: Simple linear regression with beauty and other predictors
+model1 <- lm(eval ~ beauty + age + female + minority + nonenglish, data = df)
+
+# Model 2: Adding an interaction term between beauty and female
+model2 <- lm(eval ~ beauty * female + age + minority + nonenglish, data = df)
+
+# Model 3: Adding interactions between beauty and other variables
+model3 <- lm(eval ~ beauty * female + beauty * age + beauty * minority + beauty * nonenglish, data = df)
+
+
+# Summary of each model
+summary(model1)
+summary(model2)
+summary(model3)
+
+# Create a table comparing the coefficients of each model using broom's tidy() function
+coef_model1 <- tidy(model1) %>% mutate(model = "Model 1")
+coef_model2 <- tidy(model2) %>% mutate(model = "Model 2")
+coef_model3 <- tidy(model3) %>% mutate(model = "Model 3")
+
+# Combine the coefficients from all models
+coef_comparison <- bind_rows(coef_model1, coef_model2, coef_model3)
+
+
+coef_combined <- coef_comparison %>% filter(term != "(Intercept)")
+
+
+# Print the comparison of coefficients across models
+coef_comparison %>%
+  select(term, estimate, std.error, statistic, p.value, model) %>%
+  arrange(term, model) %>%
+  print()
+
+# Plot residuals vs fitted values for each model
+
+# Model 1 Residuals vs Fitted
+residuals1 <- resid(model1)
+fitted_values1 <- fitted(model1)
+
+ggplot(data.frame(fitted = fitted_values1, residuals = residuals1), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Model 1)", x = "Fitted Values", y = "Residuals")
+
+# Model 2 Residuals vs Fitted
+residuals2 <- resid(model2)
+fitted_values2 <- fitted(model2)
+
+ggplot(data.frame(fitted = fitted_values2, residuals = residuals2), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Model 2)", x = "Fitted Values", y = "Residuals")
+
+# Model 3 Residuals vs Fitted
+residuals3 <- resid(model3)
+fitted_values3 <- fitted(model3)
+
+ggplot(data.frame(fitted = fitted_values3, residuals = residuals3), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Model 3)", x = "Fitted Values", y = "Residuals")
+
+
+ggplot(coef_combined, aes(x = term, y = estimate, fill = model)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "Comparison of Coefficients Across Models", 
+       x = "Predictors", 
+       y = "Coefficient Estimate (Slope)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+## a: Coefficient and residual standard deviation Interpretation
+1. Beauty: 0.141. For every unit increase in the beauty rating, the course evaluation is expected to increase by approximately 0.141, holding all other variables constant. This indicates a positive effect of perceived beauty on evaluations.
+2. Age: -0.0027. There is a slight negative association between age and course evaluation, but the effect is small and not statistically significant.
+3. Female: -0.207. Female instructors receive evaluations that are, on average, 0.207 points lower than male instructors, holding other factors constant. This result is statistically significant.
+4, Minority: -0.044. Minority instructors receive evaluations that are 0.044 points lower than non-minority instructors, but this effect is not statistically significant.
+5. Non-English: -0.313. Instructors who are non-native English speakers tend to receive evaluations that are 0.313 points lower than native English speakers, a statistically significant result.
+
+Residual Standard Deviation: 0.532. This indicates the typical deviation of observed evaluations from the predicted values by the model.
+
+## b: Interpretation of coefficients for other models including interactions
+### Model 2: 
+1. Beauty: 0.194. The effect of beauty on course evaluations for male instructors (reference group) is a positive increase of 0.194 per unit increase in beauty.
+2. Female: -0.214. Female instructors receive evaluations that are 0.214 points lower than male instructors when beauty is held constant.
+3. Female:Beauty : -0.111. This indicates that for female instructors, the effect of beauty is smaller. In particular, for every unit increase in beauty, female instructors receive an increase of 0.111 points less compared to male instructors. This interaction is marginally significant.
+4. Other coefficients remain similar to the first model.
+
+### Model 3: 
+1. Beauty: -0.443. In this model, the direct effect of beauty is negative. However, its interactions with other variables need to be considered for interpretation.
+2. female:Beauty: 0.0125. This suggests that the effect of beauty increases with age. Older instructors benefit more from beauty in their evaluations.
+3. minority:Beauty: -0.139. The negative interaction indicates that for minority instructors, beauty has a smaller positive effect on evaluations.
+4. Beauty:nonenglish: 0.286. Non-native English speakers benefit more from beauty in their evaluations.
+
+Residual standard error: 0.524. This model has a slightly lower residual standard error, indicating a better fit than the previous two models.
+
+11.5
+
+11.5 Residuals and predictions: The folder Pyth contains outcome y and predictors x1, x2 for 40 data points, with a further 20 points with the predictors but no observed outcome. Save the file to your working directory, then read it into R using read.table().
+(a) Use R to fit a linear regression model predicting y from x1, x2, using the first 40 data points in the file. Summarize the inferences and check the fit of your model.
+(b) Display the estimated model graphically as in Figure 11.2.
+(c) Make a residual plot for this model. Do the assumptions appear to be met?
+(d) Make predictions for the remaining 20 data points in the file. How confident do you feel about these predictions?
+
+```{r}
+# (a) Read the data with proper column names
+data <- read.table("./Other Data/HW_3/pyth.txt", header = TRUE)
+
+# Convert columns to numeric
+data$x1 <- as.numeric(data$x1)
+data$x2 <- as.numeric(data$x2)
+data$y <- as.numeric(data$y)
+
+# Separate the training data (first 40 rows) and test data (remaining 20 rows without 'y')
+train_data <- data[1:40, ]
+test_data <- data[41:60, c("x1", "x2")]
+
+# (a) Fit the linear regression model using the first 40 data points
+model <- lm(y ~ x1 + x2, data = train_data)
+
+# Summary of the model
+summary(model)
+
+# (b) Display the estimated model graphically for 'x1' with regression line
+ggplot(train_data, aes(x = x1, y = y)) +
+  geom_point() +
+  geom_abline(intercept = coef(model)[1] + coef(model)[3] * mean(train_data$x2), slope = coef(model)[2], color = "blue") +  # Add regression line
+  labs(title = "Linear Regression of y on x1", x = "x1", y = "y") +
+  theme_minimal()
+
+# (b) Display the estimated model graphically for 'x2' with regression line
+ggplot(train_data, aes(x = x2, y = y)) +
+  geom_point() +
+  geom_abline(intercept = coef(model)[1] + coef(model)[2] * mean(train_data$x1), slope = coef(model)[3], color = "green") +  # Add regression line
+  labs(title = "Linear Regression of y on x2", x = "x2", y = "y") +
+  theme_minimal()
+
+# (c) Residual plot: plot residuals against fitted values
+residuals <- resid(model)
+fitted_values <- fitted(model)
+
+ggplot(data.frame(fitted = fitted_values, residuals = residuals), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residual Plot", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# (d) Predictions for the remaining 20 data points (test_data)
+predictions <- predict(model, newdata = test_data)
+
+# Print the predictions
+print(predictions)
+
+
+```
+
+12.6
+```{r}
+# Load necessary libraries
+library(ggplot2)
+
+
+# Load the dataset with the provided column names
+column_names <- c("prec", "jant", "jult", "ovr65", "popn", "educ", "hous", "dens", 
+                  "nonw", "wwdrk", "poor", "hc", "nox", "so2", "humid", "mort")
+
+data <- read.csv("./Other Data/HW_3/pollution.csv", header=TRUE, col.names = column_names)
+
+# Inspect the dataset
+head(data)
+
+# Scatterplot of mortality rate vs nitric oxides (nox)
+ggplot(data, aes(x = nox, y = mort)) +
+  geom_point() +
+  labs(title = "Mortality Rate vs Nitric Oxides", x = "Nitric Oxides", y = "Mortality Rate") +
+  theme_minimal()
+
+# Fit a linear regression model to the untransformed data
+model <- lm(mort ~ nox, data = data)
+
+# Summary of the linear regression model
+summary(model)
+
+# Residual plot for the untransformed model
+residuals <- resid(model)
+fitted_values <- fitted(model)
+
+ggplot(data.frame(fitted = fitted_values, residuals = residuals), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Untransformed Model)", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+### (b) Logarithmic Transformation and Residual Plot
+
+# Apply logarithmic transformation
+data$log_mort <- log(data$mort)
+data$log_nox <- log(data$nox)
+
+# Fit the model using the transformed data
+log_model <- lm(log_mort ~ log_nox, data = data)
+
+# Summary of the log-log model
+summary(log_model)
+
+# Residual plot for the transformed model
+log_residuals <- resid(log_model)
+log_fitted_values <- fitted(log_model)
+
+ggplot(data.frame(fitted = log_fitted_values, residuals = log_residuals), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Log-Transformed Model)", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+### (c) Interpretation of the Slope Coefficient
+
+cat("The slope coefficient from the log-transformed model represents the percentage change in mortality rate for a 1% increase in nitric oxides level.")
+
+### (d) Multiple Regression with Transformed Data
+
+# Apply log transformations to all relevant variables
+data$log_so2 <- log(data$so2)
+data$log_hc <- log(data$hc)
+
+# Fit the multiple regression model using the transformed data
+multi_log_model <- lm(log_mort ~ log_nox + log_so2 + log_hc, data = data)
+
+# Summary of the multiple regression model
+summary(multi_log_model)
+
+# Plot fitted regression model
+ggplot(data, aes(x = log_nox, y = log_mort)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ log_nox + log_so2 + log_hc, se = FALSE, color = "blue") +
+  labs(title = "Log-Transformed Multiple Regression Model", x = "Log Nitric Oxides", y = "Log Mortality Rate") +
+  theme_minimal()
+
+### (e) Cross-Validation
+
+# Split the data into two halves
+first_half <- data[1:30, ]
+second_half <- data[31:60, ]
+
+# Fit the model to the first half of the data
+cv_model <- lm(log_mort ~ log_nox + log_so2 + log_hc, data = first_half)
+
+# Predict for the second half
+cv_predictions <- predict(cv_model, newdata = second_half)
+
+# Output predictions
+print(cv_predictions)
+
+```
+
+
+12.15
+```{r}
+
+```
 
