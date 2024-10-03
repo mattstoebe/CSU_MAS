@@ -16,9 +16,8 @@ library(psych)
 library(tidyverse)
 ```
 
+
 ```{r}
-# Load necessary libraries
-library(tidyverse)   # For data manipulation and visualization
 
 # Read the CSV file
 lpga_data <- read.csv("LPGA.csv")
@@ -76,9 +75,6 @@ initial_model <- lm(przrnd ~ . - Golfer, data = lpga_data)
 # Summary of the model
 summary(initial_model)
 
-```
-
-```{r}
 # Plot residuals to check assumptions
 par(mfrow = c(2, 2))
 plot(initial_model)
@@ -87,6 +83,81 @@ par(mfrow = c(1, 1))  # Reset plotting area
 # Q-Q plot
 qqnorm(residuals(initial_model))
 qqline(residuals(initial_model), col = "red")
+
+```
+
+#Log Transform on Response
+```{r}
+log_response <- lm(log(przrnd) ~ . - Golfer, data = lpga_data)
+
+# Summary of the model
+summary(log_response)
+
+# Plot residuals to check assumptions
+par(mfrow = c(2, 2))
+plot(log_response)
+par(mfrow = c(1, 1))  # Reset plotting area
+
+# Q-Q plot
+qqnorm(residuals(log_response))
+qqline(residuals(log_response), col = "red")
+
+
+```
+```{r}
+# Fit a linear model with selected predictors
+model_reduced <- lm(log(przrnd) ~ rounds + pctgrn + aveputt, data = lpga_data)
+
+# Check the model summary
+summary(model_reduced)
+
+# Diagnostic plots to evaluate the reduced model fit
+par(mfrow = c(2, 2))
+plot(model_reduced)
+
+```
+```{r}
+# Load the necessary packages
+library(loo)
+library(boot)
+```
+
+
+```{r}
+# Remove the 'Golfer' column from the dataset as it is a unique identifier
+lpga_data_clean <- lpga_data %>% select(-Golfer)
+
+# Function to compute LOO for a given model
+loo_cv <- function(model) {
+  loo_result <- cv.glm(lpga_data_clean, model, K = nrow(lpga_data_clean))
+  return(loo_result$delta[1])
+}
+
+# Perform LOO for the initial model
+initial_model <- lm(przrnd ~ ., data = lpga_data_clean)
+initial_loo <- loo_cv(initial_model)
+
+# Perform LOO for the log-transformed model
+log_response <- lm(log(przrnd) ~ ., data = lpga_data_clean)
+log_response_loo <- loo_cv(log_response)
+
+# Perform LOO for the reduced model
+model_reduced <- lm(log(przrnd) ~ rounds + pctgrn + aveputt, data = lpga_data_clean)
+model_reduced_loo <- loo_cv(model_reduced)
+
+# Print LOO results for comparison
+cat("Initial Model LOO:", initial_loo, "\n")
+cat("Log-Transformed Model LOO:", log_response_loo, "\n")
+cat("Reduced Model LOO:", model_reduced_loo, "\n")
+
+# Calculate and compare adjusted R-squared values
+initial_adj_r2 <- summary(initial_model)$adj.r.squared
+log_response_adj_r2 <- summary(log_response)$adj.r.squared
+reduced_adj_r2 <- summary(model_reduced)$adj.r.squared
+
+cat("Initial Model Adjusted R-squared:", initial_adj_r2, "\n")
+cat("Log-Transformed Model Adjusted R-squared:", log_response_adj_r2, "\n")
+cat("Reduced Model Adjusted R-squared:", reduced_adj_r2, "\n")
 
 
 ```
