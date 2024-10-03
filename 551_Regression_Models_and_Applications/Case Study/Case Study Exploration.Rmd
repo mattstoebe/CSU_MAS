@@ -124,33 +124,17 @@ library(boot)
 
 
 ```{r}
-# Remove the 'Golfer' column from the dataset as it is a unique identifier
-lpga_data_clean <- lpga_data %>% select(-Golfer)
-
-# Function to compute LOO for a given model
-loo_cv <- function(model) {
-  loo_result <- cv.glm(lpga_data_clean, model, K = nrow(lpga_data_clean))
-  return(loo_result$delta[1])
-}
-
-# Perform LOO for the initial model
+# Initial Model (no log transformation)
 initial_model <- lm(przrnd ~ ., data = lpga_data_clean)
-initial_loo <- loo_cv(initial_model)
 
-# Perform LOO for the log-transformed model
-log_response <- lm(log(przrnd) ~ ., data = lpga_data_clean)
-log_response_loo <- loo_cv(log_response)
+# Log-Transformed Model
+log_response <- lm(log(przrnd) ~ . , data = lpga_data_clean)
 
-# Perform LOO for the reduced model
+# Reduced Model
 model_reduced <- lm(log(przrnd) ~ rounds + pctgrn + aveputt, data = lpga_data_clean)
-model_reduced_loo <- loo_cv(model_reduced)
 
-# Print LOO results for comparison
-cat("Initial Model LOO:", initial_loo, "\n")
-cat("Log-Transformed Model LOO:", log_response_loo, "\n")
-cat("Reduced Model LOO:", model_reduced_loo, "\n")
 
-# Calculate and compare adjusted R-squared values
+# Also, display the adjusted R-squared for comparison
 initial_adj_r2 <- summary(initial_model)$adj.r.squared
 log_response_adj_r2 <- summary(log_response)$adj.r.squared
 reduced_adj_r2 <- summary(model_reduced)$adj.r.squared
@@ -158,7 +142,6 @@ reduced_adj_r2 <- summary(model_reduced)$adj.r.squared
 cat("Initial Model Adjusted R-squared:", initial_adj_r2, "\n")
 cat("Log-Transformed Model Adjusted R-squared:", log_response_adj_r2, "\n")
 cat("Reduced Model Adjusted R-squared:", reduced_adj_r2, "\n")
-
 
 ```
 
