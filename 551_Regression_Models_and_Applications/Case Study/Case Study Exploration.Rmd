@@ -127,14 +127,6 @@ library(boot)
 #Model Comparison
 
 ```{r}
-# Initial Model (no log transformation)
-initial_model <- lm(przrnd ~ ., data = lpga_data_clean)
-
-# Log-Transformed Model
-log_response <- lm(log(przrnd) ~ . , data = lpga_data_clean)
-
-# Reduced Model
-model_reduced <- lm(log(przrnd) ~ rounds + pctgrn + aveputt, data = lpga_data_clean)
 
 
 # Also, display the adjusted R-squared for comparison
@@ -174,5 +166,39 @@ lpga_data_standardized$log_przrnd_pred <- predict(model_standardized, newdata = 
 
 # View the first few rows of the data with predictions
 head(lpga_data_standardized)
+```
+```{r}
+library("rprojroot")
+library("rstantools")
+library("rstanarm")
+library("loo")
+library("ggplot2")
+library("bayesplot")
+
+# Fit the model using stan_glm
+fit1 <- stan_glm(log(przrnd) ~ . - Golfer, data = lpga_data_standardized, refresh = 0)
+
+# Plot the posterior distributions of the coefficients
+p1 <- mcmc_areas(as.matrix(fit1), pars = vars(-'(Intercept)', -sigma),
+                 prob_outer = 0.95, area_method = "scaled height") +
+  xlim(c(-1.2, 0.8))
+
+# Reverse the y-axis labels to match order of parameters
+p1 <- p1 + scale_y_discrete(limits = rev(levels(p1$data$parameter)))
+
+# Show the plot
+p1
+```
+
+```{r}
+bayes_r2_vals <- bayes_R2(fit1)
+
+# Plot histogram of Bayesian R^2
+ggplot() + 
+  geom_histogram(aes(x = bayes_r2_vals), breaks = seq(0, 1, length.out = 100)) +
+  xlim(c(0, 1)) +
+  scale_y_continuous(breaks = NULL) +
+  labs(x = "Bayesian R^2", y = "")
+
 ```
 
