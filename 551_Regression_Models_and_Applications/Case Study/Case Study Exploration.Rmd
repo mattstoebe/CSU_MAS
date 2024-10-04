@@ -4,7 +4,7 @@ author: "Matthew Stoebe"
 date: "`r Sys.Date()`"
 output: html_document
 ---
-
+#Setup
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -16,7 +16,7 @@ library(psych)
 library(tidyverse)
 ```
 
-
+#EDA
 ```{r}
 
 # Read the CSV file
@@ -68,6 +68,7 @@ corrplot(cor_matrix, method = "ellipse")
 
 ```
 
+#Basic Model
 ```{r}
 # Fit a multiple linear regression model with all predictors
 initial_model <- lm(przrnd ~ . - Golfer, data = lpga_data)
@@ -104,6 +105,7 @@ qqline(residuals(log_response), col = "red")
 
 
 ```
+#Reduced Feature Set
 ```{r}
 # Fit a linear model with selected predictors
 model_reduced <- lm(log(przrnd) ~ rounds + pctgrn + aveputt, data = lpga_data)
@@ -122,6 +124,7 @@ library(loo)
 library(boot)
 ```
 
+#Model Comparison
 
 ```{r}
 # Initial Model (no log transformation)
@@ -143,5 +146,33 @@ cat("Initial Model Adjusted R-squared:", initial_adj_r2, "\n")
 cat("Log-Transformed Model Adjusted R-squared:", log_response_adj_r2, "\n")
 cat("Reduced Model Adjusted R-squared:", reduced_adj_r2, "\n")
 
+```
+
+# Standardize features
+```{r}
+# Load necessary libraries
+library(tidyverse)
+
+# Read the CSV file
+lpga_data <- read.csv("LPGA.csv")
+
+# Remove 'Golfer' and 'przrnd' from predictors, as 'Golfer' is categorical and 'przrnd' is the target
+predictors <- names(lpga_data)[!(names(lpga_data) %in% c("Golfer", "przrnd"))]
+
+# Standardize the predictor variables
+lpga_data_standardized <- lpga_data %>%
+  mutate(across(all_of(predictors), ~ scale(.) %>% as.vector))
+
+# Fit a linear model to predict log(przrnd) using standardized inputs
+model_standardized <- lm(log(przrnd) ~ . - Golfer, data = lpga_data_standardized)
+
+# Summary of the standardized model
+summary(model_standardized)
+
+# Use the model to predict log earnings (log(przrnd))
+lpga_data_standardized$log_przrnd_pred <- predict(model_standardized, newdata = lpga_data_standardized)
+
+# View the first few rows of the data with predictions
+head(lpga_data_standardized)
 ```
 
