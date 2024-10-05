@@ -41,8 +41,6 @@ print(paste("Spearman's rho:", round(spearman_cor, 4)))
 kendall_cor <- cor(Age, Strength, method = "kendall")
 print(paste("Kendall's Tau:", round(kendall_cor, 4)))
 
-```
-```{r}
 print("Manual calculations")
 
 n<- length(Age)
@@ -111,6 +109,10 @@ kendall_tau <- calculate_kendall_tau(Age, Strength)
 
 # Display the result
 cat("Manual Calculation of Kendall's Tau:", round(kendall_tau, 4), "\n")
+
+```
+```{r}
+
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
