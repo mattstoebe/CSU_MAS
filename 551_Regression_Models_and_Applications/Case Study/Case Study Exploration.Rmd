@@ -4,7 +4,7 @@ author: "Matthew Stoebe"
 date: "`r Sys.Date()`"
 output: html_document
 ---
-
+#Setup
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -16,9 +16,8 @@ library(psych)
 library(tidyverse)
 ```
 
+#EDA
 ```{r}
-# Load necessary libraries
-library(tidyverse)   # For data manipulation and visualization
 
 # Read the CSV file
 lpga_data <- read.csv("LPGA.csv")
@@ -69,6 +68,7 @@ corrplot(cor_matrix, method = "ellipse")
 
 ```
 
+#Basic Model
 ```{r}
 # Fit a multiple linear regression model with all predictors
 initial_model <- lm(przrnd ~ . - Golfer, data = lpga_data)
@@ -76,9 +76,6 @@ initial_model <- lm(przrnd ~ . - Golfer, data = lpga_data)
 # Summary of the model
 summary(initial_model)
 
-```
-
-```{r}
 # Plot residuals to check assumptions
 par(mfrow = c(2, 2))
 plot(initial_model)
@@ -88,6 +85,120 @@ par(mfrow = c(1, 1))  # Reset plotting area
 qqnorm(residuals(initial_model))
 qqline(residuals(initial_model), col = "red")
 
+```
+
+#Log Transform on Response
+```{r}
+log_response <- lm(log(przrnd) ~ . - Golfer, data = lpga_data)
+
+# Summary of the model
+summary(log_response)
+
+# Plot residuals to check assumptions
+par(mfrow = c(2, 2))
+plot(log_response)
+par(mfrow = c(1, 1))  # Reset plotting area
+
+# Q-Q plot
+qqnorm(residuals(log_response))
+qqline(residuals(log_response), col = "red")
+
+
+```
+#Reduced Feature Set
+```{r}
+# Fit a linear model with selected predictors
+model_reduced <- lm(log(przrnd) ~ rounds + pctgrn + aveputt, data = lpga_data)
+
+# Check the model summary
+summary(model_reduced)
+
+# Diagnostic plots to evaluate the reduced model fit
+par(mfrow = c(2, 2))
+plot(model_reduced)
+
+```
+```{r}
+# Load the necessary packages
+library(loo)
+library(boot)
+```
+
+#Model Comparison
+
+```{r}
+
+
+# Also, display the adjusted R-squared for comparison
+initial_adj_r2 <- summary(initial_model)$adj.r.squared
+log_response_adj_r2 <- summary(log_response)$adj.r.squared
+reduced_adj_r2 <- summary(model_reduced)$adj.r.squared
+
+cat("Initial Model Adjusted R-squared:", initial_adj_r2, "\n")
+cat("Log-Transformed Model Adjusted R-squared:", log_response_adj_r2, "\n")
+cat("Reduced Model Adjusted R-squared:", reduced_adj_r2, "\n")
+
+```
+
+# Standardize features
+```{r}
+# Load necessary libraries
+library(tidyverse)
+
+# Read the CSV file
+lpga_data <- read.csv("LPGA.csv")
+
+# Remove 'Golfer' and 'przrnd' from predictors, as 'Golfer' is categorical and 'przrnd' is the target
+predictors <- names(lpga_data)[!(names(lpga_data) %in% c("Golfer", "przrnd"))]
+
+# Standardize the predictor variables
+lpga_data_standardized <- lpga_data %>%
+  mutate(across(all_of(predictors), ~ scale(.) %>% as.vector))
+
+# Fit a linear model to predict log(przrnd) using standardized inputs
+model_standardized <- lm(log(przrnd) ~ . - Golfer, data = lpga_data_standardized)
+
+# Summary of the standardized model
+summary(model_standardized)
+
+# Use the model to predict log earnings (log(przrnd))
+lpga_data_standardized$log_przrnd_pred <- predict(model_standardized, newdata = lpga_data_standardized)
+
+# View the first few rows of the data with predictions
+head(lpga_data_standardized)
+```
+```{r}
+library("rprojroot")
+library("rstantools")
+library("rstanarm")
+library("loo")
+library("ggplot2")
+library("bayesplot")
+
+# Fit the model using stan_glm
+fit1 <- stan_glm(log(przrnd) ~ . - Golfer, data = lpga_data_standardized, refresh = 0)
+
+# Plot the posterior distributions of the coefficients
+p1 <- mcmc_areas(as.matrix(fit1), pars = vars(-'(Intercept)', -sigma),
+                 prob_outer = 0.95, area_method = "scaled height") +
+  xlim(c(-1.2, 0.8))
+
+# Reverse the y-axis labels to match order of parameters
+p1 <- p1 + scale_y_discrete(limits = rev(levels(p1$data$parameter)))
+
+# Show the plot
+p1
+```
+
+```{r}
+bayes_r2_vals <- bayes_R2(fit1)
+
+# Plot histogram of Bayesian R^2
+ggplot() + 
+  geom_histogram(aes(x = bayes_r2_vals), breaks = seq(0, 1, length.out = 100)) +
+  xlim(c(0, 1)) +
+  scale_y_continuous(breaks = NULL) +
+  labs(x = "Bayesian R^2", y = "")
 
 ```
 
