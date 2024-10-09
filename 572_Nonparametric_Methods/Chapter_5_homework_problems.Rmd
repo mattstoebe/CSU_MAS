@@ -110,7 +110,29 @@ kendall_tau <- calculate_kendall_tau(Age, Strength)
 # Display the result
 cat("Manual Calculation of Kendall's Tau:", round(kendall_tau, 4), "\n")
 
+
+#Hypothesis Testing
+
+pearson_z <- pearson_r*sqrt(length(Age - 1))
+spearman_z <- spearman_rho*sqrt(length(Age - 1))
+
+n = length(Age)
+
+kendal_z = kendall_tau / sqrt((4*n + 10) / (9 * (n**2 - n)))
+
+pearson_p <- 1 - pnorm(pearson_z)
+spearman_p <- 1 - pnorm(spearman_z)
+kendal_p <- 1 - pnorm(kendal_z)
+
+cat("Pearson's P value", round(pearson_p, 4), "\n")
+cat("Spearman's P value", round(spearman_p, 4), "\n")
+cat("Kendal's P value", round(kendal_p, 4), "\n")
+
+print("This correlation is signifficant for all tests. The least signifficant test is Pearson's with a P value of .0188. This makes sense because the relationship is not linear, and pearsons works best for linear relationships")
+
 ```
+
+
 ```{r}
 
 ```
