@@ -346,6 +346,7 @@ pred_intervals <- posterior_predict(fit_reduced_stan_log, probs = c(0.05, 0.95))
 # View the posterior predictive intervals
 head(pred_intervals)
 
+
 ```
 
 #Model Interpretation
