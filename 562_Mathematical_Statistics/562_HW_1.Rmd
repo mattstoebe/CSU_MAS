@@ -1,0 +1,125 @@
+---
+title: "562_HW_1"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Question 3 Corroboration
+
+```{r}
+# Parameters
+m <- 5          # Degrees of freedom for X1; must be > 0
+n <- 10         # Degrees of freedom for X2; must be > 4 for Var[Y] to exist
+set.seed(123)   # For reproducibility
+N <- 1e7        # Number of simulations
+
+# Simulate chi-square random variables
+X1 <- rchisq(N, df = m)
+X2 <- rchisq(N, df = n)
+
+Y <- (n * X1) / (m * X2)
+
+# Compute empirical mean and variance
+empirical_mean_Y <- mean(Y)
+empirical_var_Y <- var(Y)
+
+# Compute theoretical mean and variance
+theoretical_mean_Y <- n / (n - 2)
+theoretical_var_Y <- (2 * n^2 * (m + n - 2)) / (m * (n - 2)^2 * (n - 4))
+
+# Print results
+cat("Empirical E[Y]:", empirical_mean_Y, "\n")
+cat("Theoretical E[Y]:", theoretical_mean_Y, "\n\n")
+cat("Empirical Var[Y]:", empirical_var_Y, "\n")
+cat("Theoretical Var[Y]:", theoretical_var_Y, "\n")
+
+```
+#Question 5
+
+##a
+```{r}
+
+percentile_t12_p95 <- qt(0.95, df = 12)
+percentile_t12_p95
+
+
+```
+
+##b
+```{r}
+percentile_F45_10 <- qf(0.10, df1 = 4, df2 = 5)
+percentile_F45_10
+```
+
+##c
+
+```{r}
+
+prob_F45_gt_4.6 <- pf(4.6, df1 = 4, df2 = 5, lower.tail = FALSE)
+prob_F45_gt_4.6
+
+```
+##d
+```{r}
+prob_t10_gt_3 <- pt(3, df = 10, lower.tail = FALSE)
+prob_t10_gt_3
+```
+
+##e
+
+```{r}
+percentile_chi2_3_95 <- qchisq(0.95, df = 3)
+percentile_chi2_3_95
+```
+
+##f
+
+```{r}
+prob_chi2_3_gt_2.6 <- pchisq(2.6, df = 3, lower.tail = FALSE)
+prob_chi2_3_gt_2.6
+
+```
+
+#Question 7
+```{r}
+
+df1 <-1
+df2 <- 3
+
+critical_value <- 2*3
+
+prob_Y <- 1 - pf(critical_value,df1,df2)
+
+cat("Probability P(Y > 2) from f dist:", prob_Y, "\n")
+```
+##Validate from Origional distribution
+```{r}
+# Parameters
+mu <- 0         # Mean used for corroboration does not affect the end result
+sigma <- 1      # Standard deviation for X_1, X_2, X_3, X_4
+N <- 1e7        # Number of simulations for accuracy
+
+X1 <- rnorm(N, mean = mu, sd = sigma)
+X2 <- rnorm(N, mean = 0, sd = sigma)
+X3 <- rnorm(N, mean = 0, sd = sigma)
+X4 <- rnorm(N, mean = 0, sd = sigma)
+
+# Compute the original value Y = (X1 - mu)^2 / (X2^2 + X3^2 + X4^2)
+Y <- (X1 - mu)^2 / (X2^2 + X3^2 + X4^2)
+
+# Compute the probability P(Y > 2)
+prob_Y_gt_2 <- mean(Y > 2)
+
+# Print the simulation result
+cat("Probability P(Y > 2) from origional dist:", prob_Y_gt_2, "\n")
+
+```
+
