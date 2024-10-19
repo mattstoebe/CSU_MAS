@@ -9,22 +9,132 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
+# Question 3
+The data in the table are the ages in days of concrete cylinders and the compression strengths of the cylinders. 
+a. Plot the data to show a nonlinear relationship. Compute Pearsons, Spearmans and Kendall's Tau
+b. Test for significant association using each of the measures of association in part a
 
 ```{r pressure, echo=FALSE}
-plot(pressure)
+Age <- c(3,7,15,24,85,180,360)
+Strength <- c(2500,3200,4300,5300,5900,6700,6900)
+
+plot(Age, Strength, 
+     main = "Age vs. Compression Strength of Concrete Cylinders",
+     xlab = "Age (days)", 
+     ylab = "Compression Strength (psi)",
+     pch = 19,        # Solid circle
+     col = "blue")    # Color of the points
+
+lines(smooth.spline(Age, Strength), col = "red", lwd = 2)
+
+print("Automatic calculations")
+# Pearson's Correlation
+pearson_cor <- cor(Age, Strength, method = "pearson")
+print(paste("Pearson's r:", round(pearson_cor, 4)))
+
+# Spearman's Rank Correlation
+spearman_cor <- cor(Age, Strength, method = "spearman")
+print(paste("Spearman's rho:", round(spearman_cor, 4)))
+
+# Kendall's Tau
+kendall_cor <- cor(Age, Strength, method = "kendall")
+print(paste("Kendall's Tau:", round(kendall_cor, 4)))
+
+print("Manual calculations")
+
+n<- length(Age)
+
+# Step 1: Calculate Means
+mean_Age <- sum(Age) / n
+mean_Strength <- sum(Strength) / n
+
+# Step 2: Calculate Deviations from Means
+dev_Age <- Age - mean_Age
+dev_Strength <- Strength - mean_Strength
+
+# Step 3: Calculate Numerator (Covariance)
+numerator <- sum(dev_Age * dev_Strength)
+
+# Step 4: Calculate Denominator (Product of Standard Deviations)
+denominator <- sqrt(sum(dev_Age^2) * sum(dev_Strength^2))
+
+# Step 5: Calculate Pearson's r
+pearson_r <- numerator / denominator
+
+# Display the result
+cat("Manual Calculation of Pearson's r:", round(pearson_r, 4), "\n")
+
+rank_Age <- rank(Age, ties.method = "average")
+rank_Strength <- rank(Strength, ties.method = "average")
+
+# Step 2: Calculate Differences in Ranks
+d <- rank_Age - rank_Strength
+
+# Step 3: Calculate d^2
+d_squared <- d^2
+
+# Step 4: Sum of d^2
+sum_d_squared <- sum(d_squared)
+
+# Step 5: Calculate Spearman's rho
+spearman_rho <- 1 - (6 * sum_d_squared) / (n * (n^2 - 1))
+
+# Display the result
+cat("Manual Calculation of Spearman's rho:", round(spearman_rho, 4), "\n")
+
+calculate_kendall_tau <- function(x, y) {
+  C <- 0  # Concordant pairs
+  D <- 0  # Discordant pairs
+  n <- length(x)
+  
+  for(i in 1:(n-1)) {
+    for(j in (i+1):n) {
+      # Compare pairs
+      if((x[i] < x[j] && y[i] < y[j]) || (x[i] > x[j] && y[i] > y[j])) {
+        C <- C + 1
+      } else if((x[i] < x[j] && y[i] > y[j]) || (x[i] > x[j] && y[i] < y[j])) {
+        D <- D + 1
+      }
+      # Ties are not considered in this basic implementation
+    }
+  }
+  
+  tau <- (C - D) / (0.5 * n * (n - 1))
+  return(tau)
+}
+
+# Calculate Kendall's Tau
+kendall_tau <- calculate_kendall_tau(Age, Strength)
+
+# Display the result
+cat("Manual Calculation of Kendall's Tau:", round(kendall_tau, 4), "\n")
+
+
+#Hypothesis Testing
+
+pearson_z <- pearson_r*sqrt(length(Age - 1))
+spearman_z <- spearman_rho*sqrt(length(Age - 1))
+
+n = length(Age)
+
+kendal_z = kendall_tau / sqrt((4*n + 10) / (9 * (n**2 - n)))
+
+pearson_p <- 1 - pnorm(pearson_z)
+spearman_p <- 1 - pnorm(spearman_z)
+kendal_p <- 1 - pnorm(kendal_z)
+
+cat("Pearson's P value", round(pearson_p, 4), "\n")
+cat("Spearman's P value", round(spearman_p, 4), "\n")
+cat("Kendal's P value", round(kendal_p, 4), "\n")
+
+print("This correlation is signifficant for all tests. The least signifficant test is Pearson's with a P value of .0188. This makes sense because the relationship is not linear, and pearsons works best for linear relationships")
+
+```
+
+
+```{r}
+
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -8,12 +8,13 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-install.packages("car")
-
 library(corrplot)
 library(car)
 library(psych)
 library(tidyverse)
+library(loo)
+library(boot)
+library(GGally)
 ```
 
 #EDA
@@ -51,20 +52,39 @@ lpga_data %>%
 predictors <- names(lpga_data)[!(names(lpga_data) %in% c("Golfer", "przrnd"))]
 
 for (var in predictors) {
-  p <- ggplot(lpga_data, aes(x = .data[[var]], y = przrnd)) +
+  
+  # Plot for original response (przrnd)
+  p1 <- ggplot(lpga_data, aes(x = .data[[var]], y = przrnd)) +
     geom_point(color = "blue") +
     geom_smooth(method = "lm", se = FALSE, color = "red") +
-    labs(title = paste("przrnd vs", var), x = var, y = "Prize Money per Round") +
+    labs(title = paste("Original Response: przrnd vs", var), x = var, y = "Prize Money per Round") +
     theme_minimal()
   
-  print(p)
+  print(p1)
+  
+  # Plot for log-transformed response (log(przrnd))
+  p2 <- ggplot(lpga_data, aes(x = .data[[var]], y = log(przrnd))) +
+    geom_point(color = "blue") +
+    geom_smooth(method = "lm", se = FALSE, color = "red") +
+    labs(title = paste("Log-transformed Response: log(przrnd) vs", var), x = var, y = "Log of Prize Money per Round") +
+    theme_minimal()
+  
+  print(p2)
 }
+
+
 # Correlation matrix of quantitative variables
 numeric_vars <- lpga_data %>% select(-Golfer)
 cor_matrix <- cor(numeric_vars)
 
 corrplot(cor_matrix, method = "ellipse")
 
+numeric_data <- lpga_data %>% select(-Golfer)
+ggpairs(numeric_data, 
+        lower = list(continuous = "smooth"),
+        upper = list(continuous = wrap("cor", size = 3)),
+        diag = list(continuous = "densityDiag")) +
+  theme_minimal()
 
 ```
 
@@ -118,13 +138,9 @@ par(mfrow = c(2, 2))
 plot(model_reduced)
 
 ```
-```{r}
-# Load the necessary packages
-library(loo)
-library(boot)
-```
 
-#Model Comparison
+
+#Initial Model Comparison
 
 ```{r}
 
@@ -167,6 +183,7 @@ lpga_data_standardized$log_przrnd_pred <- predict(model_standardized, newdata = 
 # View the first few rows of the data with predictions
 head(lpga_data_standardized)
 ```
+# Beta Plots
 ```{r}
 library("rprojroot")
 library("rstantools")
@@ -180,8 +197,8 @@ fit1 <- stan_glm(log(przrnd) ~ . - Golfer, data = lpga_data_standardized, refres
 
 # Plot the posterior distributions of the coefficients
 p1 <- mcmc_areas(as.matrix(fit1), pars = vars(-'(Intercept)', -sigma),
-                 prob_outer = 0.95, area_method = "scaled height") +
-  xlim(c(-1.2, 0.8))
+                 prob_outer = 0.95, area_method = "scaled height")# +
+#  xlim(c(-1.2, 0.8))
 
 # Reverse the y-axis labels to match order of parameters
 p1 <- p1 + scale_y_discrete(limits = rev(levels(p1$data$parameter)))
@@ -189,16 +206,193 @@ p1 <- p1 + scale_y_discrete(limits = rev(levels(p1$data$parameter)))
 # Show the plot
 p1
 ```
-
+#Lasso Feature Selection
 ```{r}
-bayes_r2_vals <- bayes_R2(fit1)
+library(glmnet)
 
-# Plot histogram of Bayesian R^2
-ggplot() + 
-  geom_histogram(aes(x = bayes_r2_vals), breaks = seq(0, 1, length.out = 100)) +
-  xlim(c(0, 1)) +
-  scale_y_continuous(breaks = NULL) +
-  labs(x = "Bayesian R^2", y = "")
+# Fit to all of the predictors in the model (exclude names)
+predictors <- c("rounds", "avedist", "pctfrwy", "pctgrn", "aveputt", "avesand", "pctsndsv")
+response <- c("przrnd")
+fit_lasso <- glmnet(lpga_data[,predictors], lpga_data[,response])
+plot(fit_lasso, alpha = 0, label=TRUE) # Default
+
+# Table for predictors by number
+data.frame(1:length(predictors), predictors)
+
+
+# Fit the Lasso regression model with cross-validation
+cv_lasso <- cv.glmnet(as.matrix(lpga_data[,predictors]), lpga_data[,response], alpha = 1)
+
+# Plot the cross-validation curve to show optimal lambda
+plot(cv_lasso)
+
+# Best lambda from cross-validation
+best_lambda <- cv_lasso$lambda.min
+cat("Best Lambda: ", best_lambda, "\n")
+
+pred_train <- predict(cv_lasso, s = best_lambda, newx = as.matrix(lpga_data[,predictors]))
+
+# Calculate evaluation metrics
+mse_train <- mean((lpga_data[,response] - pred_train)^2)
+r2_train <- 1 - sum((lpga_data[,response] - pred_train)^2) / sum((lpga_data[,response] - mean(lpga_data[,response]))^2)
+
+cat("Mean Squared Error (Train): ", mse_train, "\n")
+cat("R-squared (Train): ", r2_train, "\n")
+
+
+# Plot the coefficient path as lambda varies
+plot(cv_lasso$glmnet.fit, xvar = "lambda", label = TRUE)
+
+summary(cv_lasso)
 
 ```
 
+#Horseshoe Feature Selection
+```{r}
+predictors <- c("rounds", "avedist", "pctfrwy", "pctgrn", "aveputt", "avesand", "pctsndsv")
+response <- c("przrnd")
+lpga_data_cleaned <- lpga_data[,c(predictors, response)]
+
+p <- length(predictors)
+n <- nrow(lpga_data)
+p0 <- 5
+slab_scale <- sqrt(0.3/p0)*sd(lpga_data_cleaned$przrnd)
+global_scale <- (p0/(p-p0))/sqrt(n)
+fit_horseshoe <- stan_glm(przrnd ~ ., data = lpga_data_cleaned, refresh=0, prior = hs(global_scale=global_scale, slab_scale=slab_scale))
+
+# Plot
+library(ggplot2)
+p0 <- mcmc_areas(as.matrix(fit_horseshoe), pars=vars(-'(Intercept)', -sigma), prob_outer=0.95, area_method="scaled height")
+p0 <- p0 + scale_y_discrete(limits = rev(levels(p0$data$parameter)))
+p0
+```
+
+
+#LOO Comparison
+```{r}
+library("rstanarm")
+library("loo")
+
+# Fit the initial model using stan_glm
+fit_initial_stan <- stan_glm(przrnd ~ . - Golfer, data = lpga_data_standardized, refresh = 0)
+
+# Fit the log-transformed model using stan_glm
+fit_log_response_stan <- stan_glm(log(przrnd) ~ . - Golfer, data = lpga_data_standardized, refresh = 0)
+
+# Fit the reduced model using stan_glm
+fit_reduced_stan <- stan_glm(log(przrnd) ~ rounds + pctgrn + aveputt, data = lpga_data_standardized, refresh = 0)
+
+
+# Compute LOO for each model
+loo_log_response <- loo(fit_log_response_stan)
+loo_reduced <- loo(fit_reduced_stan)
+
+# Compare models using loo_compare
+loo_comparison <- loo_compare(loo_log_response, loo_reduced)
+
+# Display the LOO comparison results
+print(loo_comparison)
+
+```
+
+
+#Full Evaluation
+```{r}
+# Step 1: Fit the reduced model using the log-transformed response
+fit_reduced_stan_log <- stan_glm(log(przrnd) ~ rounds + pctgrn + aveputt, data = lpga_data, refresh = 0)
+
+# Step 2: Extract LOO Information for the reduced model
+loo_reduced_log <- loo(fit_reduced_stan_log)
+
+# Print the LOO results for the reduced model
+print(loo_reduced_log)
+
+# Step 3: Calculate WAIC for the reduced model
+waic_reduced_log <- waic(fit_reduced_stan_log)
+
+# Print the WAIC results for the reduced model
+print(waic_reduced_log)
+
+# Step 4: Posterior Predictive Checks
+pp_check(fit_reduced_stan_log)
+
+# Step 5: Residual Diagnostics
+# Extract residuals
+residuals_reduced <- residuals(fit_reduced_stan_log)
+
+# Q-Q plot of residuals
+qqnorm(residuals_reduced)
+qqline(residuals_reduced, col = "red")
+
+# Histogram of residuals
+hist(residuals_reduced, breaks = 20, col = "skyblue", main = "Residuals Distribution")
+
+# Step 6: Bayesian R-squared for the reduced model
+bayesian_r2_reduced <- bayes_R2(fit_reduced_stan_log)
+
+# Plot posterior distributions of R-squared
+ggplot() + 
+  geom_histogram(aes(x = bayesian_r2_reduced), breaks = seq(0, 1, length.out = 100)) +
+  xlim(c(0, 1)) +
+  labs(x = "Bayesian R^2", y = "Frequency") +
+  theme_minimal()
+
+# Step 7: Summarize model performance
+summary(fit_reduced_stan_log)
+
+# Step 8: Posterior predictive intervals for log-transformed response
+pred_intervals <- posterior_predict(fit_reduced_stan_log, probs = c(0.05, 0.95))
+
+# View the posterior predictive intervals
+head(pred_intervals)
+
+
+```
+
+#Model Interpretation
+```{r}
+# Extract summary of posterior distributions for the coefficients
+posterior_summary <- summary(fit_reduced_stan_log)
+print(posterior_summary)
+
+posterior_intervals <- posterior_interval(fit_reduced_stan_log, prob = 0.95)
+print(posterior_intervals)
+
+```
+
+Model Interpretation:
+The Bayesian model fit for predicting log-transformed prize money per round (log(przrnd)) uses three predictors: rounds, pctgrn (percentage of greens in regulation), and aveputt (average putts per round). Here's an interpretation of each component of the output:
+
+## 1.Intercept
+Mean Estimate: 3.0
+95% Credibility Interval: (1.04, 5.04)
+The intercept represents the expected log-transformed prize money per round when all other predictors (rounds, pctgrn, and aveputt) are held at their mean values. The value of 3.0 corresponds to a non-logarithmic prize money of approximately $20.09 (exp(3) ≈ 20.09). The credibility interval suggests that the actual log prize money when the other factors are at their average values likely falls between 1.04 and 5.04.
+
+## 2. Rounds
+Mean Estimate: 0.03
+95% Credibility Interval: (0.02, 0.03)
+The coefficient for rounds is positive and small, indicating that for each additional round played, the log prize money increases by approximately 0.03 units. Since this model is on a log scale, we can interpret the effect of rounds as follows: for each additional round played, the prize money per round increases by approximately 3% (exp(0.03) - 1 ≈ 0.03 or 3%). The 95% credibility interval confirms that this effect is small but positive and likely falls between a 2.1% and 3.4% increase per round.
+
+## 3. Percentage of Greens in Regulation (pctgrn)
+Mean Estimate: 0.1
+95% Credibility Interval: (0.06, 0.12)
+The coefficient for pctgrn is positive, indicating that players who hit a higher percentage of greens in regulation earn more prize money per round. Specifically, for each 1% increase in greens hit, the log prize money increases by approximately 0.1 units. This corresponds to about a 10.5% increase in prize money (exp(0.1) - 1 ≈ 0.105 or 10.5%) for every 1% improvement in greens in regulation. The credibility interval suggests that this effect is consistently positive, ranging from about 6.3% to 12.3%.
+
+## 4. Average Putts per Round (aveputt)
+Mean Estimate: -0.1
+95% Credibility Interval: (-0.16, -0.07)
+The coefficient for aveputt is negative, meaning that players who have a lower number of putts per round tend to earn more prize money. For each additional putt per round, the log prize money decreases by approximately 0.1 units, corresponding to about a 9.5% decrease in prize money (1 - exp(-0.1) ≈ 0.095 or 9.5%) for each extra putt. The credibility interval confirms this negative effect, with the decrease likely falling between 6.7% and 15.6% for each additional putt.
+
+## 5. Residual Standard Deviation (sigma)
+Mean Estimate: 0.5
+95% Credibility Interval: (0.40, 0.52)
+The residual standard deviation (sigma) represents the variability in the log-transformed prize money that is not explained by the model. The value of 0.5 means that the typical deviation of the observed log prize money from the predicted values is about 0.5 units. This translates into a larger range when we consider the prize money in its original scale (exp(0.5) ≈ 1.65), indicating substantial variability in prize money per round after accounting for rounds, pctgrn, and aveputt.
+
+## 6. MCMC Diagnostics
+Rhat: All parameters have Rhat values close to 1, indicating that the MCMC chains have converged well.
+n_eff: The effective sample sizes for all parameters are large, indicating that the posterior estimates are based on a sufficient number of effectively independent samples, making the estimates reliable.
+Overall Interpretation:
+Rounds: More rounds played leads to a small increase in prize money per round, reflecting consistency in performance over multiple rounds.
+Pctgrn: Players who hit more greens in regulation earn significantly more prize money, showing that accuracy in reaching the green is a strong predictor of success.
+Aveputt: Fewer putts per round is strongly associated with higher prize money, which aligns with better putting skills contributing to success.
+This model provides useful insights into the factors that most influence a golfer's earnings per round and suggests that accuracy (greens in regulation) and putting efficiency are key to increasing prize money.

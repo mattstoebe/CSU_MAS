@@ -1,0 +1,180 @@
+---
+title: "566_Final_Project"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(leaflet)
+library(sf)
+library(tidyverse)
+library(ggmap)
+library(GGally)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+```
+# Introduction
+The dataset analyzed in this report is webscraped rental data from Redfin, specifically for properties in Washington state. The data contians basic variables such as rent price, square footage, number of bedrooms, bathrooms, and property type, along with geographic information like latitude and longitude.
+
+The primary motivation for this analysis is to explore rent patterns within Washington state to assist in making informed investment decisions regarding rental properties. By understanding the factors that influence rent prices, investors can better assess the market and make strategic choices in terms of property acquisition, pricing, and returns on investment.
+
+```{r, echo=FALSE, suppressWarnings = TRUE}
+data = read.csv("~/reibrowser/Database/Redfin Data/rentals_0926.csv")
+
+data <- data %>% filter(state_code == "WA")  
+
+numeric_columns <- c("price", "square_feet", "bedrooms", "bathrooms", "latitude", "longitude")
+data <- data %>% mutate(across(all_of(numeric_columns), as.numeric)) %>% filter(across(all_of(numeric_columns), ~ !is.na(.)))
+
+```
+
+# Rent Price Distribution
+The following plots show  the distribution of rental prices across all properties, with both the raw and log-transformed rent prices visualized to identify the range and concentration of rent values. We see that it is somewhat log normal, but we may not care about these high cost rentals in our analysis as we are focused on more standard investment strategies. As such, it is better for us to filter some of these out as outlines than to predict the log transformed values. 
+```{r, echo=FALSE}
+ggplot(data, aes(x = price)) +
+  geom_histogram(aes(y = ..density..), bins = 50, fill = "skyblue", color = "black", alpha = 0.6) +
+  geom_density(color = "red", size = 1) +
+  labs(title = "Distribution of Rent Prices with Density Curve", x = "Rent Price", y = "Density") +
+  theme_minimal()
+
+
+ggplot(data, aes(x = log(price))) +
+  geom_histogram(aes(y = ..density..), bins = 50, fill = "skyblue", color = "black", alpha = 0.6) +
+  geom_density(color = "red", size = 1) +
+  labs(title = "Distribution of Rent Prices with Density Curve", x = "Rent Price", y = "Density") +
+  theme_minimal()
+
+
+data <- data %>% filter(price < 10000)  # Sample 500 rows for the state-level map
+
+
+```
+
+
+# Rent vs. Property Features
+Next, we examine how rent prices vary based on property characteristics such as square footage, number of bedrooms, and bathrooms. The following scatter plots and regression lines show these relationships:
+
+```{r, echo=FALSE}
+# Convert column names to lowercase to avoid potential case sensitivity issues
+data <- data %>% rename_all(tolower)
+
+# Sample data to speed up plotting for maps
+set.seed(123)  # Set seed for reproducibility
+
+# Scatter Plot: Rent vs. Square Footage
+scatter_sqft <- ggplot(data, aes(x = square_feet, y = price)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Rent vs. Square Footage", x = "Square Feet", y = "Rent Price") +
+  theme_minimal()
+
+# Scatter Plot: Rent vs. Number of Bedrooms
+scatter_bedrooms <- ggplot(data, aes(x = bedrooms, y = price)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "green") +
+  labs(title = "Rent vs. Number of Bedrooms", x = "Number of Bedrooms", y = "Rent Price") +
+  theme_minimal()
+
+# Scatter Plot: Rent vs. Number of Bedrooms
+scatter_bathrooms <- ggplot(data, aes(x = bathrooms, y = price)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "green") +
+  labs(title = "Rent vs. Number of Bathrooms", x = "Number of Bathrooms", y = "Rent Price") +
+  theme_minimal()
+
+
+# Box Plot: Rent by Property Type
+box_property_type <- ggplot(data, aes(x = property_type, y = price)) +
+  geom_boxplot(aes(fill = property_type)) +
+  labs(title = "Rent Distribution by Property Type", x = "Property Type", y = "Rent Price") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+scatter_sqft
+scatter_bedrooms
+box_property_type
+scatter_bathrooms
+```
+
+
+# Geographic Distribution of Rent Prices
+Using a color gradient map, we visualize the spatial distribution of rent prices across Washington state. The color gradient represents the log-transformed rent prices, allowing us to observe regional variations in rental prices. This visual is not as efective since we are looking at individual rent values. It may be more valueable to look at clusters, or at avg rent by zip code to understand the spatial nature of rent prices
+
+```{r, echo=FALSE}
+# Simple Map with Color Gradient (Log Scale): Rent Prices in WA
+data_1bed <- data %>%
+  filter(bedrooms == 1)
+
+# Step 2: Remove outliers using the IQR method for rent price
+Q1 <- quantile(data_1bed$price, 0.25)
+Q3 <- quantile(data_1bed$price, 0.75)
+IQR <- Q3 - Q1
+
+# Define lower and upper bounds for outliers
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# Filter data to remove outliers
+data_filtered <- data_1bed %>%
+  filter(price >= lower_bound & price <= upper_bound)
+
+
+# Filter data for valid latitude and longitude points
+data_map <- data_filtered %>% filter(!is.na(latitude) & !is.na(longitude))
+
+# Create a color palette based on log-transformed rent prices
+pal <- colorNumeric(palette = "YlOrRd", domain = log(data_map$price))
+
+# Create leaflet map with larger dots and color gradient on log scale
+leaflet(data_map) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    ~longitude, ~latitude,
+    radius = ~sqrt(price) / 50,  # Increase the size of the dots by adjusting the scaling factor
+    color = ~pal(log(price)),  # Apply color gradient using log-transformed prices
+    stroke = FALSE, fillOpacity = 0.7,
+    popup = ~paste("Price: $", price, "<br>Square Feet: ", square_feet)
+  ) %>%
+  addLegend(
+    position = "bottomright", 
+    pal = pal, 
+    values = ~log(price),  # Use log-transformed prices for the legend
+    title = "Log of Rent Prices",
+    labFormat = labelFormat(transform = function(x) round(exp(x))),  # Exponentiate labels to show actual prices
+  )
+```
+
+# Pairs Plot, Feature Distribution and Multicolinearity Concerns
+The following pair plot shows the pairwise relationships between key numeric features, including price, square footage, number of bedrooms, and bathrooms. WE also evaluate the risk of too much colinearity between features such as square feet and bedrooms
+
+```{r ,echo=FALSE}
+ggpairs(data, columns = c("price", "square_feet", "bedrooms", "bathrooms"))
+
+cor_matrix <- data %>%
+  select(price, square_feet, bedrooms, bathrooms) %>%
+  cor()
+
+# Step 2: Convert the correlation matrix to long format for ggplot2
+library(reshape2)
+melted_cor_matrix <- melt(cor_matrix)
+
+# Step 3: Create a heatmap using ggplot2
+heatmap <- ggplot(data = melted_cor_matrix, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1, 1), space = "Lab", 
+                       name = "Correlation") +
+  geom_text(aes(label = round(value, 2)), color = "black", size = 4) +  # Add correlation values as text
+  theme_minimal() + 
+  labs(title = "Multicollinearity Heatmap", x = "Features", y = "Features") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+heatmap
+```
+
+# Discussion
+As suggested above, there are some concerns about the high correlation coefficients between each of these values. We do however have a lot of signal with rent, and may be able to effectively predict it, but most likely would need to look at other local features (like KNN) to get a good gauge of what standard rent prices are in the area or the county. This will help with prediction accuracy. Overall, I think that this is on the right track, but needs more feature engineering to make any real progress. 
