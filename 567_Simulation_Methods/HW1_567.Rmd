@@ -1,0 +1,114 @@
+---
+title: "STAA 567: HW 1"
+author: "Matthew Stoebe"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+
+#tinytex::install_tinytex()
+
+
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+
+## Q1A
+
+```{r}
+#Q1A
+
+g <- function(x) {
+  x^3 + x - 1
+}
+
+x_values <- seq(-1, 2, length.out = 1000)
+
+y_values <- g(x_values)
+
+
+plot(x_values, y_values, type = "l", col = "blue",
+     main = "Plot of g(x) = x^3 + x - 1",
+     xlab = "x", ylab = "g(x)")
+
+
+abline(h = 0, col = "red", lty = 2)
+
+```
+
+## Q1B
+
+```{r}
+#Q1B
+
+result <- uniroot(g, interval = c(0, 1), tol = 0.001)
+
+estimated_root <- result$root
+iterations <- result$iter
+
+
+cat("Estimated root:", round(estimated_root, 4), "\n")
+cat("Number of iterations:", iterations, "\n")
+
+```
+
+## Q1C
+
+```{r}
+#Q1C
+a <- 0
+b <- 1
+tolerance <- 0.001
+iterations <- 0
+
+while ((b - a) >= tolerance) {
+  iterations <- iterations + 1
+  c <- (a + b) / 2
+  if (g(a) * g(c) < 0) {
+    b <- c
+  } else {
+    a <- c
+  }
+}
+
+estimated_root <- (a + b) / 2
+
+cat("Estimated root:", round(estimated_root, 4), "\n")
+cat("Number of iterations:", iterations, "\n")
+```
+
+## Q1D
+
+```{r}
+#Q1D
+
+g_prime <- function(x) {
+  3 * x^2 + 1
+}
+
+x_old <- 0
+tolerance <- 0.001
+iterations <- 0
+
+repeat {
+  iterations <- iterations + 1
+  x_new <- x_old - g(x_old) / g_prime(x_old)
+  if (abs(x_new - x_old) < tolerance) {
+    break
+  }
+  x_old <- x_new
+}
+
+cat("Derivative of g(x): g'(x) = 3x^2 + 1\n")
+cat("Estimated root:", round(x_new, 4), "\n")
+cat("Number of iterations:", iterations, "\n")
+
+```
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
