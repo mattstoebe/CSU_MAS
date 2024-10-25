@@ -1,6 +1,6 @@
 ---
 title: "STAA 552: HW 1"
-author: "YOUR NAME HERE"
+author: "Matthew Stoebe"
 output:
   pdf_document:
     toc: yes
@@ -16,6 +16,7 @@ mainfont: SourceSansPro
 ```{r setup, include=FALSE}
 #Retain this code chunk!!!
 library(knitr)
+
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 ```
@@ -243,7 +244,7 @@ Plot the empirical distribution (ex: density histogram) of your observed $\hat\p
 #Q10
 
 hist(pihat, freq = FALSE, breaks = 50, 
-     main = "Empirical Distribution of π̂ and Approximate Normal Distribution",
+     main = "Empirical Distribution of pihat and Approximate Normal Distribution",
      xlab = "pihat", col = "lightblue", border = "black")
 
 x_vals <- seq(min(pihat), max(pihat), length = 100)
@@ -296,6 +297,17 @@ Response
 ```{r, echo = TRUE}
 #Q12
 
+pi0 <- .5
+
+z <- (pihat - pi0) / sqrt(pihat * (1 - pihat)/n)
+
+x <- z**2
+
+p <- pchisq(x, df=1, lower.tail = FALSE)
+
+cat("wald test chi squared statistic is:", x, "\n")
+cat("with a p value of", p, "\n")
+
 ```
 
 *****
@@ -311,7 +323,16 @@ Response
 
 ```{r, echo = TRUE}
 #Q13
+pi0 <- .5
 
+z <- (pihat - pi0) / sqrt(pi0 * (1 - pi0)/n)
+
+x <- z**2
+
+p <- pchisq(x, df=1, lower.tail = FALSE)
+
+cat("score test chi squared statistic is:", x, "\n")
+cat("with a p value of", p, "\n")
 ```
 
 *****
@@ -327,6 +348,20 @@ Response
 
 ```{r, echo = TRUE}
 #Q14
+
+L0 <- y * log(pi0) + (n - y) * log(1 - pi0)
+
+L1 <- y * log(pihat) + (n - y) * log(1 - pihat)
+
+
+likelyhood_ratio = -2*(L0 - L1)
+
+
+p <- pchisq(likelyhood_ratio, df = 1, lower.tail = FALSE)
+
+
+cat("likelyhood_ratio test chi squared statistic is:", likelyhood_ratio, "\n")
+cat("with a p value of", p, "\n")
 
 ```
 

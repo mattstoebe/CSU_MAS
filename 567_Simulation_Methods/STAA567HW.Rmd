@@ -1,0 +1,84 @@
+---
+title: "STAA 567: HW X"
+author: "YOUR NAME HERE"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+- Your submitted assignment should be neatly formatted and organized.
+- For calculation questions, provide output with text descriptions as appropriate.  The code should appear in the appendix. Use code comments so that the question number appears with the relevant code in the appendix. 
+- For mathematical calculations, you can include LaTex equations or include your handwritten work as an image.
+- For discussion questions, please use complete sentences.
+- Add or delete questions and code chunks as needed.  
+
+# Q1
+
+## Q1A
+
+```{r}
+#Q1A
+
+```
+
+## Q1B
+
+```{r}
+#Q1B
+
+```
+
+## Q1C
+
+```{r}
+#Q1C
+
+```
+
+## Q1D
+
+```{r}
+#Q1D
+
+```
+
+# Q2
+
+## Q2A
+
+```{r}
+#Q2A
+
+```
+
+## Q2B
+
+```{r}
+#Q2B
+
+```
+
+## Q2C
+
+```{r}
+#Q2C
+
+```
+
+## Q2D
+
+```{r}
+#Q2D
+
+```
+
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
