@@ -1,0 +1,120 @@
+---
+title: "562_HW_2"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+#3 b:
+```{r pressure}
+x = qchisq(.01, 8)
+print(x)
+
+xadj <- x*225 / 100
+print(xadj)
+
+pchisq(xadj, df=8, lower.tail=TRUE)
+
+```
+
+#3 c:
+```{r}
+# Define parameters
+threshold <- 0.8          # Desired power
+alpha <- 0.01             # Significance level
+sigma0_sq <- 225          # Variance under H0
+sigma_a_sq <- 100         # Variance under H1
+
+# Starting sample size
+n <- 9                    # Corresponds to df = 8
+
+# Initialize variables
+df <- n - 1        # Degrees of freedom
+power <- 0                 # Initial power
+
+# Loop to find the required sample size
+while(power < threshold && df < 200){
+  
+  # Calculate the critical chi-square value for the given alpha
+  x <- qchisq(alpha, df = df)
+  
+  xscaled <- x * sigma0_sq / sigma_a_sq
+  power <- pchisq(xscaled, df = df)
+
+  if(power < threshold){
+    n <- n + 1
+    df <- df + 1
+  }
+}
+
+# Output the required sample size
+if(power >= threshold){
+  cat("Required sample size (n):", n, "\n")
+} else {
+  cat("Sample size did not reach required power within n=100.\n")
+}
+
+
+
+x = qchisq(.01, 36)
+print(x)
+
+xadj <- x*225 / 100
+print(xadj)
+
+power <- pchisq(xadj, df=36, lower.tail=TRUE)
+
+print(power)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+#4a:
+
+```{r}
+1-pt(5.316, 19)
+```
+#4b
+```{r}
+n = 20
+sd = 45
+true_mean <- 1180
+
+nloop = 10000
+
+tstat <- numeric(nloop)
+
+for(iloop in 1:nloop){
+  y=rnorm(n, true_mean, sd)
+  samp_mean = mean(y)
+  samp_sd = sd(y)
+  tstat[iloop] = (samp_mean - 1160)/(samp_sd /sqrt(n))
+}
+
+hist(tstat, br=50)
+
+sum(tstat > qt(1-.05,n-1))/nloop
+
+```
+#5b
+```{r}
+2*(1-pt(.978, df=24))
+
+```
+#5c
+```{r}
+2* (1-pf(2.1199, df1=11, df2=13))
+
+```
+
