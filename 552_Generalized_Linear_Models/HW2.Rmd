@@ -1,0 +1,270 @@
+---
+title: "STAA 552: HW 2"
+author: "YOUR NAME HERE"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '2'
+    includes:
+      in_header: preamble.tex
+header-includes:
+- \usepackage[default]{sourcesanspro}
+- \usepackage[T1]{fontenc}
+mainfont: SourceSansPro
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+library(kableExtra)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+See Canvas Calendar for due date.  
+54 points total.  
+Content for Q1-Q8 is from section 02.  
+Content for Q9-Q14 is from section 03.  
+Add or delete code chunks as needed.  
+For full credit, your numeric answers should be clearly labeled, outside of the R output.
+
+# Diabetes 2 (Q1 - Q6)
+
+A researcher is interested in estimating the proportion of US adults who have been diagnosed with diabetes ($\pi$).  Consider a study where n = 65 people are contacted and asked whether they have been diagnosed with diabetes.   Suppose this is based on a random sample of US adults.  From this sample, 7 people have been diagnosed with diabetes.
+
+:::: {.taskbox data-latex=""}
+## Q1 (2 pts)
+
+Calculate $\hat\pi$.
+::::
+
+*****
+Response
+
+```{r}
+#Q1
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q2 (4 pts)
+
+Discuss whether the large sample normal approximation is reasonable here.  Use the rule of thumb from the course notes.
+::::
+
+*****
+Response
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q3 (2 pts)
+
+Use `prop.test( , correct = TRUE)` to calculate an (approximate) 95% confidence interval for $\pi$.  The resulting interval is generated using using Wilson’s score method.  You can just show the R output for full credit.
+::::
+
+```{r}
+#Q3
+
+```
+
+
+:::: {.taskbox data-latex=""}
+## Q4 (4 pts)
+
+Using the confidence interval from the previous question, interpret the interval in context.  Aim for an interpretation that could be used in a write-up: avoid abbreviations and statistical jargon. 
+::::
+
+*****
+Response
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q5 (4 pts)
+
+Construct an (approximate) 95% Wald confidence interval for $\pi$. Do this "by hand" (using R as a calculator) and echo your R code.
+::::
+
+***** 
+Response
+
+```{r, echo = TRUE}
+#Q5
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q6 (2 pts)
+
+Use `binom.test()` to calculate the exact 95% confidence interval for $\pi$.  You can just show the R output for full credit.
+::::
+
+```{r}
+#Q6
+
+```
+
+# Bomb Hits (Q7 - Q8)
+
+This data is taken from Ott&Longnecker and originally from Hand (1993).  During WWII, bomb hits were recorded in the n = 576 grids in a map of a region of South London.  If the bomb hits were purely random, a Poisson model would produce the number of hits per grid.
+
+| # Bomb Hits | 0   | 1   | 2  | 3  | 4+ | 
+|-------------|---  |---  |--- |--- |----|
+| # Grids     | 229 | 211 | 93 | 35 | 8  |
+
+:::: {.taskbox data-latex=""}
+## Q7 (2 pts)
+
+Calculate $\hat\mu$, the sample mean hits per grid.  
+
+Notes: (1) To do this calculation find the total number of bomb hits and divide by the number of grids. (2) For the calculation, treat 4+ as 4.  (3) Some example R code has been provided to get you started.  But other approaches are allowed.
+::::
+
+*****
+Response
+
+```{r}
+#Q7
+Bombs <- data.frame(Y = seq(from = 0, to = 4), 
+                    Obs = c(229, 211, 93, 35, 8))
+
+```
+
+******
+
+:::: {.taskbox data-latex=""}
+## Q8 (8 pts)
+
+Use the Pearson chi-square GOF test to test whether the number of bomb hits per grid follows the Poisson distribution.  Calculate the test statistic, df, p-value and give a conclusion (in context) using $\alpha$ = 0.05.  
+
+Notes: (1) Do this "by hand" (using R as a calculator) but you can double check the test statistic using `chisq.test()`. (2) When calculating Poisson probabilities, you will use your $\hat\mu$ value from the previous question.  (3) When calculating Poisson probabilities, the last value should represent P($Y \ge 4$).  This can be done "manually".  (4) When calculating df, we "lose" 1 df because estimated $\hat\mu$.  
+::::
+
+*****
+Response
+
+
+```{r}
+#Q8
+
+```
+
+*****
+
+
+# Auto Accidents (Q9 - Q14)
+
+CDA problem 2.4 concerns fatality results for drivers and passengers in auto accidents in Florida in 2008, according to whether the person was wearing a seat belt.
+
+```{r}
+#Q9-Q14
+Auto <- matrix(c(441239, 703,
+                  55623, 1085), nrow = 2, byrow = TRUE)
+rownames(Auto) <- c("YesSeatBelt", "NoSeatBelt")
+colnames(Auto) <- c("Nonfatal", "Fatal")
+Auto
+```
+
+:::: {.taskbox data-latex=""}
+## Q9 (3 pts)
+
+Estimate (a) the marginal probability of **fatality**.  Also estimate the probability of fatality, conditional on seat-belt use in category (b) yes and (c) no.
+::::
+
+*****
+Response
+
+```{r}
+#Q9
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q10 (3 pt)
+
+Estimate (a) the marginal probability of **wearing a seatbelt**.  Also estimate the probability of wearing a seatbelt, conditional on the injury being (b) Nonfatal and (c) Fatal.  
+::::
+
+*****
+Response
+
+```{r}
+#Q10
+
+```
+
+*****
+
+## Auto Accidents continued (Q11 - Q13)
+
+Use injury as the response variable (with fatal injury being the "event of interest") and compare those not wearing seatbelts vs those wearing seatbelts.
+
+:::: {.taskbox data-latex=""}
+## Q11 (6 pts)
+
+Provide an estimate of the **difference in proportions** and the corresponding (Wald) 95\% confidence interval.  Use the interval to make a conclusion about association between seat belt use and injury.  Be sure to mention the direction of association. (By direction of association, I just mean which group has the higher probability (risk) of fatal injury.)  
+::::
+
+*****
+Response
+
+```{r}
+#Q11
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q12 (6 pts)
+
+Provide an estimate of the **relative risk** and the corresponding (Wald) 95\% confidence interval.   Use the interval to make a conclusion about association between seat belt use and injury.  Be sure to mention the direction of association.  (By direction of association, I just mean which group has the higher probability (risk) of fatal injury.)  
+::::
+
+*****
+Response
+
+```{r}
+#Q12
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q13 (6 pts)
+
+Provide an estimate of the **odds ratio** and the corresponding (Wald) 95\% confidence interval.  Use the interval to make a conclusion about association between seat belt use and injury.  Be sure to mention the direction of association.  (By direction of association, I just mean which group has the higher odds of fatal injury.)  
+::::
+
+*****
+Response
+
+```{r}
+#Q13
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q14 (2 pts)
+
+Considering the results of the previous two questions, why are the relative risk and odds ratio approximated equal?
+::::
+
+*****
+Response
+
+*****
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
