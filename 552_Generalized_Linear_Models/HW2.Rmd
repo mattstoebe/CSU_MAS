@@ -15,6 +15,9 @@ mainfont: SourceSansPro
 
 ```{r setup, include=FALSE}
 #Retain this code chunk!!!
+#install.packages("tinytex")
+#install.packages("kableExtra")
+
 library(knitr)
 library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
@@ -43,7 +46,12 @@ Response
 
 ```{r}
 #Q1
+n <- 65
+t <- 7
 
+pihat <- t/n
+
+print(pihat)
 ```
 
 *****
@@ -57,6 +65,12 @@ Discuss whether the large sample normal approximation is reasonable here.  Use t
 *****
 Response
 
+This should be sufficient. We generally want to see two things:
+
+1. n*pihat > 5 TRUE
+2. n*(1-pihat) > 5 True
+
+In our case both 7 and 58 are greater than 5
 *****
 
 :::: {.taskbox data-latex=""}
@@ -67,6 +81,8 @@ Use `prop.test( , correct = TRUE)` to calculate an (approximate) 95% confidence 
 
 ```{r}
 #Q3
+
+prop.test(x = 7, n = 65, correct = TRUE)
 
 ```
 
@@ -80,6 +96,7 @@ Using the confidence interval from the previous question, interpret the interval
 *****
 Response
 
+Based on the confidence interval shown above, we have 95% confidence that between 4.8 and 21.5% of adults in the US have been diagnosed with diabetes.
 *****
 
 :::: {.taskbox data-latex=""}
@@ -94,6 +111,16 @@ Response
 ```{r, echo = TRUE}
 #Q5
 
+z <- qnorm(0.975)
+
+pihat <- 7/65
+
+lower <- pihat - z*sqrt((pihat*(1-pihat))/n)
+upper <- pihat + z*sqrt((pihat*(1-pihat))/n)
+
+cat("Wald confidence interval is", lower, "-", upper, "\n")
+
+
 ```
 
 *****
@@ -106,6 +133,9 @@ Use `binom.test()` to calculate the exact 95% confidence interval for $\pi$.  Yo
 
 ```{r}
 #Q6
+
+binom.test(x = 7, n = 65)
+
 
 ```
 
@@ -133,6 +163,13 @@ Response
 Bombs <- data.frame(Y = seq(from = 0, to = 4), 
                     Obs = c(229, 211, 93, 35, 8))
 
+total <- sum(Bombs$Y*Bombs$Obs)
+n <- sum(Bombs$Obs)
+
+mu <- total/n
+
+print(mu)
+
 ```
 
 ******
@@ -151,6 +188,30 @@ Response
 
 ```{r}
 #Q8
+O <- Bombs$Obs
+
+muhat <- total / n
+
+E0 <- dpois(0, lambda<- muhat) * n
+E1 <- dpois(1, lambda<- muhat) * n
+E2 <- dpois(2, lambda<- muhat) * n
+E3 <- dpois(3, lambda<- muhat) * n
+E4 <- dpois(4, lambda<- muhat) * n
+
+E <- c(E0, E1, E2, E3, E4)
+
+Chisq <- sum((O-E)^2/E)
+Chisq
+
+df <- length(O) - 2
+p <- 1 - pchisq(Chisq, df)
+p
+
+if (p < 0.05) {
+  cat("Reject the null hypothesis as our P value is: ", p, ".\n There is evidence that the bomb hits do not follow a Poisson distribution.\n")
+} else {
+  cat("Fail to reject the null hypothesis as our P value is: ", p, ".\n There is no evidence against the bomb hits following a Poisson distribution.\n")
+}
 
 ```
 
@@ -182,6 +243,22 @@ Response
 ```{r}
 #Q9
 
+Total <- sum(Auto)
+
+TotalFatal <- sum(Auto[,"Fatal"])
+marginalFatality <- TotalFatal/Total
+cat("The Marginal probability of Fatality is, ", marginalFatality, "\n")
+
+TotalSeatBelt <- sum(Auto["YesSeatBelt", ])
+FatalSeatBelt <- Auto["YesSeatBelt", "Fatal"]
+ProbFatalGivenYes <- FatalSeatBelt / TotalSeatBelt
+cat("The Marginal probability of Fatality given that you are wearing a seatbelt is,", ProbFatalGivenYes, "\n")
+
+TotalSeatBelt <- sum(Auto["NoSeatBelt", ])
+FatalNoSeatBelt <- Auto["NoSeatBelt", "Fatal"]
+ProbFatalGivenNo <- FatalNoSeatBelt / TotalSeatBelt
+cat("The Marginal probability of Fatality given that you are not wearing a seatbelt is,", ProbFatalGivenNo, "\n")
+
 ```
 
 *****
@@ -198,6 +275,21 @@ Response
 ```{r}
 #Q10
 
+TotalSeatBelt <- sum(Auto["YesSeatBelt", ])
+MarginalProbSeatBelt <- TotalSeatBelt / Total
+cat("Probability of wearing a seatbelt is, ", MarginalProbSeatBelt, "\n")
+
+
+TotalNonfatal <- sum(Auto[, "Nonfatal"])
+SeatBeltNonfatal <- Auto["YesSeatBelt", "Nonfatal"]
+ProbSeatBeltNonfatal <- SeatBeltNonfatal / TotalNonfatal
+cat("Probability of wearing a seatbelt given that you were in a non fatal crash is,", ProbSeatBeltNonfatal, "\n")
+
+
+TotalFatal <- sum(Auto[, "Fatal"])
+SeatBeltFatal <- Auto["YesSeatBelt", "Fatal"]
+ProbSeatBeltFatal <- SeatBeltFatal / TotalFatal
+cat("Probability of wearing a seatbelt given that you were in a Fatal crash is,", ProbSeatBeltFatal, "\n")
 ```
 
 *****
@@ -218,6 +310,34 @@ Response
 ```{r}
 #Q11
 
+fatal_no_seatbelt <- Auto["NoSeatBelt", "Fatal"]
+nonfatal_no_seatbelt <- Auto["NoSeatBelt", "Nonfatal"]
+n_no_seatbelt <- fatal_no_seatbelt + nonfatal_no_seatbelt
+
+fatal_yes_seatbelt <- Auto["YesSeatBelt", "Fatal"]
+nonfatal_yes_seatbelt <- Auto["YesSeatBelt", "Nonfatal"]
+n_yes_seatbelt <- fatal_yes_seatbelt + nonfatal_yes_seatbelt
+
+p_no_seatbelt <- fatal_no_seatbelt / n_no_seatbelt
+p_yes_seatbelt <- fatal_yes_seatbelt / n_yes_seatbelt
+
+D <- p_no_seatbelt - p_yes_seatbelt
+
+SE <- sqrt(
+  (p_no_seatbelt * (1 - p_no_seatbelt) / n_no_seatbelt) +
+  (p_yes_seatbelt * (1 - p_yes_seatbelt) / n_yes_seatbelt)
+)
+z <- qnorm(0.975)
+
+ME <- z * SE
+
+
+Lower <- D - ME
+Upper <- D + ME
+
+cat("Difference in proportions:", D, "\n")
+cat("95% Confidence interval: (", Lower, ",", Upper, ")\n")
+
 ```
 
 *****
@@ -233,6 +353,22 @@ Response
 
 ```{r}
 #Q12
+RR <- p_no_seatbelt / p_yes_seatbelt
+
+SE_lnRR <- sqrt((1 / fatal_no_seatbelt) + (1 / fatal_yes_seatbelt))
+z <- qnorm(0.975)
+ME_lnRR <- z * SE_lnRR
+
+lnRR <- log(RR)
+Lower_lnRR <- lnRR - ME_lnRR
+Upper_lnRR <- lnRR + ME_lnRR
+
+
+Lower_RR <- exp(Lower_lnRR)
+Upper_RR <- exp(Upper_lnRR)
+
+cat("Relative Risk:", RR, "\n")
+cat("95% Confidence interval: (", Lower_RR, ",", Upper_RR, ")\n")
 
 ```
 
@@ -250,6 +386,33 @@ Response
 ```{r}
 #Q13
 
+a <- Auto["NoSeatBelt", "Fatal"]
+b <- Auto["YesSeatBelt", "Fatal"]
+c <- Auto["NoSeatBelt", "Nonfatal"]
+d <- Auto["YesSeatBelt", "Nonfatal"]
+
+# Odds Ratio
+OR <- (a * d) / (b * c)
+
+# Standard error of ln(OR)
+SE_lnOR <- sqrt(1/a + 1/b + 1/c + 1/d)
+
+# 95% Confidence interval for ln(OR)
+z <- qnorm(0.975)
+ME_lnOR <- z * SE_lnOR
+
+lnOR <- log(OR)
+Lower_lnOR <- lnOR - ME_lnOR
+Upper_lnOR <- lnOR + ME_lnOR
+
+# Transform back to OR
+Lower_OR <- exp(Lower_lnOR)
+Upper_OR <- exp(Upper_lnOR)
+
+# Output
+cat("Odds Ratio:", OR, "\n")
+cat("95% Confidence interval: (", Lower_OR, ",", Upper_OR, ")\n")
+
 ```
 
 *****
@@ -262,6 +425,8 @@ Considering the results of the previous two questions, why are the relative risk
 
 *****
 Response
+
+The relative risk and odds ratio are approximately equal because fatal injury is rare in both groups. When the outcome is rare, the odds and the probabilities of the event are similar, making the odds ratio a close approximation of the relative risk.
 
 *****
 
