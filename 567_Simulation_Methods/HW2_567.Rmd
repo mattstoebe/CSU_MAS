@@ -1,7 +1,9 @@
 ---
-title: "STAA 567: HW X"
-author: "YOUR NAME HERE"
-output: pdf_document
+title: 'STAA 567: HW 2'
+author: "Matthew Stoebe"
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -10,42 +12,106 @@ library(knitr)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(warning = FALSE)
-```
 
-- Your submitted assignment should be neatly formatted and organized.
-- For calculation questions, provide output with text descriptions as appropriate.  The code should appear in the appendix. Use code comments so that the question number appears with the relevant code in the appendix. 
-- For mathematical calculations, you can include LaTex equations or include your handwritten work as an image.
-- For discussion questions, please use complete sentences.
-- Add or delete questions and code chunks as needed.  
+#install.packages("field")
+
+#install.packages("tinytex")
+
+```
 
 # Q1
 
 ## Q1A
+Write the Log likelyhood Function
 
-```{r}
-#Q1A
 
-```
+
+
+
 
 ## Q1B
+Find the First Derrivative
 
-```{r}
-#Q1B
 
-```
+
+
+
 
 ## Q1C
+Find the Fomula for Lambda hat
 
-```{r}
-#Q1C
 
-```
+
+
+
 
 ## Q1D
 
 ```{r}
 #Q1D
+load("./Data/expData.RData")
 
+lambda_hat <- 1 / mean(x)
+lambda_hat
+```
+
+## Q1E
+```{r}
+hist(x, freq = FALSE, xlim = c(0, max(x)), main = "Histogram of x with Exponential Density", xlab = "x")
+
+x_vals <- seq(0, max(x), length.out = 100)
+dens_vals <- dexp(x_vals, rate = lambda_hat)
+lines(x_vals, dens_vals, col = "red")
+```
+
+## Q1f
+```{r}
+lambda_seq <- seq(1, 7, length.out = 1000)
+
+logLik_vals <- sapply(lambda_seq, function(lambda) {
+  n <- length(x)
+  n * log(lambda) - lambda * sum(x)
+})
+
+plot(lambda_seq, logLik_vals, type = 'l', xlab = expression(lambda), ylab = "Log-Likelihood", main = "Log-Likelihood Function")
+
+abline(v = lambda_hat, col = 'red', lty = 2)
+
+```
+
+```{r}
+neg_logLik <- function(lambda) {
+  if (lambda <= 0) return(Inf)
+  n <- length(x)
+  - (n * log(lambda) - lambda * sum(x))
+}
+
+opt_result <- optimize(neg_logLik, interval = c(1, 7))
+lambda_hat_opt <- opt_result$minimum
+lambda_hat_opt
+```
+## Q1I
+
+```{r}
+newton_raphson <- function(x, lambda_init = 3, tol = 1e-6, max_iter = 100) {
+  n <- length(x)
+  S <- sum(x)
+  lambda_old <- lambda_init
+  for (i in 1:max_iter) {
+    dL <- n / lambda_old - S
+    d2L <- - n / lambda_old^2
+    lambda_new <- lambda_old - dL / d2L
+    cat("Iteration", i, ": lambda =", lambda_new, "\n")
+    if (abs(lambda_new - lambda_old) < tol) {
+      break
+    }
+    lambda_old <- lambda_new
+  }
+  return(lambda_new)
+}
+
+lambda_hat_nr <- newton_raphson(x)
+lambda_hat_nr
 ```
 
 # Q2
@@ -54,13 +120,48 @@ knitr::opts_chunk$set(warning = FALSE)
 
 ```{r}
 #Q2A
+load("./Data/betaData.RData")
 
+logLik_beta <- function(alpha, beta, y) {
+  if (alpha <= 0 || beta <= 0) {
+    return(NA)
+  }
+  sum(dbeta(y, shape1 = alpha, shape2 = beta, log = TRUE))
+}
+
+alpha_seq <- seq(1, 6, length.out = 100)
+beta_seq <- seq(0.1, 5, length.out = 100)
+
+logLik_vals <- matrix(NA, nrow = length(alpha_seq), ncol = length(beta_seq))
+
+for (i in 1:length(alpha_seq)) {
+  for (j in 1:length(beta_seq)) {
+    logLik_vals[i, j] <- logLik_beta(alpha_seq[i], beta_seq[j], y)
+  }
+}
+
+library(fields)
+image.plot(alpha_seq, beta_seq, logLik_vals, xlab = expression(alpha), ylab = expression(beta), main = "Log-Likelihood Surface")
 ```
 
 ## Q2B
 
 ```{r}
 #Q2B
+neg_logLik_beta <- function(params, y) {
+  alpha <- params[1]
+  beta <- params[2]
+  if (alpha <= 0 || beta <= 0) {
+    return(Inf)
+  }
+  -sum(dbeta(y, shape1 = alpha, shape2 = beta, log = TRUE))
+}
+
+start_params <- c(alpha = 3, beta = 3)
+
+result_nelder <- optim(start_params, neg_logLik_beta, y = y, method = "Nelder-Mead")
+result_nelder$par  # Estimated parameters
+result_nelder$counts  # Number of iterations
 
 ```
 
@@ -68,13 +169,20 @@ knitr::opts_chunk$set(warning = FALSE)
 
 ```{r}
 #Q2C
+hist(y, freq = FALSE, main = "Histogram of y with Beta Density", xlab = "y")
 
+y_vals <- seq(0, 1, length.out = 100)
+dens_vals <- dbeta(y_vals, shape1 = result_nelder$par[1], shape2 = result_nelder$par[2])
+lines(y_vals, dens_vals, col = 'red')
 ```
 
 ## Q2D
 
 ```{r}
 #Q2D
+result_bfgs <- optim(start_params, neg_logLik_beta, y = y, method = "BFGS")
+result_bfgs$par  # Estimated parameters
+result_bfgs$counts  # Number of iterations
 
 ```
 
