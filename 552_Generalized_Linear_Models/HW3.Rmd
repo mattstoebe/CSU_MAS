@@ -18,6 +18,9 @@ mainfont: SourceSansPro
 library(knitr)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
+
+install.packages("DescTools")
+
 ```
 
 See Canvas Calendar for due date.  
@@ -51,6 +54,10 @@ Create a visual summary of the data using a mosaic plot.
 ```{r}
 #Q1
 
+library(vcd)
+
+mosaic(HappyData, shade = TRUE, legend = TRUE, main = "Mosaic Plot of Happiness by Income Level")
+
 ```
 
 
@@ -66,6 +73,11 @@ Create a numeric summary of the data by calculating estimated conditional probab
 
 ```{r}
 #Q2
+row_totals <- rowSums(HappyData)
+
+cond_probs <- sweep(HappyData, 1, row_totals, FUN = "/")
+
+cond_probs
 
 ```
 
@@ -84,6 +96,11 @@ State the hypotheses corresponding to the chi-square test for this research scen
 *****
 Response
 
+Hypotheses for the Chi-Square Test:
+
+- Null Hypothesis: There is no association between income level and perceived happiness. That is, income level and happiness are independent.
+- Alternative Hypothesis: There is an association between income level and perceived happiness. That is, income level and happiness are not independent.
+
 *****
 
 
@@ -98,7 +115,9 @@ Use `chisq.test()` to run the chi-square test.  Use the results to make a conclu
 
 ```{r}
 #Q4
+chi_test <- chisq.test(HappyData)
 
+chi_test
 ```
 
 Response
@@ -121,10 +140,19 @@ Note: For (b) there are several possible cells that can be discussed.
 
 ```{r}
 #Q5
+expected_counts <- chi_test$expected
+expected_counts
+
+differences <- HappyData - expected_counts
+differences
 
 ```
 
 Response
+
+All Expected cell counts are well above 5 so the chi squared is a appropriate test. 
+
+The "Below Average Income" group shows the most signifficant deviation from expected behavior with 41 people more than expected being not to happy, and 46 less than expected being very happy. 
 
 *****
 
@@ -140,6 +168,9 @@ Use `GTest()` from the `DescTools` package to run a likelihood ratio test.  Use 
 
 ```{r}
 #Q6
+library(DescTools)
+g_test <- GTest(HappyData)
+g_test
 
 ```
 
@@ -175,7 +206,16 @@ Fit an appropriate logistic regression model. Use YesHD as the event of interest
 
 ```{r}
 #Q7
+library(tidyr)
+library(dplyr)
 
+SnoreData_long <- SnoreData %>%
+  gather(key = "HeartDisease", value = "Count", NoHD, YesHD) %>%
+  mutate(HD = ifelse(HeartDisease == "YesHD", 1, 0))
+
+SnoreModel <- glm(HD ~ Snore, weights = Count, data = SnoreData_long, family = binomial)
+
+summary(SnoreModel)
 ```
 
 
@@ -188,6 +228,18 @@ Create a plot of the observed proportion of subjects with heart disease versus s
 
 ```{r}
 #Q8
+
+SnoreData$Total <- SnoreData$NoHD + SnoreData$YesHD
+SnoreData$Prop_HD <- SnoreData$YesHD / SnoreData$Total
+
+Snore_seq <- seq(min(SnoreData$Snore), max(SnoreData$Snore), length.out = 100)
+
+Predicted_Probs <- predict(SnoreModel, newdata = data.frame(Snore = Snore_seq), type = "response")
+
+plot(SnoreData$Snore, SnoreData$Prop_HD, xlab = "Snore Score", ylab = "Proportion with Heart Disease",
+     main = "Heart Disease vs. Snore Score", pch = 16, ylim = c(0, max(SnoreData$Prop_HD) + 0.05))
+
+lines(Snore_seq, Predicted_Probs, col = "blue", lwd = 2)
 
 ```
 
@@ -204,6 +256,13 @@ Response
 
 ```{r}
 #Q9
+
+# Extract the coefficient for Snore from the model
+beta <- coef(SnoreModel)["Snore"]
+
+# Calculate the odds ratio
+odds_ratio <- exp(beta)
+odds_ratio
 
 ```
 
@@ -225,14 +284,19 @@ Notes:
 
 ```{r, warning = FALSE}
 library(tidyverse)
-#PredValues <- data.frame(Snore = seq(from = 0, to = 5))
-#PredValues <- PredValues %>%
-#              mutate(
-#                Prob = predict(SnoreModel, PredValues, type = "response"),
-#                Odds = Prob/(1-Prob),
-#                OddsRatio = Odds/lag(Odds),
-#                RiskRatio = Prob/lag(Prob))
-#PredValues
+
+PredValues <- data.frame(Snore = seq(from = 0, to = 5))
+
+
+PredValues <- PredValues %>%
+              mutate(
+                Prob = predict(SnoreModel, newdata = PredValues, type = "response"),
+                Odds = Prob / (1 - Prob),
+                OddsRatio = Odds / lag(Odds),
+                RiskRatio = Prob / lag(Prob)
+              )
+
+PredValues
 ```
 
 
