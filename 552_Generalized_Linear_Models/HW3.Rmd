@@ -1,0 +1,243 @@
+---
+title: "STAA 552: HW 3"
+author: "YOUR NAME HERE"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '2'
+    includes:
+      in_header: preamble.tex
+header-includes:
+- \usepackage[default]{sourcesanspro}
+- \usepackage[T1]{fontenc}
+mainfont: SourceSansPro
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+See Canvas Calendar for due date.  
+40 points total, 4 points per problem unless otherwise noted.  
+Content for Q1-Q6 is from section 04 or earlier.  
+Content for Q7-Q10 is from section 06 (slide 11) or earlier.  
+Add or delete code chunks as needed.  
+For full credit, your numeric answers should be clearly labeled, outside of the R output.
+
+# Happiness and Income (Q1 - Q6)
+
+We consider data from a General Social Survey (GSS) cross-classifying a persons perceived happiness (not too happy, pretty happy, very happ) with their family income (above average, average, below average).  A total of n = 1362 subjects participated in the survey.   This data is taken from Introduction to Categorical Data Analysis, 3rd Edition.  
+
+```{r, echo = FALSE}
+HappyData <- matrix(c(21, 159, 110,
+                      53, 372, 221,
+                      94, 249, 83), byrow = TRUE, nrow = 3)
+rownames(HappyData) <- c("Above Avg Inc", "Avg Inc", "Below Avg Inc")
+colnames(HappyData) <- c("Not Too Happy", "Pretty Happy", "Very Happy")
+HappyData
+```
+
+
+:::: {.taskbox data-latex=""}
+## Q1 (2 pts)
+
+Create a visual summary of the data using a mosaic plot.
+:::: 
+
+
+```{r}
+#Q1
+
+```
+
+
+
+:::: {.taskbox data-latex=""}
+## Q2 
+
+Create a numeric summary of the data by calculating estimated conditional probabilities **by income level**.  Which income category has the **highest** estimated probability of being "very happy"?  Which income category has the **lowest** estimated probability of being "very happy"?
+:::: 
+
+
+*****
+
+```{r}
+#Q2
+
+```
+
+Response
+
+*****
+
+
+:::: {.taskbox data-latex=""}
+## Q3
+
+State the hypotheses corresponding to the chi-square test for this research scenario.  In this case, it is easiest to state the hypotheses in words.
+:::: 
+
+
+*****
+Response
+
+*****
+
+
+:::: {.taskbox data-latex=""}
+## Q4
+
+Use `chisq.test()` to run the chi-square test.  Use the results to make a conclusion in context.
+:::: 
+
+
+*****
+
+```{r}
+#Q4
+
+```
+
+Response
+
+*****
+
+
+:::: {.taskbox data-latex=""}
+## Q5 (6 pts)
+
+Show the expected cell counts under the null hypothesis.  Use these to discuss:  
+(a) whether the chi-square test is appropriate here based on the "rule of thumb" from the notes.    
+(b) one income-happiness category that has a large difference between observed and expected cell counts.   For the cell you chose, mention whether the observed count is higher or lower than expected.  
+
+Note: For (b) there are several possible cells that can be discussed. 
+:::: 
+
+
+*****
+
+```{r}
+#Q5
+
+```
+
+Response
+
+*****
+
+
+:::: {.taskbox data-latex=""}
+## Q6
+
+Use `GTest()` from the `DescTools` package to run a likelihood ratio test.  Use the results to make a conclusion in context.
+:::: 
+
+
+*****
+
+```{r}
+#Q6
+
+```
+
+Response
+
+*****
+
+
+# Snoring (Q7 - Q10)
+
+An epidemiological survey was done to investigate snoring as a risk factor for heart disease.  n = 2484 subjects were classified based on how much they snored (based on spouse report) and whether they reported having heart disease.  Snore score is given as 0 = "never", 2 = "occasionally", 4 = "nearly every night" and 5 = "every night".  This data appears in CDA Table 4.2. We will fit, visualize and interpret a logistic regression model.  
+
+```{r}
+SnoreData <- data.frame(Snore = c(0, 2, 4, 5),
+                        NoHD = c(1355, 603, 192, 224),
+                        YesHD = c(24, 35, 21, 30))
+SnoreData
+```
+
+Notes: 
+
+- For these questions, it will be helpful to look at the Beetles example (Sec06_Examples sections 1.1 – 1.4).
+-  We will treat snore score as continuous, but it feels strange! We will do several more examples of logistic regression analysis.
+- I specifically chose this data because you can check your own work with information from CDA (p119-120): $logit[\hat p(x)] = - 3.87 + 0.40 x$
+
+
+:::: {.taskbox data-latex=""}
+## Q7
+
+Fit an appropriate logistic regression model. Use YesHD as the event of interest.  You can just show the R output for full credit.  
+:::: 
+
+
+```{r}
+#Q7
+
+```
+
+
+:::: {.taskbox data-latex=""}
+## Q8
+
+Create a plot of the observed proportion of subjects with heart disease versus snore score.  Overlay a smooth curve corresponding to the model based estimated probabilities.
+:::: 
+
+
+```{r}
+#Q8
+
+```
+
+
+:::: {.taskbox data-latex=""}
+## Q9
+
+**Calculate and interpret** the estimated odds ratio corresponding to score snore in context.
+:::: 
+
+
+*****
+Response 
+
+```{r}
+#Q9
+
+```
+
+*****
+
+
+:::: {.taskbox data-latex=""}
+## Q10
+
+We will "verify" the estimated odds ratio from above empirically.  Specifically, we will calculate the model based estimated probabilities of heart disease at snore values in 1 unit increments. Then we will use those values to calculate odds ratios corresponding to a 1 unit increase.  While we are at it, we will calculate risk ratio values.
+
+Notes:  
+
+* Code using tidyverse is provided.  Just show the resulting output for full credit. 
+* Remove the comments (#) and change "SnoreModel" to whatever you called the logistic regression model in Q7. 
+* The `lag()` function extracts the previous value in the vector.
+
+:::: 
+
+```{r, warning = FALSE}
+library(tidyverse)
+#PredValues <- data.frame(Snore = seq(from = 0, to = 5))
+#PredValues <- PredValues %>%
+#              mutate(
+#                Prob = predict(SnoreModel, PredValues, type = "response"),
+#                Odds = Prob/(1-Prob),
+#                OddsRatio = Odds/lag(Odds),
+#                RiskRatio = Prob/lag(Prob))
+#PredValues
+```
+
+
+
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
