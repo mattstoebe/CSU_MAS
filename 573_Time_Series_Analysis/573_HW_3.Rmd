@@ -1,0 +1,89 @@
+---
+title: "573_HW_1"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+# Load the Johnson & Johnson data
+data("JohnsonJohnson")
+
+jj_data <- data.frame(
+  Year = as.numeric(time(JohnsonJohnson)),
+  EPS = as.numeric(JohnsonJohnson)
+)
+
+jj_data$log_EPS <- log(jj_data$EPS)
+
+jj_data$t <- jj_data$Year
+jj_data$Quarter <- as.factor(cycle(JohnsonJohnson))
+jj_data$Q1 <- ifelse(jj_data$Quarter == 1, 1, 0)
+jj_data$Q2 <- ifelse(jj_data$Quarter == 2, 1, 0)
+jj_data$Q3 <- ifelse(jj_data$Quarter == 3, 1, 0)
+jj_data$Q4 <- ifelse(jj_data$Quarter == 4, 1, 0)
+
+model <- lm(log_EPS ~ t + Q1 + Q2 + Q3 + Q4 - 1, data = jj_data)
+
+summary(model)
+```
+```{r}
+
+beta <- coef(model)["t"]
+cat("Estimated average annual increase in logged earnings per share:", beta, "\n")
+
+```
+
+```{r}
+alpha3 <- coef(model)["Q3"]
+alpha4 <- coef(model)["Q4"]
+
+delta_alpha <- alpha4 - alpha3
+cat("Change from Q3 to Q4 in logged earnings:", delta_alpha, "\n")
+
+percentage_change <- (delta_alpha)/abs(alpha3)
+cat("Percentage change from Q3 to Q4:", percentage_change, "%\n")
+
+```
+The average Log earnings rate decreases slightly from Q3 to Q4
+
+```{r}
+model_with_intercept <- lm(log_EPS ~ t + Q1 + Q2 + Q3 + Q4, data = jj_data)
+summary(model_with_intercept)
+
+```
+
+```{r}
+jj_data$fitted <- fitted(model)
+
+# Plot the data and fitted values
+library(ggplot2)
+
+ggplot(jj_data, aes(x = t, y = log_EPS)) +
+  geom_line(color = "blue", size = 1) +
+  geom_line(aes(y = fitted), color = "red", size = 1, linetype = "dashed") +
+  labs(title = "Logged Earnings per Share with Fitted Values",
+       x = "Time (Years)",
+       y = "Log(Earnings per Share)") +
+  theme_minimal()
+
+jj_data$residuals <- resid(model)
+
+ggplot(jj_data, aes(x = t, y = residuals)) +
+  geom_line(color = "purple", size = 1) +
+  labs(title = "Residuals of the Regression Model",
+       x = "Time (Years)",
+       y = "Residuals") +
+  theme_minimal()
+
+acf(jj_data$residuals, main = "ACF of Residuals")
+```
+The Residuals do not look like white noise. in between 1970 and 1975 where we seem to systematically under predict. This model is OK but not great

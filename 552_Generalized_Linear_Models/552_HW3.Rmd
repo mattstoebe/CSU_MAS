@@ -2,14 +2,14 @@
 title: 'STAA 552: HW 3'
 author: "YOUR NAME HERE"
 output:
+  word_document:
+    toc: false
+    toc_depth: '2'
   pdf_document:
     toc: false
     toc_depth: '2'
     includes:
       in_header: preamble.tex
-  word_document:
-    toc: false
-    toc_depth: '2'
 header-includes:
 - \usepackage[default]{sourcesanspro}
 - \usepackage[T1]{fontenc}
@@ -21,9 +21,6 @@ mainfont: SourceSansPro
 library(knitr)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
-
-#install.packages("tinytex")
-
 ```
 
 See Canvas Calendar for due date.  
