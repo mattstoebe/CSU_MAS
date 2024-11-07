@@ -2,59 +2,48 @@
 title: "HW3_567"
 author: "Matthew Stoebe"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-install.packages("Lock5Data")
+#install.packages("Lock5Data")
 library(Lock5Data)
 data(CommuteAtlanta)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
 #a
 ```{r cars}
-# Load the required package and data
-library(Lock5Data)
 data(CommuteAtlanta)
-
-# Extract the 'Time' variable
 times <- CommuteAtlanta$Time
 
-# Plot the histogram
-hist(times, breaks = 30, col = "lightblue", main = "Histogram of Commute Times", xlab = "Commute Time (minutes)")
-
-
-
+hist(times, breaks = 30, col = "lightblue", main = "Histogram of Commute Times")
 ```
 #b
 ```{r pressure, echo=FALSE}
 mean_time <- mean(times)
-mean_time
+
+cat("population mean commute time:", mean_time)
 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 #c
 ```{r}
-# Perform t-test to get the confidence interval
 t_test_result <- t.test(times)
-t_test_result$conf.int
+
+print(t_test_result$conf.int)
 
 
 ```
 
 #d
 ```{r}
-# Define the bootstrap function
+
+
 bootstrap_mean <- function(data, R) {
-  set.seed(12345)  # For reproducibility
+  set.seed(12345)  
   n <- length(data)
   boot_means <- numeric(R)
   for (i in 1:R) {
@@ -78,29 +67,22 @@ qqline(boot_means, col = "red")
 ```
 #e
 
-The histogram of means does appear to be bell shaped and symetric. This makes sense as wek know that according to CLT, the sampling distribution of the sample mean will be approximately normal when the sample size is large enough. WIth our sample size of 2000, the CLT should hold. 
+The histogram of means does appear to be bell shaped and symmetric. This makes sense as we know that according to the central limit theorem, the sampling distribution of the sample mean will be approximately normal when the sample size is large enough. With our sample size of 2000, the CLT should hold. 
 
 #f
 ```{r}
-# Original sample mean
-mean_orig <- mean(times)
 
-# Bootstrap mean
+mean_orig <- mean(times)
 mean_bootstrap <- mean(boot_means)
 
-# Bias
 bias <- mean_bootstrap - mean_orig
-
-# Variance
 variance <- var(boot_means)
-
-# Mean Squared Error
 MSE <- variance + bias^2
 
-# Display results
-bias
-variance
-MSE
+
+cat("bias: ", bias, "\n")
+cat("variance: ", variance, "\n")
+cat("MSE: ", MSE, "\n")
 
 ```
 #g
