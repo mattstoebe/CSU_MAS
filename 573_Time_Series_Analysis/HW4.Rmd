@@ -1,0 +1,76 @@
+---
+title: "HW4"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Install necessary packages if not already installed
+install.packages(c("forecast", "ggplot2"))
+
+# Load the packages
+library(forecast)
+library(ggplot2)
+
+```
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Number of observations
+n <- 100
+
+# Define parameters for each model
+# You can adjust these parameters as needed
+# ARMA(1,1) parameters
+phi <- 0.5   # AR(1) coefficient
+theta <- 0.5 # MA(1) coefficient
+
+# ARMA(1,0) parameters (AR(1))
+phi_ar <- 0.5
+
+# ARMA(0,1) parameters (MA(1))
+theta_ma <- 0.5
+
+# Generate ARMA(1,1) series
+arma11_series <- arima.sim(n = n, 
+                           list(ar = .5, ma = .5), 
+                           sd = 1)
+arma10_series <- arima.sim(n = n, 
+                           list(ar = phi_ar), 
+                           sd = 1)
+
+arma01_series <- arima.sim(n = n, 
+                           list(ma = theta_ma), 
+                           sd = 1)
+# Plot the series
+ts.plot(arma11_series, main = "ARMA(1,1) Time Series", ylab = "Value")
+ts.plot(arma10_series, main = "AR(1) Time Series", ylab = "Value")
+ts.plot(arma01_series, main = "MA(1) Time Series", ylab = "Value")
+
+
+```
+
+```{r}
+
+# Sample ACF
+acf_arma11 <- Acf(arma11_series, main = "Sample ACF of ARMA(1,1)")
+pacf_arma11 <- Pacf(arma11_series, main = "Sample PACF of ARMA(1,1)")
+
+theoretical_acf_arma11 <- ARMAacf(ar = phi, ma = theta, lag.max = 20)
+
+# Plot Sample ACF and Theoretical ACF
+plot(acf_arma11, main = "Sample ACF vs Theoretical ACF for ARMA(1,1)")
+lines(0:20, theoretical_acf_arma11, col = "red", lty = 2)
+legend("topright", legend = c("Sample ACF", "Theoretical ACF"), 
+       col = c("black", "red"), lty = c(1,2))
+
+
+```
+
+
+
