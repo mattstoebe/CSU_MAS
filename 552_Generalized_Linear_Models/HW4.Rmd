@@ -1,9 +1,12 @@
 ---
-title: "STAA 552: HW 4"
+title: 'STAA 552: HW 4'
 author: "YOUR NAME HERE"
 output:
+  word_document:
+    toc: false
+    toc_depth: '2'
   pdf_document:
-    toc: no
+    toc: false
     toc_depth: '2'
     includes:
       in_header: preamble.tex
