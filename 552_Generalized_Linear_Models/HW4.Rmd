@@ -1,0 +1,424 @@
+---
+title: "STAA 552: HW 4"
+author: "YOUR NAME HERE"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '2'
+    includes:
+      in_header: preamble.tex
+header-includes:
+- \usepackage[default]{sourcesanspro}
+- \usepackage[T1]{fontenc}
+mainfont: SourceSansPro
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+See Canvas Calendar for due date.  
+64 points total, 4 points per problem unless otherwise noted.  **The first 4 items will not be graded. They are included for extra practice.**
+Content for all questions is from section 06 or earlier.  
+Add or delete code chunks as needed.  
+For full credit, your numeric answers should be clearly labeled, outside of the R output.
+
+For this assignment we will use data from the Statistical Sleuth (3rd Edition) about the Donner party.  
+
+From Wikipedia: "The Donner Party, sometimes called the Donner–Reed Party, was a group of American pioneers who migrated to California in a wagon train from the Midwest. Delayed by a multitude of mishaps, they spent the winter of 1846–1847 snowbound in the Sierra Nevada mountain range."  
+
+The DonnerData.csv file includes the Age (years) and Sex (Female or Male) of n = 45 adults (over 15 years).  **Survived (0,1) should be used as the response for logistic regression analyses.**  Status (Died or Survived) may be used elsewhere or ignored.
+
+These data were previously used by an anthropologist (Grayson, 1990) to study the "theory that females are better able to withstand harsh conditions than are males". 
+
+Note: We essentially have a census, but we will perform statistical analysis anyway.
+
+:::: {.taskbox data-latex=""}
+## Q1 (not graded)
+
+Create a summary table including the following information **by Sex**: n (sample size), proportion that survived, minimum Age, mean Age, max Age.  Hint: `group_by()` and `summarise()` from tidyverse/dplyr are helpful here. Or, use `table1()` form the `table1` package.
+::::
+
+```{r}
+#Q1
+
+```
+
+
+:::: {.taskbox data-latex=""}
+## Q2 (not graded)
+
+Calculate the odds ratio of survival for Males vs Females and corresponding 95% (Wald) confidence interval.  Some example code has been provided, but other approaches are possible.  
+::::
+
+******
+OR =    
+95% CI:  
+
+
+```{r}
+#Q2
+library(epitools)
+#DonnerTable <- table(DonnerData$Sex,DonnerData$Status)
+#oddsratio(DonnerTable, method = "wald")
+```
+*****
+
+:::: {.taskbox data-latex=""}
+## Q3 (not graded)
+
+Run a chi-squared test using Status (or Survived) and Sex.  Report the p-value and use it to make a conclusion in context.  Be sure to mention the direction of the association.  Hint: This result appears in the `oddsratio()` output.  
+::::
+
+******
+p-value =        
+Conclusion:   
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q4 (not graded)
+
+The chi-squared test is based on a large sample approximation.  Is the sample size large enough for the chi-squared test to be appropriate?  Use the rule of thumb from the notes to justify your response.
+::::
+
+*****
+Response
+
+```{r}
+#Q4
+
+```
+
+*****
+
+
+# Model 1 (Q5 - Q8)
+
+For this group of questions, fit an appropriate logistic regression model using Survived (0,1) as the response and **Sex** as the predictor.  
+
+:::: {.taskbox data-latex=""}
+## Q5 (2 pts)
+
+Fit the model and show the coefficients table.  
+::::
+
+*****
+
+```{r}
+#Q5
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q6 
+
+Calculate the (model based) estimated odds ratio of survival for Males vs Females and corresponding 95% (profile) confidence interval.  Use this information to make a conclusion in context.  Be sure to mention the direction of the association.
+::::
+
+*****
+OR =    
+95% CI:    
+Conclusion:   
+
+```{r}
+#Q6
+
+```
+
+*****
+
+## Q7
+
+Using this model, we will test for a Sex effect.
+
+:::: {.taskbox data-latex=""}
+### Q7a (2 pts)
+
+Do this using a Wald test.  Report the Z test statistic and p-value.
+::::
+
+*****
+Z =      
+p =    
+
+*****
+
+:::: {.taskbox data-latex=""}
+### Q7b (2 pts)
+
+Do this using a likelihood ratio test "by hand" (using summary information from the model).  Report the chi-square test statistic and p-value.    
+::::
+
+******
+X2 =    
+p =     
+
+```{r, echo = TRUE}
+#Q7b 
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+### Q7c (2 pts)
+
+Confirm your likelihood test results using `Anova()` from the car package.  Just show the output for full credit.
+::::
+
+******************
+
+```{r}
+#Q7c
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q8
+
+Use `emmeans()` from the emmeans package to (a) calculate (model based) estimated probabilities of survival by Sex and (b) corresponding odds ratio.  Just show the output for full credit.  Hint: Remember to use type = "response".  Note: The estimated probabilities should exactly match the simple proportions from Q1. 
+::::
+
+***** 
+```{r}
+#Q8
+
+```
+*****
+
+# Model 2 (Q9 - Q15)
+
+For this group of questions, fit an appropriate logistic regression model using Survived (0,1) as the response and **Sex and Age** as predictors.  This should be an additive model (no interaction).   
+
+:::: {.taskbox data-latex=""}
+## Q9 (2 pts)
+
+Fit the model and show the coefficients table.  
+::::
+
+*****
+```{r}
+#Q9
+
+```
+*****
+
+:::: {.taskbox data-latex=""}
+## Q10
+
+Create a visual summary of this model.  Specifically, graph fitted curves showing the probability of survival for females and males as a function of age.  Hint: See Crabs Example section 3.3.
+::::
+
+
+```{r}
+#Q10
+
+```
+
+
+
+:::: {.taskbox data-latex=""}
+## Q11
+
+Calculate **and interpret** the (model based) estimated odds ratio corresponding to **Sex**. 
+::::
+
+*****
+OR:   
+Interpretation:   
+
+```{r}
+#Q11
+
+```
+*****
+
+:::: {.taskbox data-latex=""}
+## Q12
+
+Calculate **and interpret** the (model based) estimated odds ratio corresponding to **Age**. 
+::::
+
+*****
+OR:    
+Interpretation:   
+
+*****
+
+## Q13  
+
+Using this model, test for the effect of **Sex** (controlling for Age). 
+
+:::: {.taskbox data-latex=""}
+### Q13a (2 pts)
+
+Do this using a Wald test.  Report the Z test statistic and p-value.
+::::
+
+*****
+Z =     
+p =   
+
+*****
+
+:::: {.taskbox data-latex=""}
+### Q13b
+
+Do this using a likelihood ratio test "by hand" (using summary information from the model).  Report the chi-square test statistic and p-value.    
+::::
+
+*****
+X2 =     
+p =     
+
+```{r, echo = TRUE}
+#Q13b 
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+### Q13c (2 pts)
+
+Confirm your likelihood test results using `Anova()` from the car package.  Just show the output for full credit.
+::::
+
+*****
+
+```{r}
+#Q13c
+
+```
+*****
+
+:::: {.taskbox data-latex=""}
+## Q14
+
+Use `emmeans()` from the emmeans package to (a) calculate (model based) estimated probabilities of survival by Sex and (b) corresponding odds ratio.  Just show the resulting output for full credit.  Hint: Remember to use type = "response".  
+::::
+
+*****
+```{r}
+#Q14
+
+```
+*****
+
+
+## Q15
+
+Calculate the (model based) estimated probabilities of survival for Males and Females with (mean) age = 31.8 years.  Note: These results should match the previous question. 
+
+:::: {.taskbox data-latex=""}
+### Q15a
+
+Do this "by hand" (using summary information from the model).  
+::::
+
+*****
+Females:   
+Males:   
+
+```{r, echo = TRUE}
+#Q15a
+
+```
+*****
+
+:::: {.taskbox data-latex=""}
+### Q15b
+
+Confirm your results using the `predict()` function.
+::::
+
+*****
+```{r, echo = TRUE}
+#Q15b
+
+```
+*****
+
+# Model 3 (Q16 - Q18)
+
+For this group of questions, fit an appropriate logistic regression model using Survived (0,1) as the response and **Sex, Age and Sex:Age interaction** as predictors.
+
+:::: {.taskbox data-latex=""}
+## Q16 (2 pts)
+
+Fit the model and show the coefficients table.  
+::::
+
+*****
+```{r}
+#Q16
+
+```
+*****
+
+:::: {.taskbox data-latex=""}
+## Q17
+
+Create a visual summary of this model.  Specifically, graph fitted curves showing the probability of survival for females and males as a function of age.  Hint: See Crabs Example section 4.2.
+::::
+
+```{r}
+#Q17
+
+```
+
+
+
+## Q18
+
+The interaction model allows the effect of Age to depend on Sex (and vice versa). 
+
+:::: {.taskbox data-latex=""}
+### Q18a
+
+Calculate **and interpret** the (model based) estimated odds ratio corresponding corresponding to Age for **Females**. 
+::::
+
+*****
+OR:   
+Interpretation:   
+
+```{r}
+#Q18a
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+### Q18b
+
+Calculate **and interpret** the (model based) estimated odds ratio corresponding corresponding to Age for **Males**.   
+::::
+
+*****
+OR:   
+Interpretation:  
+
+```{r}
+#Q18b
+
+```
+
+*****
+
+
+
+
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
