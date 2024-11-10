@@ -18,6 +18,10 @@ mainfont: SourceSansPro
 library(knitr)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
+#install.packages("emmeans")
+library(car)
+library(emmeans)
+library(ggplot2)
 ```
 
 See Canvas Calendar for due date.  
@@ -110,7 +114,12 @@ Fit the model and show the coefficients table.
 
 ```{r}
 #Q5
+donner_data <- read.csv("Data/DonnerData.csv")
+donner_data$Survived <- as.factor(donner_data$Survived)
 
+log_model1 <- glm(Survived ~ Sex, data = donner_data, family = "binomial")
+
+summary(log_model1)
 ```
 
 *****
@@ -122,13 +131,20 @@ Calculate the (model based) estimated odds ratio of survival for Males vs Female
 ::::
 
 *****
-OR =    
-95% CI:    
-Conclusion:   
 
 ```{r}
 #Q6
+odds_ratio <- exp(coef(log_model1)["SexMale"])
 
+# Calculate the 95% confidence interval for the odds ratio
+confint_model <- confint(log_model1, "SexMale")
+confint_odds_ratio <- exp(confint_model)
+
+# Print results
+cat("OR =", round(odds_ratio, 2), "\n")
+cat("95% CI:", round(confint_odds_ratio[1], 2), "-", round(confint_odds_ratio[2], 2), "\n")
+
+print("The Odds Ratio of .25 tesls us that the odds of survival for males is 25% of the odds of survival for females. We also see that the 95% confidence interval does not include 1 which indicates that atleast 95% of the time our directional conclusion is correct.")
 ```
 
 *****
@@ -141,11 +157,15 @@ Using this model, we will test for a Sex effect.
 ### Q7a (2 pts)
 
 Do this using a Wald test.  Report the Z test statistic and p-value.
+
 ::::
 
 *****
-Z =      
-p =    
+log(odds_ratio) + 1.96 * SE = log(.9)
+SE = (log(.9) - log(.25))/ 1.96 = .653
+Z = Coef/SE = -1.386/.653 = -2.12
+
+p = .017
 
 *****
 
@@ -156,12 +176,17 @@ Do this using a likelihood ratio test "by hand" (using summary information from 
 ::::
 
 ******
-X2 =    
-p =     
 
 ```{r, echo = TRUE}
-#Q7b 
+null_model <- glm(Survived ~ 1, data = donner_data, family = binomial)
+logLik_full <- logLik(log_model1)
+logLik_null <- logLik(null_model)
 
+lr_stat <- 2 * (as.numeric(logLik_full) - as.numeric(logLik_null))
+p_value <- pchisq(lr_stat, df = 1, lower.tail = FALSE)
+
+cat("X2 =", lr_stat, "\n")
+cat("p = ", p_value)
 ```
 
 *****
@@ -176,7 +201,8 @@ Confirm your likelihood test results using `Anova()` from the car package.  Just
 
 ```{r}
 #Q7c
-
+anova_results <- Anova(log_model1, test="LR")
+print(anova_results)
 ```
 
 *****
@@ -191,6 +217,13 @@ Use `emmeans()` from the emmeans package to (a) calculate (model based) estimate
 ```{r}
 #Q8
 
+#estimated probabilities of survival by Sex
+emmeans_prob <- emmeans(log_model1, ~ Sex, type = "response")
+print(emmeans_prob)
+
+#odds ratio
+emmeans_odds <- contrast(emmeans(log_model1, ~ Sex), method = "pairwise", infer = TRUE)
+print(emmeans_odds)
 ```
 *****
 
@@ -207,7 +240,12 @@ Fit the model and show the coefficients table.
 *****
 ```{r}
 #Q9
+donner_data <- read.csv("Data/DonnerData.csv")
+donner_data$Survived <- as.factor(donner_data$Survived)
 
+log_model2 <- glm(Survived ~ Sex + Age, data = donner_data, family = "binomial")
+
+summary(log_model2)
 ```
 *****
 
@@ -220,6 +258,23 @@ Create a visual summary of this model.  Specifically, graph fitted curves showin
 
 ```{r}
 #Q10
+
+donner_data$predicted_prob <- predict(log_model2, newdata = donner_data, type = "response")
+
+ggplot(donner_data, aes(x = Age, y = predicted_prob, color = Sex)) +
+  geom_point(alpha = 0.6) +  # Points for each individual's predicted probability
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) +  # Smooth curve for each sex
+  labs(
+    title = "Predicted Probability of Survival by Age and Sex",
+    x = "Age",
+    y = "Predicted Probability of Survival"
+  ) +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, 1), labels = scales::percent) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.title = element_blank()
+  )
 
 ```
 
@@ -237,19 +292,32 @@ Interpretation:
 
 ```{r}
 #Q11
+# Extract and exponentiate the coefficient for Sex to get the odds ratio
+odds_ratio_sex <- exp(coef(log_model2)["SexMale"])
+
+# Print the odds ratio
+cat("Estimated Odds Ratio for Sex (Males vs Females):", round(odds_ratio_sex, 2), "\n")
 
 ```
+The Estimated Odds Ratio of .2 implies that the odds of survival for men are 80% lower than the odds of survival for women when we control for age.
 *****
 
 :::: {.taskbox data-latex=""}
 ## Q12
+```{r}
 
+#Q12
+
+odds_ratio_age <- exp(coef(log_model2)["Age"])
+cat("Estimated Odds Ratio for Age:", round(odds_ratio_age, 2), "\n")
+
+```
 Calculate **and interpret** the (model based) estimated odds ratio corresponding to **Age**. 
 ::::
 
 *****
-OR:    
-Interpretation:   
+OR: .92
+Interpretation: for each year of age, the odds of survival decrearse by 8%
 
 *****
 
@@ -264,8 +332,8 @@ Do this using a Wald test.  Report the Z test statistic and p-value.
 ::::
 
 *****
-Z =     
-p =   
+Z = Coef/SE = -1.59729/0.75547 = -2.1143
+p = .017258.
 
 *****
 
@@ -276,11 +344,21 @@ Do this using a likelihood ratio test "by hand" (using summary information from 
 ::::
 
 *****
-X2 =     
-p =     
 
 ```{r, echo = TRUE}
 #Q13b 
+reduced_model <- glm(Survived ~ Age, data = donner_data, family = "binomial")
+
+logLik_full <- logLik(log_model2)
+logLik_reduced <- logLik(reduced_model)
+
+lr_stat <- 2 * (as.numeric(logLik_full) - as.numeric(logLik_reduced))
+
+# Calculate the p-value
+p_value_lr <- pchisq(lr_stat, df = 1, lower.tail = FALSE)
+
+cat("X2 =", lr_stat, "\n")
+cat("p = ", p_value_lr)
 
 ```
 
@@ -296,7 +374,8 @@ Confirm your likelihood test results using `Anova()` from the car package.  Just
 
 ```{r}
 #Q13c
-
+anova_results <- Anova(log_model2, test="LR")
+print(anova_results)
 ```
 *****
 
@@ -309,7 +388,11 @@ Use `emmeans()` from the emmeans package to (a) calculate (model based) estimate
 *****
 ```{r}
 #Q14
+emmeans_prob <- emmeans(log_model2, ~ Sex, type = "response")
+print(emmeans_prob)
 
+emmeans_odds <- contrast(emmeans(log_model2, ~ Sex), method = "pairwise", infer = TRUE)
+print(emmeans_odds)
 ```
 *****
 
@@ -330,6 +413,24 @@ Males:
 
 ```{r, echo = TRUE}
 #Q15a
+beta_0 <- coef(log_model2)["(Intercept)"]      
+beta_SexMale <- coef(log_model2)["SexMale"]    
+beta_Age <- coef(log_model2)["Age"]   
+
+# Mean age
+mean_age <- 31.8
+
+
+eta_female <- beta_0 + beta_SexMale * 0 + beta_Age * mean_age
+prob_female <- exp(eta_female) / (1 + exp(eta_female))
+
+# For Males (SexMale = 1)
+eta_male <- beta_0 + beta_SexMale * 1 + beta_Age * mean_age
+prob_male <- exp(eta_male) / (1 + exp(eta_male))
+
+# Print results
+cat("Females:", round(prob_female, 2), "\n")
+cat("Males:", round(prob_male, 2), "\n")
 
 ```
 *****
@@ -343,7 +444,14 @@ Confirm your results using the `predict()` function.
 *****
 ```{r, echo = TRUE}
 #Q15b
+new_data <- data.frame(
+  Sex = c("Female", "Male"),
+  Age = c(31.8, 31.8)
+)
 
+predicted_probs <- predict(log_model2, newdata = new_data, type = "response")
+
+print(predicted_probs,2)
 ```
 *****
 
@@ -360,7 +468,12 @@ Fit the model and show the coefficients table.
 *****
 ```{r}
 #Q16
+donner_data <- read.csv("Data/DonnerData.csv")
+donner_data$Survived <- as.factor(donner_data$Survived)
 
+log_model3 <- glm(Survived ~ Sex + Age + Sex:Age, data = donner_data, family = "binomial")
+
+summary(log_model3)
 ```
 *****
 
@@ -372,7 +485,22 @@ Create a visual summary of this model.  Specifically, graph fitted curves showin
 
 ```{r}
 #Q17
+donner_data$predicted_prob <- predict(log_model3, newdata = donner_data, type = "response")
 
+ggplot(donner_data, aes(x = Age, y = predicted_prob, color = Sex)) +
+  geom_point(alpha = 0.6) +  # Points for each individual's predicted probability
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) +  # Smooth curve for each sex
+  labs(
+    title = "Predicted Probability of Survival by Age and Sex",
+    x = "Age",
+    y = "Predicted Probability of Survival"
+  ) +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, 1), labels = scales::percent) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.title = element_blank()
+  )
 ```
 
 
@@ -393,9 +521,13 @@ Interpretation:
 
 ```{r}
 #Q18a
+beta_Age <- coef(log_model3)["Age"]
 
+odds_ratio_age_female <- exp(beta_Age)
+
+cat("Estimated Odds Ratio for Age (Females):", round(odds_ratio_age_female, 4), "\n")
 ```
-
+For Females, each one year increase in age is associated with a 16% decrease in the odds of survival
 *****
 
 :::: {.taskbox data-latex=""}
@@ -409,10 +541,14 @@ OR:
 Interpretation:  
 
 ```{r}
-#Q18b
+beta_Age <- coef(log_model3)["Age"]
+beta_SexMale_Age <- coef(log_model3)["SexMale:Age"]
 
+beta_Age_male <- beta_Age + beta_SexMale_Age
+odds_ratio_age_male <- exp(beta_Age_male)
+cat("Estimated Odds Ratio for Age (Males):", round(odds_ratio_age_male, 4), "\n")
 ```
-
+For males, each one year increase in age is associated with a 3.2% decrease in the odds of survival. 
 *****
 
 
