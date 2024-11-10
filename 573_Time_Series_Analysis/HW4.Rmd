@@ -2,14 +2,16 @@
 title: "HW4"
 author: "Matthew Stoebe"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 # Install necessary packages if not already installed
-install.packages(c("forecast", "ggplot2"))
+#install.packages(c("forecast", "ggplot2"))
 
 # Load the packages
 library(forecast)
@@ -62,12 +64,12 @@ plot(pacf_arma11, main = "Sample PACF for ARMA(1,1)",
      ylim = c(min(pacf_arma11$acf), max(pacf_arma11$acf)))
 abline(h = 0, col = "black")
 
-plot(pacf_arma10, main = "Sample PACF vs Theoretical PACF for AR(1)", 
+plot(pacf_arma10, main = "Sample PACF for AR(1)", 
      ylim = c(min(pacf_arma10$acf), max(pacf_arma10$acf)))
 abline(h = 0, col = "black")
 
 
-plot(pacf_arma01, main = "Sample PACF vs Theoretical PACF for MA(1)", 
+plot(pacf_arma01, main = "Sample PACF for MA(1)", 
      ylim = c(min(pacf_arma01$acf), max(pacf_arma01$acf)))
 abline(h = 0, col = "black")
 
