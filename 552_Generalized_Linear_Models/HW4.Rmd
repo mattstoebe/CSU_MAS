@@ -69,8 +69,6 @@ OR =
 ```{r}
 #Q2
 library(epitools)
-#DonnerTable <- table(DonnerData$Sex,DonnerData$Status)
-#oddsratio(DonnerTable, method = "wald")
 ```
 *****
 
@@ -139,11 +137,9 @@ Calculate the (model based) estimated odds ratio of survival for Males vs Female
 #Q6
 odds_ratio <- exp(coef(log_model1)["SexMale"])
 
-# Calculate the 95% confidence interval for the odds ratio
 confint_model <- confint(log_model1, "SexMale")
 confint_odds_ratio <- exp(confint_model)
 
-# Print results
 cat("OR =", round(odds_ratio, 2), "\n")
 cat("95% CI:", round(confint_odds_ratio[1], 2), "-", round(confint_odds_ratio[2], 2), "\n")
 
@@ -220,11 +216,9 @@ Use `emmeans()` from the emmeans package to (a) calculate (model based) estimate
 ```{r}
 #Q8
 
-#estimated probabilities of survival by Sex
 emmeans_prob <- emmeans(log_model1, ~ Sex, type = "response")
 print(emmeans_prob)
 
-#odds ratio
 emmeans_odds <- contrast(emmeans(log_model1, ~ Sex), method = "pairwise", infer = TRUE)
 print(emmeans_odds)
 ```
@@ -265,8 +259,8 @@ Create a visual summary of this model.  Specifically, graph fitted curves showin
 donner_data$predicted_prob <- predict(log_model2, newdata = donner_data, type = "response")
 
 ggplot(donner_data, aes(x = Age, y = predicted_prob, color = Sex)) +
-  geom_point(alpha = 0.6) +  # Points for each individual's predicted probability
-  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) +  # Smooth curve for each sex
+  geom_point(alpha = 0.6) +  
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) +  
   labs(
     title = "Predicted Probability of Survival by Age and Sex",
     x = "Age",
@@ -295,10 +289,8 @@ Interpretation:
 
 ```{r}
 #Q11
-# Extract and exponentiate the coefficient for Sex to get the odds ratio
 odds_ratio_sex <- exp(coef(log_model2)["SexMale"])
 
-# Print the odds ratio
 cat("Estimated Odds Ratio for Sex (Males vs Females):", round(odds_ratio_sex, 2), "\n")
 
 ```
@@ -357,7 +349,6 @@ logLik_reduced <- logLik(reduced_model)
 
 lr_stat <- 2 * (as.numeric(logLik_full) - as.numeric(logLik_reduced))
 
-# Calculate the p-value
 p_value_lr <- pchisq(lr_stat, df = 1, lower.tail = FALSE)
 
 cat("X2 =", lr_stat, "\n")
@@ -427,11 +418,9 @@ mean_age <- 31.8
 eta_female <- beta_0 + beta_SexMale * 0 + beta_Age * mean_age
 prob_female <- exp(eta_female) / (1 + exp(eta_female))
 
-# For Males (SexMale = 1)
 eta_male <- beta_0 + beta_SexMale * 1 + beta_Age * mean_age
 prob_male <- exp(eta_male) / (1 + exp(eta_male))
 
-# Print results
 cat("Females:", round(prob_female, 2), "\n")
 cat("Males:", round(prob_male, 2), "\n")
 
@@ -491,8 +480,8 @@ Create a visual summary of this model.  Specifically, graph fitted curves showin
 donner_data$predicted_prob <- predict(log_model3, newdata = donner_data, type = "response")
 
 ggplot(donner_data, aes(x = Age, y = predicted_prob, color = Sex)) +
-  geom_point(alpha = 0.6) +  # Points for each individual's predicted probability
-  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) +  # Smooth curve for each sex
+  geom_point(alpha = 0.6) +  
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) +  
   labs(
     title = "Predicted Probability of Survival by Age and Sex",
     x = "Age",
