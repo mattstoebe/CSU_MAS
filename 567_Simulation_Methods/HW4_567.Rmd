@@ -1,0 +1,146 @@
+---
+title: "HW4_567"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#a
+Use lm() to fit the multiple regression model described above. Provide estimates for
+the regression parameters β0, β1, β2 by showing the coefficients table from the summary
+output.
+
+```{r pressure, echo=FALSE}
+library(car)
+
+data(Duncan)
+
+model <- lm(prestige ~ income + education, data = Duncan)
+
+summary(model)$coefficients
+
+```
+#b
+```{r}
+confint(model, level = 0.95)
+
+```
+
+
+#c
+```{r}
+# Set up plotting area
+par(mfrow = c(1, 2))  # Two plots side by side
+
+# Residuals vs Fitted Values
+plot(model$fitted.values, resid(model),
+     main = "Residuals vs Fitted",
+     xlab = "Fitted Values",
+     ylab = "Residuals",
+     pch = 19, col = "blue")
+abline(h = 0, lty = 2, col = "red")
+
+# QQ Plot of Residuals
+qqnorm(resid(model), main = "QQ Plot of Residuals", pch = 19, col = "blue")
+qqline(resid(model), col = "red", lwd = 2)
+
+```
+
+
+#d
+```{r}
+# Load necessary package for bootstrap
+install.packages("boot")  # If not already installed
+library(boot)
+
+# Define a function to obtain coefficients
+boot_fn <- function(data, indices) {
+  d <- data[indices, ]  # Resample the data
+  fit <- lm(prestige ~ income + education, data = d)
+  return(coef(fit))
+}
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Perform bootstrap with 5000 replications
+bootstrap_results <- boot(data = Duncan, statistic = boot_fn, R = 5000)
+
+# Extract bootstrap estimates
+boot_estimates <- bootstrap_results$t
+colnames(boot_estimates) <- names(coef(model))
+
+# Plot histograms for each parameter
+par(mfrow = c(1, 3))  # Three plots side by side
+
+# Histogram for Intercept
+hist(boot_estimates[, " (Intercept)"], main = "Bootstrap Intercept",
+     xlab = "Intercept", col = "lightblue", border = "black")
+
+# Histogram for Income
+hist(boot_estimates[, "income"], main = "Bootstrap Income",
+     xlab = "Income Coefficient", col = "lightgreen", border = "black")
+
+# Histogram for Education
+hist(boot_estimates[, "education"], main = "Bootstrap Education",
+     xlab = "Education Coefficient", col = "lightpink", border = "black")
+
+```
+
+
+#e
+```{r}
+# Calculate the original estimates
+original_estimates <- coef(model)
+
+# Calculate bootstrap estimates means
+bootstrap_means <- colMeans(boot_estimates)
+
+# Calculate bias for each parameter
+bias <- bootstrap_means - original_estimates
+bias
+
+```
+
+#f
+```{r}
+# Calculate 95% percentile confidence intervals
+percentile_CI <- apply(boot_estimates, 2, function(x) quantile(x, probs = c(0.025, 0.975)))
+
+# Transpose for better readability
+percentile_CI <- t(percentile_CI)
+colnames(percentile_CI) <- c("2.5 %", "97.5 %")
+percentile_CI
+
+```
+
+
+#g
+```{r}
+# Reconstruct histogram for income bootstrap estimates
+hist(boot_estimates[, "income"], 
+     main = "Bootstrap Estimates for Income Coefficient",
+     xlab = "Income Coefficient", 
+     col = "lightgreen", 
+     border = "black", 
+     breaks = 30)
+
+# Add t-based confidence interval (from part b)
+t_CI <- confint(model, level = 0.95)["income", ]
+abline(v = t_CI, col = "blue", lwd = 2, lty = 2)
+
+# Add bootstrap confidence interval (from part f)
+boot_CI_income <- percentile_CI["income", ]
+abline(v = boot_CI_income, col = "red", lwd = 2, lty = 2)
+
+# Add legend
+legend("topright", legend = c("t-Confidence Interval", "Bootstrap CI"),
+       col = c("blue", "red"), lty = 2, lwd = 2)
+
+```
+
