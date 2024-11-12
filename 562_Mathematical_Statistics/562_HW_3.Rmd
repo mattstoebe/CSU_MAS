@@ -169,7 +169,7 @@ Get a histogram of the data and interpret what you see in the context of the pro
 think your answer in (a) or your answer in (b) is more accurate?
 
 ```{r}
-hist(net_worth, breaks = 10, col = "lightblue", 
+hist(net_worth, breaks = 5, col = "lightblue", 
      main = "Histogram of Net Worth Changes",
      xlab = "Change in Net Worth ($1000)",
      border = "black")
@@ -316,7 +316,7 @@ cat("Z-score for alpha =", alpha, ":", z_alpha, "\n")
 cat("Critical Value (c):", c, "\n\n")
 
 
-cat("Decision Rule: Reject H₀ if the sample mean number of flaws <",
+cat("Decision Rule: Reject H0 if the sample mean number of flaws <",
     round(c, 3), "\n")
 ```
 ##b
@@ -382,7 +382,7 @@ c_prime <- quantile(sample_means_H0, probs = desired_alpha)
 
 actual_alpha <- mean(sample_means_H0 < c_prime)
 
-cat("Critical Value (c') for Test Size ≈ 0.05:", round(c_prime, 3), "\n")
+cat("Critical Value (c') for Test Size = 0.05:", round(c_prime, 3), "\n")
 cat("Actual Test Size:", round(actual_alpha, 4), "\n")
 ```
 ```{r}
