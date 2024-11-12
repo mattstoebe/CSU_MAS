@@ -206,14 +206,12 @@ n <- 20            # Sample size
 shape <- 2         # Shape parameter for Gamma
 rate <- 0.5        # Rate parameter for Gamma
 
-# Initialize vector to store sample means
+
 store_means <- numeric(sims)
 
-# Simulation loop
-set.seed(123)  # For reproducibility
 for(i in 1:sims){
-  samp <- rgamma(n, shape=shape, rate=rate)  # Generate sample
-  store_means[i] <- mean(samp)               # Compute sample mean
+  samp <- rgamma(n, shape=shape, rate=rate) 
+  store_means[i] <- mean(samp)               
 }
 
 # Plot histogram of sample means
@@ -237,8 +235,8 @@ store_means_b <- numeric(sims)
 
 set.seed(123)  
 for(i in 1:sims){
-  samp <- rbinom(n, size=1, prob=p)  # Generate Bernoulli sample
-  store_means_b[i] <- mean(samp)      # Compute sample mean
+  samp <- rbinom(n, size=1, prob=p)  
+  store_means_b[i] <- mean(samp)    
 }
 
 hist(store_means_b, freq=FALSE, col="grey", 
@@ -248,7 +246,7 @@ hist(store_means_b, freq=FALSE, col="grey",
 
 # Overlay normal density
 x_range_b <- seq(min(store_means_b), max(store_means_b), length=100)
-normal_density_b <- dnorm(x_range_b, mean=p, sd=sqrt(p*(1-p)/n))  # mean=0.25, sd≈0.0968
+normal_density_b <- dnorm(x_range_b, mean=p, sd=sqrt(p*(1-p)/n))
 lines(x_range_b, normal_density_b, col="red", lwd=2)
 ```
 ##c
@@ -261,8 +259,8 @@ shape2 <- 2        # Beta parameter for Beta
 store_means_c <- numeric(sims)
 
 for(i in 1:sims){
-  samp <- rbeta(n, shape1=shape1, shape2=shape2)  # Generate Beta sample
-  store_means_c[i] <- mean(samp)                    # Compute sample mean
+  samp <- rbeta(n, shape1=shape1, shape2=shape2)  
+  store_means_c[i] <- mean(samp)          
 }
 
 hist(store_means_c, freq=FALSE, col="grey", 
@@ -271,7 +269,7 @@ hist(store_means_c, freq=FALSE, col="grey",
      border = "black")
 
 x_range_c <- seq(min(store_means_c), max(store_means_c), length=100)
-normal_density_c <- dnorm(x_range_c, mean=0.5, sd=sqrt(0.05/n))  # mean=0.5, sd=0.05
+normal_density_c <- dnorm(x_range_c, mean=0.5, sd=sqrt(0.05/n)) 
 lines(x_range_c, normal_density_c, col="red", lwd=2)
 ```
 #Question 6
@@ -362,7 +360,6 @@ sims <- 100000
 
 simulated_samples_new <- replicate(sims, sample(flaws_new, size = n, replace = TRUE, prob = probabilities_new))
 
-# Compute the sample means
 sample_means_new <- colMeans(simulated_samples_new)
 power <- mean(sample_means_new < c)
 
@@ -376,11 +373,10 @@ when the null hypothesis is true. What is the decision rule that gives a test si
 to .05?
 ```{r}
 desired_alpha <- 0.05
-sims <- 100000  # Number of simulations
+sims <- 100000
 
 simulated_samples_H0 <- replicate(sims, sample(flaws, size = n, replace = TRUE, prob = probabilities))
 
-# Compute the sample means and Critical value
 sample_means_H0 <- colMeans(simulated_samples_H0)
 c_prime <- quantile(sample_means_H0, probs = desired_alpha)
 
@@ -392,12 +388,11 @@ cat("Actual Test Size:", round(actual_alpha, 4), "\n")
 ```{r}
 n <- 20
 c_prime <- 0.313
-sims <- 100000  # Number of simulations
+sims <- 100000  
 
 
 simulated_samples_new_Ha <- replicate(sims, sample(flaws_new, size = n, replace = TRUE, prob = probabilities_new))
 
-# Compute the sample means and power
 sample_means_new_Ha <- colMeans(simulated_samples_new_Ha)
 power_new <- mean(sample_means_new_Ha < c_prime)
 
