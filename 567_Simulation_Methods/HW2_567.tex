@@ -1,0 +1,312 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={STAA 567: HW 2},
+  pdfauthor={Matthew Stoebe},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{STAA 567: HW 2}
+\author{Matthew Stoebe}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Q1}\label{q1}
+
+\subsection{Q1A}\label{q1a}
+
+Write the Log likelyhood Function
+
+\subsection{Q1B}\label{q1b}
+
+Find the First Derrivative
+
+\subsection{Q1C}\label{q1c}
+
+Find the Fomula for Lambda hat
+
+\subsection{Q1D}\label{q1d}
+
+\begin{verbatim}
+## [1] 4.607375
+\end{verbatim}
+
+\subsection{Q1E}\label{q1e}
+
+\includegraphics{HW2_567_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+\subsection{Q1f}\label{q1f}
+
+\includegraphics{HW2_567_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+\begin{verbatim}
+## [1] 4.607375
+\end{verbatim}
+
+\subsection{Q1I}\label{q1i}
+
+\begin{verbatim}
+## Iteration 1 : lambda = 4.04661 
+## Iteration 2 : lambda = 4.539124 
+## Iteration 3 : lambda = 4.606364 
+## Iteration 4 : lambda = 4.607375 
+## Iteration 5 : lambda = 4.607375
+\end{verbatim}
+
+\begin{verbatim}
+## [1] 4.607375
+\end{verbatim}
+
+\section{Q2}\label{q2}
+
+\subsection{Q2A}\label{q2a}
+
+\includegraphics{HW2_567_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+\subsection{Q2B}\label{q2b}
+
+\begin{verbatim}
+##    alpha     beta 
+## 3.014761 2.115292
+\end{verbatim}
+
+\begin{verbatim}
+## function gradient 
+##       55       NA
+\end{verbatim}
+
+\subsection{Q2C}\label{q2c}
+
+\includegraphics{HW2_567_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\subsection{Q2D}\label{q2d}
+
+\begin{verbatim}
+##    alpha     beta 
+## 3.015065 2.115614
+\end{verbatim}
+
+\begin{verbatim}
+## function gradient 
+##       23        9
+\end{verbatim}
+
+\section{Appendix}\label{appendix}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Retain this code chunk!!!}
+\FunctionTok{library}\NormalTok{(knitr)}
+\NormalTok{knitr}\SpecialCharTok{::}\NormalTok{opts\_chunk}\SpecialCharTok{$}\FunctionTok{set}\NormalTok{(}\AttributeTok{echo =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{knitr}\SpecialCharTok{::}\NormalTok{opts\_chunk}\SpecialCharTok{$}\FunctionTok{set}\NormalTok{(}\AttributeTok{message =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{knitr}\SpecialCharTok{::}\NormalTok{opts\_chunk}\SpecialCharTok{$}\FunctionTok{set}\NormalTok{(}\AttributeTok{warning =} \ConstantTok{FALSE}\NormalTok{)}
+
+\CommentTok{\#install.packages("field")}
+
+\CommentTok{\#install.packages("tinytex")}
+
+\CommentTok{\#Q1D}
+\FunctionTok{load}\NormalTok{(}\StringTok{"./Data/expData.RData"}\NormalTok{)}
+
+\NormalTok{lambda\_hat }\OtherTok{\textless{}{-}} \DecValTok{1} \SpecialCharTok{/} \FunctionTok{mean}\NormalTok{(x)}
+\NormalTok{lambda\_hat}
+\FunctionTok{hist}\NormalTok{(x, }\AttributeTok{freq =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{xlim =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FunctionTok{max}\NormalTok{(x)), }\AttributeTok{main =} \StringTok{"Histogram of x with Exponential Density"}\NormalTok{, }\AttributeTok{xlab =} \StringTok{"x"}\NormalTok{)}
+
+\NormalTok{x\_vals }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FunctionTok{max}\NormalTok{(x), }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{)}
+\NormalTok{dens\_vals }\OtherTok{\textless{}{-}} \FunctionTok{dexp}\NormalTok{(x\_vals, }\AttributeTok{rate =}\NormalTok{ lambda\_hat)}
+\FunctionTok{lines}\NormalTok{(x\_vals, dens\_vals, }\AttributeTok{col =} \StringTok{"red"}\NormalTok{)}
+\NormalTok{lambda\_seq }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{7}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{1000}\NormalTok{)}
+
+\NormalTok{logLik\_vals }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(lambda\_seq, }\ControlFlowTok{function}\NormalTok{(lambda) \{}
+\NormalTok{  n }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(x)}
+\NormalTok{  n }\SpecialCharTok{*} \FunctionTok{log}\NormalTok{(lambda) }\SpecialCharTok{{-}}\NormalTok{ lambda }\SpecialCharTok{*} \FunctionTok{sum}\NormalTok{(x)}
+\NormalTok{\})}
+
+\FunctionTok{plot}\NormalTok{(lambda\_seq, logLik\_vals, }\AttributeTok{type =} \StringTok{\textquotesingle{}l\textquotesingle{}}\NormalTok{, }\AttributeTok{xlab =} \FunctionTok{expression}\NormalTok{(lambda), }\AttributeTok{ylab =} \StringTok{"Log{-}Likelihood"}\NormalTok{, }\AttributeTok{main =} \StringTok{"Log{-}Likelihood Function"}\NormalTok{)}
+
+\FunctionTok{abline}\NormalTok{(}\AttributeTok{v =}\NormalTok{ lambda\_hat, }\AttributeTok{col =} \StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, }\AttributeTok{lty =} \DecValTok{2}\NormalTok{)}
+
+\NormalTok{neg\_logLik }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(lambda) \{}
+  \ControlFlowTok{if}\NormalTok{ (lambda }\SpecialCharTok{\textless{}=} \DecValTok{0}\NormalTok{) }\FunctionTok{return}\NormalTok{(}\ConstantTok{Inf}\NormalTok{)}
+\NormalTok{  n }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(x)}
+  \SpecialCharTok{{-}}\NormalTok{ (n }\SpecialCharTok{*} \FunctionTok{log}\NormalTok{(lambda) }\SpecialCharTok{{-}}\NormalTok{ lambda }\SpecialCharTok{*} \FunctionTok{sum}\NormalTok{(x))}
+\NormalTok{\}}
+
+\NormalTok{opt\_result }\OtherTok{\textless{}{-}} \FunctionTok{optimize}\NormalTok{(neg\_logLik, }\AttributeTok{interval =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{7}\NormalTok{))}
+\NormalTok{lambda\_hat\_opt }\OtherTok{\textless{}{-}}\NormalTok{ opt\_result}\SpecialCharTok{$}\NormalTok{minimum}
+\NormalTok{lambda\_hat\_opt}
+\NormalTok{newton\_raphson }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x, }\AttributeTok{lambda\_init =} \DecValTok{3}\NormalTok{, }\AttributeTok{tol =} \FloatTok{1e{-}6}\NormalTok{, }\AttributeTok{max\_iter =} \DecValTok{100}\NormalTok{) \{}
+\NormalTok{  n }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(x)}
+\NormalTok{  S }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(x)}
+\NormalTok{  lambda\_old }\OtherTok{\textless{}{-}}\NormalTok{ lambda\_init}
+  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{max\_iter) \{}
+\NormalTok{    dL }\OtherTok{\textless{}{-}}\NormalTok{ n }\SpecialCharTok{/}\NormalTok{ lambda\_old }\SpecialCharTok{{-}}\NormalTok{ S}
+\NormalTok{    d2L }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\NormalTok{ n }\SpecialCharTok{/}\NormalTok{ lambda\_old}\SpecialCharTok{\^{}}\DecValTok{2}
+\NormalTok{    lambda\_new }\OtherTok{\textless{}{-}}\NormalTok{ lambda\_old }\SpecialCharTok{{-}}\NormalTok{ dL }\SpecialCharTok{/}\NormalTok{ d2L}
+    \FunctionTok{cat}\NormalTok{(}\StringTok{"Iteration"}\NormalTok{, i, }\StringTok{": lambda ="}\NormalTok{, lambda\_new, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+    \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{abs}\NormalTok{(lambda\_new }\SpecialCharTok{{-}}\NormalTok{ lambda\_old) }\SpecialCharTok{\textless{}}\NormalTok{ tol) \{}
+      \ControlFlowTok{break}
+\NormalTok{    \}}
+\NormalTok{    lambda\_old }\OtherTok{\textless{}{-}}\NormalTok{ lambda\_new}
+\NormalTok{  \}}
+  \FunctionTok{return}\NormalTok{(lambda\_new)}
+\NormalTok{\}}
+
+\NormalTok{lambda\_hat\_nr }\OtherTok{\textless{}{-}} \FunctionTok{newton\_raphson}\NormalTok{(x)}
+\NormalTok{lambda\_hat\_nr}
+\CommentTok{\#Q2A}
+\FunctionTok{load}\NormalTok{(}\StringTok{"./Data/betaData.RData"}\NormalTok{)}
+
+\NormalTok{logLik\_beta }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(alpha, beta, y) \{}
+  \ControlFlowTok{if}\NormalTok{ (alpha }\SpecialCharTok{\textless{}=} \DecValTok{0} \SpecialCharTok{||}\NormalTok{ beta }\SpecialCharTok{\textless{}=} \DecValTok{0}\NormalTok{) \{}
+    \FunctionTok{return}\NormalTok{(}\ConstantTok{NA}\NormalTok{)}
+\NormalTok{  \}}
+  \FunctionTok{sum}\NormalTok{(}\FunctionTok{dbeta}\NormalTok{(y, }\AttributeTok{shape1 =}\NormalTok{ alpha, }\AttributeTok{shape2 =}\NormalTok{ beta, }\AttributeTok{log =} \ConstantTok{TRUE}\NormalTok{))}
+\NormalTok{\}}
+
+\NormalTok{alpha\_seq }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{6}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{)}
+\NormalTok{beta\_seq }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\DecValTok{5}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{)}
+
+\NormalTok{logLik\_vals }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\ConstantTok{NA}\NormalTok{, }\AttributeTok{nrow =} \FunctionTok{length}\NormalTok{(alpha\_seq), }\AttributeTok{ncol =} \FunctionTok{length}\NormalTok{(beta\_seq))}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(alpha\_seq)) \{}
+  \ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(beta\_seq)) \{}
+\NormalTok{    logLik\_vals[i, j] }\OtherTok{\textless{}{-}} \FunctionTok{logLik\_beta}\NormalTok{(alpha\_seq[i], beta\_seq[j], y)}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\FunctionTok{library}\NormalTok{(fields)}
+\FunctionTok{image.plot}\NormalTok{(alpha\_seq, beta\_seq, logLik\_vals, }\AttributeTok{xlab =} \FunctionTok{expression}\NormalTok{(alpha), }\AttributeTok{ylab =} \FunctionTok{expression}\NormalTok{(beta), }\AttributeTok{main =} \StringTok{"Log{-}Likelihood Surface"}\NormalTok{)}
+\CommentTok{\#Q2B}
+\NormalTok{neg\_logLik\_beta }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(params, y) \{}
+\NormalTok{  alpha }\OtherTok{\textless{}{-}}\NormalTok{ params[}\DecValTok{1}\NormalTok{]}
+\NormalTok{  beta }\OtherTok{\textless{}{-}}\NormalTok{ params[}\DecValTok{2}\NormalTok{]}
+  \ControlFlowTok{if}\NormalTok{ (alpha }\SpecialCharTok{\textless{}=} \DecValTok{0} \SpecialCharTok{||}\NormalTok{ beta }\SpecialCharTok{\textless{}=} \DecValTok{0}\NormalTok{) \{}
+    \FunctionTok{return}\NormalTok{(}\ConstantTok{Inf}\NormalTok{)}
+\NormalTok{  \}}
+  \SpecialCharTok{{-}}\FunctionTok{sum}\NormalTok{(}\FunctionTok{dbeta}\NormalTok{(y, }\AttributeTok{shape1 =}\NormalTok{ alpha, }\AttributeTok{shape2 =}\NormalTok{ beta, }\AttributeTok{log =} \ConstantTok{TRUE}\NormalTok{))}
+\NormalTok{\}}
+
+\NormalTok{start\_params }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\AttributeTok{alpha =} \DecValTok{3}\NormalTok{, }\AttributeTok{beta =} \DecValTok{3}\NormalTok{)}
+
+\NormalTok{result\_nelder }\OtherTok{\textless{}{-}} \FunctionTok{optim}\NormalTok{(start\_params, neg\_logLik\_beta, }\AttributeTok{y =}\NormalTok{ y, }\AttributeTok{method =} \StringTok{"Nelder{-}Mead"}\NormalTok{)}
+\NormalTok{result\_nelder}\SpecialCharTok{$}\NormalTok{par  }\CommentTok{\# Estimated parameters}
+\NormalTok{result\_nelder}\SpecialCharTok{$}\NormalTok{counts  }\CommentTok{\# Number of iterations}
+
+\CommentTok{\#Q2C}
+\FunctionTok{hist}\NormalTok{(y, }\AttributeTok{freq =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{main =} \StringTok{"Histogram of y with Beta Density"}\NormalTok{, }\AttributeTok{xlab =} \StringTok{"y"}\NormalTok{)}
+
+\NormalTok{y\_vals }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{)}
+\NormalTok{dens\_vals }\OtherTok{\textless{}{-}} \FunctionTok{dbeta}\NormalTok{(y\_vals, }\AttributeTok{shape1 =}\NormalTok{ result\_nelder}\SpecialCharTok{$}\NormalTok{par[}\DecValTok{1}\NormalTok{], }\AttributeTok{shape2 =}\NormalTok{ result\_nelder}\SpecialCharTok{$}\NormalTok{par[}\DecValTok{2}\NormalTok{])}
+\FunctionTok{lines}\NormalTok{(y\_vals, dens\_vals, }\AttributeTok{col =} \StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{)}
+\CommentTok{\#Q2D}
+\NormalTok{result\_bfgs }\OtherTok{\textless{}{-}} \FunctionTok{optim}\NormalTok{(start\_params, neg\_logLik\_beta, }\AttributeTok{y =}\NormalTok{ y, }\AttributeTok{method =} \StringTok{"BFGS"}\NormalTok{)}
+\NormalTok{result\_bfgs}\SpecialCharTok{$}\NormalTok{par  }\CommentTok{\# Estimated parameters}
+\NormalTok{result\_bfgs}\SpecialCharTok{$}\NormalTok{counts  }\CommentTok{\# Number of iterations}
+\end{Highlighting}
+\end{Shaded}
+
+
+\end{document}

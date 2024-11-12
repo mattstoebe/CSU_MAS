@@ -1,0 +1,593 @@
+---
+title: "551 HW 3"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+#10.6:
+
+Regression models with interactions: The folder Beauty contains data (use file beauty.csv) from Hamermesh and Parker (2005) on student evaluations of instructors’ beauty and teaching quality for several courses at the University of Texas. The teaching evaluations were conducted at the end of the semester, and the beauty judgments were made later, by six students who had not attended the classes and were not aware of the course evaluations.
+(a) Run a regression using beauty (the variable beauty) to predict course evaluations (eval), adjusting for various other predictors. Graph the data and fitted model, and explain the meaning of each of the coefficients along with the residual standard deviation. Plot the residuals versus fitted values.
+
+(b) Fit some other models, including beauty and also other predictors. Consider at least one model with interactions. For each model, explain the meaning of each of its estimated
+coefficients.
+
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(broom) # for tidy model summaries
+
+# Load the data
+df <- read.csv("./Other Data/HW_3/beauty.csv")
+
+# Inspect the first few rows of the data
+head(df)
+
+# Model 1: Simple linear regression with beauty and other predictors
+model1 <- lm(eval ~ beauty + age + female + minority + nonenglish, data = df)
+
+# Model 2: Adding an interaction term between beauty and female
+model2 <- lm(eval ~ beauty * female + age + minority + nonenglish, data = df)
+
+# Model 3: Adding interactions between beauty and other variables
+model3 <- lm(eval ~ beauty * female + beauty * age + beauty * minority + beauty * nonenglish, data = df)
+
+
+# Summary of each model
+summary(model1)
+summary(model2)
+summary(model3)
+
+# Create a table comparing the coefficients of each model using broom's tidy() function
+coef_model1 <- tidy(model1) %>% mutate(model = "Model 1")
+coef_model2 <- tidy(model2) %>% mutate(model = "Model 2")
+coef_model3 <- tidy(model3) %>% mutate(model = "Model 3")
+
+# Combine the coefficients from all models
+coef_comparison <- bind_rows(coef_model1, coef_model2, coef_model3)
+
+
+coef_combined <- coef_comparison %>% filter(term != "(Intercept)")
+
+
+# Print the comparison of coefficients across models
+coef_comparison %>%
+  select(term, estimate, std.error, statistic, p.value, model) %>%
+  arrange(term, model) %>%
+  print()
+
+# Plot residuals vs fitted values for each model
+
+# Model 1 Residuals vs Fitted
+residuals1 <- resid(model1)
+fitted_values1 <- fitted(model1)
+
+ggplot(data.frame(fitted = fitted_values1, residuals = residuals1), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Model 1)", x = "Fitted Values", y = "Residuals")
+
+# Model 2 Residuals vs Fitted
+residuals2 <- resid(model2)
+fitted_values2 <- fitted(model2)
+
+ggplot(data.frame(fitted = fitted_values2, residuals = residuals2), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Model 2)", x = "Fitted Values", y = "Residuals")
+
+# Model 3 Residuals vs Fitted
+residuals3 <- resid(model3)
+fitted_values3 <- fitted(model3)
+
+ggplot(data.frame(fitted = fitted_values3, residuals = residuals3), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Model 3)", x = "Fitted Values", y = "Residuals")
+
+
+ggplot(coef_combined, aes(x = term, y = estimate, fill = model)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "Comparison of Coefficients Across Models", 
+       x = "Predictors", 
+       y = "Coefficient Estimate (Slope)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+## a: Coefficient and residual standard deviation Interpretation
+1. Beauty: 0.141. For every unit increase in the beauty rating, the course evaluation is expected to increase by approximately 0.141, holding all other variables constant. This indicates a positive effect of perceived beauty on evaluations.
+2. Age: -0.0027. There is a slight negative association between age and course evaluation, but the effect is small and not statistically significant.
+3. Female: -0.207. Female instructors receive evaluations that are, on average, 0.207 points lower than male instructors, holding other factors constant. This result is statistically significant.
+4, Minority: -0.044. Minority instructors receive evaluations that are 0.044 points lower than non-minority instructors, but this effect is not statistically significant.
+5. Non-English: -0.313. Instructors who are non-native English speakers tend to receive evaluations that are 0.313 points lower than native English speakers, a statistically significant result.
+
+Residual Standard Deviation: 0.532. This indicates the typical deviation of observed evaluations from the predicted values by the model.
+
+## b: Interpretation of coefficients for other models including interactions
+### Model 2: 
+1. Beauty: 0.194. The effect of beauty on course evaluations for male instructors (reference group) is a positive increase of 0.194 per unit increase in beauty.
+2. Female: -0.214. Female instructors receive evaluations that are 0.214 points lower than male instructors when beauty is held constant.
+3. Female:Beauty : -0.111. This indicates that for female instructors, the effect of beauty is smaller. In particular, for every unit increase in beauty, female instructors receive an increase of 0.111 points less compared to male instructors. This interaction is marginally significant.
+4. Other coefficients remain similar to the first model.
+
+### Model 3: 
+1. Beauty: -0.443. In this model, the direct effect of beauty is negative. However, its interactions with other variables need to be considered for interpretation.
+2. female:Beauty: 0.0125. This suggests that the effect of beauty increases with age. Older instructors benefit more from beauty in their evaluations.
+3. minority:Beauty: -0.139. The negative interaction indicates that for minority instructors, beauty has a smaller positive effect on evaluations.
+4. Beauty:nonenglish: 0.286. Non-native English speakers benefit more from beauty in their evaluations.
+
+Residual standard error: 0.524. This model has a slightly lower residual standard error, indicating a better fit than the previous two models.
+
+#11.5
+
+Residuals and predictions: The folder Pyth contains outcome y and predictors x1, x2 for 40 data points, with a further 20 points with the predictors but no observed outcome. Save the file to your working directory, then read it into R using read.table().
+(a) Use R to fit a linear regression model predicting y from x1, x2, using the first 40 data points in the file. Summarize the inferences and check the fit of your model.
+(b) Display the estimated model graphically as in Figure 11.2.
+(c) Make a residual plot for this model. Do the assumptions appear to be met?
+(d) Make predictions for the remaining 20 data points in the file. How confident do you feel about these predictions?
+
+```{r}
+# (a) Read the data with proper column names
+data <- read.table("./Other Data/HW_3/pyth.txt", header = TRUE)
+
+# Convert columns to numeric
+data$x1 <- as.numeric(data$x1)
+data$x2 <- as.numeric(data$x2)
+data$y <- as.numeric(data$y)
+train_data <- data[1:40, ]
+test_data <- data[41:60, c("x1", "x2")]
+
+# (a) Fit the linear regression model using the first 40 data points
+model <- lm(y ~ x1 + x2, data = train_data)
+
+summary(model)
+
+# (b) Display the estimated model graphically for 'x1' with regression line
+ggplot(train_data, aes(x = x1, y = y)) +
+  geom_point() +
+  geom_abline(intercept = coef(model)[1] + coef(model)[3] * mean(train_data$x2), slope = coef(model)[2], color = "blue") +  # Add regression line
+  labs(title = "Linear Regression of y on x1", x = "x1", y = "y") +
+  theme_minimal()
+
+# (b) Display the estimated model graphically for 'x2' with regression line
+ggplot(train_data, aes(x = x2, y = y)) +
+  geom_point() +
+  geom_abline(intercept = coef(model)[1] + coef(model)[2] * mean(train_data$x1), slope = coef(model)[3], color = "green") +  # Add regression line
+  labs(title = "Linear Regression of y on x2", x = "x2", y = "y") +
+  theme_minimal()
+
+# (c) Residual plot: plot residuals against fitted values
+residuals <- resid(model)
+fitted_values <- fitted(model)
+
+ggplot(data.frame(fitted = fitted_values, residuals = residuals), aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residual Plot", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# (d) Predictions for the remaining 20 data points (test_data)
+predictions <- predict(model, newdata = test_data)
+
+# Print the predictions
+print(predictions)
+
+
+```
+
+#12.6
+12.6 Logarithmic transformations: The folder Pollution contains mortality rates and various
+environmental factors from 60 U.S. metropolitan areas (see McDonald and Schwing, 1973). For
+this exercise we shall model mortality rate given nitric oxides, sulfur dioxide, and hydrocarbons
+as inputs. This model is an extreme oversimplification, as it combines all sources of mortality
+and does not adjust for crucial factors such as age and smoking. We use it to illustrate log
+transformations in regression.
+(a) Create a scatterplot of mortality rate versus level of nitric oxides. Do you think linear regression will fit these data well? Fit the regression and evaluate a residual plot from the regression.
+(b) Find an appropriate transformation that will result in data more appropriate for linear regression. Fit a regression to the transformed data and evaluate the new residual plot.
+(c) Interpret the slope coefficient from the model you chose in (b)
+(d) Now fit a model predicting mortality rate using levels of nitric oxides, sulfur dioxide, and hydrocarbons as inputs. Use appropriate transformations when helpful. Plot the fitted regression model and interpret the coefficients.
+(e) Cross validate: fit the model you chose above to the first half of the data and then predict for the second half. You used all the data to construct the model in (d), so this is not really cross validation, but it gives a sense of how the steps of cross validation can be implemented.
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Load and Inspect the Dataset
+
+# Define column names
+column_names <- c("prec", "jant", "jult", "ovr65", "popn", "educ", "hous", "dens", 
+                  "nonw", "wwdrk", "poor", "hc", "nox", "so2", "humid", "mort")
+
+# Load the dataset
+data <- read.csv("./Other Data/HW_3/pollution.csv", header = TRUE, col.names = column_names)
+
+# Inspect the first few rows of the dataset
+head(data)
+
+# Part (a): Scatterplot and Linear Regression
+
+# Create scatterplot of mortality rate vs nitric oxides (nox)
+ggplot(data, aes(x = nox, y = mort)) +
+  geom_point(color = "darkblue") +
+  labs(title = "Mortality Rate vs Nitric Oxides (NOx)",
+       x = "Nitric Oxides (NOx)",
+       y = "Mortality Rate") +
+  theme_minimal()
+
+
+# Fit a simple linear regression model: mort ~ nox
+linear_model <- lm(mort ~ nox, data = data)
+
+# Summary of the linear regression model
+summary(linear_model)
+
+# Residuals vs Fitted Values Plot
+ggplot(data, aes(x = fitted(linear_model), y = resid(linear_model))) +
+  geom_point(color = "darkgreen") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Linear Model)",
+       x = "Fitted Values",
+       y = "Residuals") +
+  theme_minimal()
+
+
+# Part (b): Logarithmic Transformation and Regression
+
+# Check for zero or negative values before log transformation
+if(any(data$mort <= 0) | any(data$nox <= 0)) {
+  stop("Mortality rate and NOx levels must be positive for log transformation.")
+}
+
+# Apply logarithmic transformation to both response and predictor
+data <- data %>%
+  mutate(log_mort = log(mort),
+         log_nox = log(nox))
+
+# Create scatterplot of log-transformed variables
+ggplot(data, aes(x = log_nox, y = log_mort)) +
+  geom_point(color = "purple") +
+  labs(title = "Log-Log Scatterplot: Mortality Rate vs NOx",
+       x = "Log Nitric Oxides (log NOx)",
+       y = "Log Mortality Rate (log Mort)") +
+  theme_minimal()
+
+# Fit a linear regression model on log-transformed data
+log_linear_model <- lm(log_mort ~ log_nox, data = data)
+
+# Summary of the log-log regression model
+summary(log_linear_model)
+
+# Residuals vs Fitted Values Plot for Log-Transformed Model
+ggplot(data, aes(x = fitted(log_linear_model), y = resid(log_linear_model))) +
+  geom_point(color = "orange") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Log-Log Model)",
+       x = "Fitted Values (log scale)",
+       y = "Residuals") +
+  theme_minimal()
+
+# Part (c): Interpretation of the Slope Coefficient
+
+# Extract slope coefficient
+slope_coef <- coef(log_linear_model)["log_nox"]
+
+# Interpretation statement
+cat(sprintf("Interpretation of Slope Coefficient:\nA 1%% increase in nitric oxides (NOx) level is associated with approximately %.2f%% increase in mortality rate, holding other factors constant.\n", 
+            slope_coef * 100))
+
+# Part (d): Multiple Regression with Transformed Data
+
+# Check for zero or negative values in additional predictors
+if(any(data$so2 <= 0) | any(data$hc <= 0)) {
+  stop("SO2 and HC levels must be positive for log transformation.")
+}
+
+# Apply logarithmic transformation to additional predictors
+data <- data %>%
+  mutate(log_so2 = log(so2),
+         log_hc = log(hc))
+
+# Fit multiple linear regression model on log-transformed data
+multi_log_model <- lm(log_mort ~ log_nox + log_so2 + log_hc, data = data)
+
+# Summary of the multiple regression model
+summary(multi_log_model)
+
+# Residuals vs Fitted Values Plot for Multiple Log-Transformed Model
+ggplot(data, aes(x = fitted(multi_log_model), y = resid(multi_log_model))) +
+  geom_point(color = "brown") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values (Multiple Log-Log Model)",
+       x = "Fitted Values (log scale)",
+       y = "Residuals") +
+  theme_minimal()
+
+
+# Part (e): Cross-Validation
+
+# Split the data into first half and second half
+set.seed(123) # For reproducibility
+n <- nrow(data)
+half <- floor(n / 2)
+
+# Ensure data is shuffled before splitting to avoid any ordering bias
+data_shuffled <- data %>% sample_frac(1)
+
+first_half <- data_shuffled[1:half, ]
+second_half <- data_shuffled[(half + 1):n, ]
+
+# Fit the multiple regression model on the first half
+cv_model <- lm(log_mort ~ log_nox + log_so2 + log_hc, data = first_half)
+
+# Predict on the second half
+cv_predictions_log <- predict(cv_model, newdata = second_half)
+
+# Convert predictions back to the original scale
+cv_predictions <- exp(cv_predictions_log)
+
+# Actual mortality rates in the second half
+actual_mort <- second_half$mort
+
+# Calculate prediction errors (e.g., Mean Absolute Error)
+mae <- mean(abs(cv_predictions - actual_mort))
+rmse <- sqrt(mean((cv_predictions - actual_mort)^2))
+
+# Output prediction results and error metrics
+cat("Cross-Validation Predictions:\n")
+print(data.frame(Actual = actual_mort, Predicted = cv_predictions))
+
+cat(sprintf("\nPrediction Error Metrics:\nMean Absolute Error (MAE): %.2f\nRoot Mean Squared Error (RMSE): %.2f\n", mae, rmse))
+
+# Optional: Plot Actual vs Predicted Mortality Rates
+ggplot(data.frame(Actual = actual_mort, Predicted = cv_predictions), aes(x = Actual, y = Predicted)) +
+  geom_point(color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Actual vs Predicted Mortality Rates",
+       x = "Actual Mortality Rate",
+       y = "Predicted Mortality Rate") +
+  theme_minimal()
+
+```
+
+
+#12.15
+
+```{r}
+# Load libraries
+library("rprojroot")
+library("rstantools")
+library("rstanarm")
+library("loo")
+library("ggplot2")
+library("bayesplot")
+theme_set(bayesplot::theme_default(base_family = "sans"))
+
+SEED=123
+
+data_path <- "./Other Data/HW_3/portugese_language.csv"  # Ensure the correct path and filename
+
+data <- read.csv(data_path, header = TRUE)
+
+# Inspect the first few rows of the dataset
+head(data)
+
+# Define the predictors as per Section 12.7
+predictors <- c("school", "sex", "age", "address", "famsize", "Pstatus",
+               "Medu", "Fedu", "traveltime", "studytime", "failures",
+               "schoolsup", "famsup", "paid", "activities", "nursery",
+               "higher", "internet", "romantic", "famrel", "freetime",
+               "goout", "Dalc", "Walc", "health", "absences")
+
+p <- length(predictors)
+
+
+# Define the outcome variable
+outcome <- "G3por"  # Assuming the Portuguese grade column is named 'G3port'
+
+```
+
+```{r}
+data_G3por <- subset(data, subset=G3por>0, select=c("G3por",predictors))
+n <- nrow(data_G3por)
+
+fit0 <- stan_glm(G3por ~ ., data = data_G3por, refresh=0)
+p0 <- mcmc_areas(as.matrix(fit0), pars=vars(-'(Intercept)',-sigma),
+                 prob_outer=0.95, area_method = "scaled height") +
+  xlim(c(-3.2,2.4))
+p0 <- p0 + scale_y_discrete(limits = rev(levels(p0$data$parameter)))
+p0
+
+
+
+```
+
+```{r}
+datastd_G3por <- data_G3por
+datastd_G3por[,predictors] <-scale(data_G3por[,predictors])
+
+fit1 <- stan_glm(G3por ~ ., data = datastd_G3por, seed = SEED, refresh=0)
+
+p1 <- mcmc_areas(as.matrix(fit1), pars=vars(-'(Intercept)',-sigma),
+                 prob_outer=0.95, area_method = "scaled height") +
+  xlim(c(-1.2,0.8))
+p1 <- p1 + scale_y_discrete(limits = rev(levels(p1$data$parameter)))
+p1
+```
+```{r}
+round(median(bayes_R2(fit1)), 2)
+round(median(loo_R2(fit1)), 2)
+(loo1 <- loo(fit1))
+
+```
+
+```{r}
+ggplot() + geom_histogram(aes(x=bayes_R2(fit1)), breaks=seq(0,1,length.out=100)) +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  labs(x="Bayesian R^2", y="")
+```
+```{r}
+ppR2<-numeric()
+for (i in 1:4000) {
+  sigma2 <- rexp(1,rate=0.3)^2;
+  muvar <- var(as.matrix(datastd_G3por[,2:27]) %*% rnorm(26)*2.5)
+  ppR2[i] <- muvar/(muvar+sigma2)
+}
+ggplot()+geom_histogram(aes(x=ppR2), breaks=seq(0,1,length.out=50)) +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  labs(x="Prior predictive Bayesian R^2",y="")
+```
+```{r}
+pp1 <- mcmc_hist(data.frame(Prior=ppR2,Posterior=bayes_R2(fit1)),
+                 breaks=seq(0,1,length.out=100),
+                 facet_args = list(nrow = 2)) +
+  facet_text(size = 13) +
+  scale_x_continuous(limits = c(0,1), expand = c(0, 0),
+                     labels = c("0","0.25","0.5","0.75","1")) +
+  theme(axis.line.y = element_blank()) +
+  xlab("Bayesian R^2")
+
+pp1
+```
+
+```{r}
+ppR2<-numeric()
+for (i in 1:4000) {
+  sigma2 <- 0.7*rexp(1, rate=1/sd(datastd_G3por$G3por))^2
+  muvar <- var(as.matrix(datastd_G3por[,2:27]) %*% rnorm(26, sd=sd(datastd_G3por$G3por)/sqrt(26)*sqrt(0.3)))
+  ppR2[i] <- muvar/(muvar+sigma2)
+}
+ggplot()+geom_histogram(aes(x=ppR2), breaks=seq(0,1,length.out=50)) +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  labs(x="Prior predictive Bayesian R^2",y="")
+
+fit2 <- stan_glm(G3por ~ ., data = datastd_G3por, seed = SEED,
+                 prior=normal(scale=sd(datastd_G3por$G3por)/sqrt(26)*sqrt(0.3),
+                              autoscale=FALSE),
+                 refresh=0)
+
+round(median(loo_R2(fit2)), 2)
+round(median(bayes_R2(fit2)), 2)
+ggplot()+geom_histogram(aes(x=bayes_R2(fit2)), breaks=seq(0,1,length.out=100)) +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  labs(x="Bayesian R^2",y="")
+
+pp2 <- mcmc_hist(data.frame(Prior=ppR2,Posterior=bayes_R2(fit2)),
+                 breaks=seq(0,1,length.out=100),
+                 facet_args = list(nrow = 2)) +
+  facet_text(size = 13) +
+  scale_x_continuous(limits = c(0,1), expand = c(0, 0),
+                     labels = c("0","0.25","0.5","0.75","1")) +
+  theme(axis.line.y = element_blank()) +
+  xlab("Bayesian R^2")
+pp2
+```
+```{r}
+(loo2 <- loo(fit2))
+loo_compare(loo1,loo2)
+
+p2 <- mcmc_areas(as.matrix(fit2), pars=vars(-'(Intercept)',-sigma),
+                 prob_outer=0.95, area_method = "scaled height") +
+  xlim(c(-1.2,0.8))
+p2 <- p2 + scale_y_discrete(limits = rev(levels(p2$data$parameter)))
+p2
+
+```
+
+```{r}
+p0 <- 6
+slab_scale <- sd(datastd_G3por$G3por)/sqrt(p0)*sqrt(0.3)
+#
+ppR2<-numeric()
+for (i in 1:4000) {
+  sigma2 <- 0.7*rexp(1,rate=1/sd(datastd_G3por$G3por))^2;
+  global_scale <- p0 / (p - p0) * sqrt(sigma2) / sqrt(n)
+  z <- rnorm(p)
+  lambda <- rcauchy(p)
+  tau <- rcauchy(1, scale = global_scale)
+  caux <- 1/rgamma(1, shape=0.5, rate=0.5)
+  c <-  slab_scale * sqrt(caux)
+  lambda_tilde <- sqrt(c^2 * lambda^2 / (c^2 + tau^2*lambda^2))
+  beta <- rnorm(p) * lambda_tilde * tau
+  muvar <- var(as.matrix(datastd_G3por[,2:27]) %*% beta)
+  ppR2[i] <- muvar/(muvar+sigma2)
+}
+ggplot()+geom_histogram(aes(x=ppR2), breaks=seq(0,1,length.out=50)) +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  labs(x="Prior predictive Bayesian R^2",y="")
+
+p0 <- 6
+slab_scale <- sd(datastd_G3por$G3por)/sqrt(p0)*sqrt(0.3)
+# global scale without sigma, as the scaling by sigma happens in stan_glm
+global_scale <- p0 / (p - p0) / sqrt(n)
+fit3 <- stan_glm(G3por ~ ., data = datastd_G3por, seed = SEED,
+                 prior=hs(global_scale=global_scale, slab_scale=slab_scale),
+                 refresh=0)
+
+round(median(loo_R2(fit3)), 2)
+round(median(bayes_R2(fit3)), 2)
+(loo3 <- loo(fit3))
+loo_compare(loo1,loo3)
+loo_compare(loo2,loo3)
+
+ggplot()+geom_histogram(aes(x=bayes_R2(fit3)), breaks=seq(0,1,length.out=100)) +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  labs(x="Bayesian R^2",y="")
+
+pp3 <- mcmc_hist(data.frame(Prior=ppR2,Posterior=bayes_R2(fit3)),
+                 breaks=seq(0,1,length.out=100),
+                 facet_args = list(nrow = 2)) +
+  facet_text(size = 13) +
+  scale_x_continuous(limits = c(0,1), expand = c(0, 0),
+                     labels = c("0","0.25","0.5","0.75","1")) +
+  theme(axis.line.y = element_blank()) +
+  xlab("Bayesian R^2")
+pp3
+```
+```{r}
+p3 <- mcmc_areas(as.matrix(fit3), pars=vars(-'(Intercept)',-sigma),
+                 prob_outer=0.95, area_method = "scaled height") +
+  xlim(c(-1.2,0.8))
+p3 <- p3 + scale_y_discrete(limits = rev(levels(p3$data$parameter)))
+p3
+```
+
+```{r}
+fit4 <- stan_glm(G3por ~ failures + schoolsup + goout + absences +higher + school +sex,
+                 data = datastd_G3por, seed = SEED, refresh=0)
+
+round(median(loo_R2(fit4)), 2)
+round(median(bayes_R2(fit4)), 2)
+ggplot()+geom_histogram(aes(x=bayes_R2(fit4)), breaks=seq(0,1,length.out=100)) +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  labs(x="Bayesian R^2",y="")
+
+(loo4 <- loo(fit4))
+loo_compare(loo3,loo4)
+loo_compare(loo2,loo4)
+loo_compare(loo1,loo4)
+p4 <- mcmc_areas(as.matrix(fit4), pars=vars(-'(Intercept)',-sigma),
+                 prob_outer=0.99, area_method = "scaled height") +
+  xlim(c(-1.3,0.1))
+p4 <- p4 + scale_y_discrete(limits = rev(levels(p4$data$parameter)))
+p4
+```
+

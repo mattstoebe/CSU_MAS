@@ -1,0 +1,103 @@
+---
+title: "566_Assignment_2"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(forcats)
+library(ggrepel)
+```
+
+
+```{r}
+library(socviz) 
+
+data("gss_sm")
+
+
+gss_sm_summary <- gss_sm %>%
+  group_by(bigregion, religion) %>%
+  summarise(n = n(), .groups = 'drop') %>%
+  group_by(bigregion) %>%  #Group by region
+  mutate(freq = n / sum(n))  # Calculating the relative frequency per region
+
+# Plotting
+gss_sm_plot <- ggplot(gss_sm_summary, aes(x = freq, y = fct_reorder(religion, freq), fill = religion)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~bigregion, scales = "free_y", ncol = 2) +  # Create a 2-column layout
+  labs(x = "Frequency", y = "Religion") +
+  theme_minimal() +
+  theme(
+        # Adjust the background to grey
+        panel.background = element_rect(fill = "grey90", color = NA),
+        panel.grid.major = element_line(color = "white"),
+        panel.grid.minor = element_blank()
+  ) +
+  scale_fill_brewer(palette = "Set3")  
+
+# Display the plot
+print(gss_sm_plot)
+
+
+```
+
+
+
+```{r}
+life_exp <- read.csv("Life Expectancy Data.csv", header=TRUE)
+
+# Calculate the average life expectancy, GDP, and other relevant variables for each country
+life_exp_avg <- life_exp %>%
+  filter(Population >= 30000000) %>%  # Filter for population >= 30 million
+  group_by(Country, Status) %>%        # Group by Country and Status
+  summarise(
+    avg_life_expectancy = mean(Life.expectancy, na.rm = TRUE),  # Average life expectancy
+    avg_GDP = mean(GDP, na.rm = TRUE),  # Average GDP
+    sd_life_expectancy = sd(Life.expectancy, na.rm = TRUE)  # Standard deviation of life expectancy
+  ) %>%
+  ungroup() %>%
+  arrange(avg_life_expectancy)  # Order by highest average life expectancy
+
+# Reorder Country factor by average life expectancy
+life_exp_avg$Country <- factor(life_exp_avg$Country, levels = life_exp_avg$Country)
+
+# Plot life expectancy with error bars (one standard deviation), ordered by average life expectancy
+ggplot(life_exp_avg, aes(x = avg_life_expectancy, y = Country, color = Status)) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = avg_life_expectancy - sd_life_expectancy,
+                     xmax = avg_life_expectancy + sd_life_expectancy)) +
+  labs(x = "Average Life Expectancy", y = "Country", title = "Average Life Expectancy by Country (Ordered)") +
+  theme_minimal() + 
+    theme(
+    panel.background = element_rect(fill = "grey90", color = NA),  # Set the panel background to light grey
+    plot.background = element_rect(fill = "grey90", color = NA),   # Set the plot background to light grey
+    panel.grid.major = element_line(color = "white"),              # Set major grid lines to white
+    panel.grid.minor = element_blank()     
+    )
+```
+
+
+```{r}
+
+# Assuming life_exp_avg contains the data with columns avg_GDP, avg_life_expectancy, and Country
+ggplot(life_exp_avg, aes(x = avg_GDP, y = avg_life_expectancy)) +
+  geom_point() +
+  geom_text_repel(aes(label = Country), size = 3, box.padding = 0.35, point.padding = 0.5, max.overlaps = 10) +  # Using ggrepel
+  labs(x = "Average GDP", y = "Average Life Expectancy", title = "Average GDP vs Life Expectancy by Country") +
+  theme_minimal() +
+  theme(
+    panel.background = element_rect(fill = "grey90", color = NA),  # Set the panel background to light grey
+    plot.background = element_rect(fill = "grey90", color = NA),   # Set the plot background to light grey
+    panel.grid.major = element_line(color = "white"),              # Set major grid lines to white
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold")  # Center the title and adjust the style
+
+    # Remove minor grid lines
+  )
+```
+

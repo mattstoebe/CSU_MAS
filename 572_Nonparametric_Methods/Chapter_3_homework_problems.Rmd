@@ -1,0 +1,356 @@
+---
+title: "572_Chapter5_Hw"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(gtools)
+
+
+```
+
+#Question 1:
+The data are sampled from 3 simulated distributions. 
+Apply the permutation F Test to the data
+Compare the results in part a with the results of the one way analysis of variance
+```{r, warnings = False}
+group_1 <- c(2.9736, 0.9448, 1.6394, 0.0389, 1.2958)
+group_2 <- c(0.7681, 0.8027, 0.2156, 0.074, 1.5076)
+group_3 <- c(4.8249, 2.2516, 1.5609, 2.0452, 1.0959)
+all_data <- c(group_1, group_2, group_3)
+
+X_bar <- mean(all_data)
+SST = sum(5*((mean(group_1) - X_bar)**2 + (mean(group_2) - X_bar)**2 + (mean(group_3) - X_bar)**2))
+MST = SST/ 2
+SSE = sum(4*(var(group_1) + var(group_2) +var(group_3)))
+MSE = SSE/(15-3)
+F_obs = MST/ MSE
+
+print(F_obs)
+
+# Number of data points per group
+n <- 5
+
+# Initialize an empty vector to store the F-statistics
+F_stats <- c()
+
+# Perform 10,000 random permutations
+for (k in 1:10000) {
+  
+  # Shuffle the data randomly
+  permuted_data <- sample(all_data)
+  
+  # Split the permuted data into three groups
+  group_1_perm <- permuted_data[1:n]
+  group_2_perm <- permuted_data[(n+1):(2*n)]
+  group_3_perm <- permuted_data[(2*n+1):(3*n)]
+  
+  # Overall mean
+  X_bar <- mean(all_data)
+  
+  # SST
+  SST <- n * ((mean(group_1_perm) - X_bar)^2 + 
+              (mean(group_2_perm) - X_bar)^2 + 
+              (mean(group_3_perm) - X_bar)^2)
+  
+  # MST
+  MST <- SST / (3 - 1)
+  
+  # SSE
+  SSE <- (n - 1) * (var(group_1_perm) + var(group_2_perm) + var(group_3_perm))
+  
+  # MSE
+  MSE <- SSE / (15 - 3)
+  
+  # F-statistic
+  F <- MST / MSE
+  
+  # Store the F-statistic
+  F_stats <- c(F_stats, F)
+}
+
+hist(F_stats)
+
+percentage_greater <- mean(F_stats > F_obs) * 100
+
+# Output the observed F-statistic and the percentage
+cat("Observed F-statistic:", F_obs, "\n")
+cat("Percentage of generated F-statistics greater than the observed F-statistic:", percentage_greater, "%\n")
+
+
+data <- data.frame(
+  value = c(group_1, group_2, group_3),
+  group = factor(rep(1:3, each = 5))
+)
+
+# Perform the one-way ANOVA
+anova_result <- aov(value ~ group, data = data)
+
+# Summary of the ANOVA
+summary(anova_result)
+
+```
+# Question 2: 
+The following data from the National Transoportation Safety Administration are the left femur loads on the driver side crash dummies for automobiles in various weeight classes. Apply the permutation F-test and ANOVA F-test to the data and compare p-values. Does it appear tha the data re normally distributed? 
+
+```{r}
+w1 <- c(574, 976, 789, 805, 361, 529)
+w2 <- c(791, 1146, 394, 767, 1385, 1021, 2073, 803, 1263, 1016, 1101, 945, 139)
+w3 <- c(865, 775, 729, 1721, 1113, 820, 1613, 1404, 1201, 205, 1380, 580, 1803)
+w4 <- c(998, 1049, 736, 782, 730, 742, 1219, 705, 1260, 611, 1350, 1657, 1143)
+w5 <- c(1154, 541, 406, 1529, 1132, 767, 1224, 314, 1728)
+
+all_data = c(w1, w2, w3, w4, w5)
+
+N = length(all_data)
+
+n1 = length(w1)
+n2 = length(w2)
+n3 = length(w3)
+n4 = length(w4)
+n5 = length(w5)
+
+X_bar = mean(all_data)
+
+SST = sum(
+  n1 *(mean(w1) - X_bar)**2,
+  n2 *(mean(w2) - X_bar)**2,
+  n3 *(mean(w3) - X_bar)**2,
+  n4 *(mean(w4) - X_bar)**2,
+  n5 *(mean(w5) - X_bar)**2
+)
+
+MST = SST / (5-1)
+
+SSE = sum(
+  (n1-1)*(var(w1)),
+  (n2-1)*(var(w2)),
+  (n3-1)*(var(w3)),
+  (n4-1)*(var(w4)),
+  (n5-1)*(var(w5))
+)
+
+MSE = SSE / (N - 5)
+F_obs = MST / MSE
+print(F_obs)
+
+hist(all_data)
+
+F_perm <- numeric(100000)
+
+for (i in 1:100000) {
+  # Permute the data
+  permuted_data <- sample(all_data)
+  
+  # Assign the permuted data to groups
+  perm_w1 <- permuted_data[1:n1]
+  perm_w2 <- permuted_data[(n1 + 1):(n1 + n2)]
+  perm_w3 <- permuted_data[(n1 + n2 + 1):(n1 + n2 + n3)]
+  perm_w4 <- permuted_data[(n1 + n2 + n3 + 1):(n1 + n2 + n3 + n4)]
+  perm_w5 <- permuted_data[(n1 + n2 + n3 + n4 + 1):N]
+  
+  # Calculate the mean of each permuted group
+  perm_mean_w1 <- mean(perm_w1)
+  perm_mean_w2 <- mean(perm_w2)
+  perm_mean_w3 <- mean(perm_w3)
+  perm_mean_w4 <- mean(perm_w4)
+  perm_mean_w5 <- mean(perm_w5)
+  
+  # Calculate the permuted SST
+  perm_SST <- sum(
+    n1 * (perm_mean_w1 - X_bar)^2,
+    n2 * (perm_mean_w2 - X_bar)^2,
+    n3 * (perm_mean_w3 - X_bar)^2,
+    n4 * (perm_mean_w4 - X_bar)^2,
+    n5 * (perm_mean_w5 - X_bar)^2
+  )
+  
+  # Calculate the permuted MST
+  perm_MST <- perm_SST / (5 - 1)
+  
+  # Calculate the permuted SSE
+  perm_SSE <- sum(
+    (n1 - 1) * var(perm_w1),
+    (n2 - 1) * var(perm_w2),
+    (n3 - 1) * var(perm_w3),
+    (n4 - 1) * var(perm_w4),
+    (n5 - 1) * var(perm_w5)
+  )
+  
+  # Calculate the permuted MSE
+  perm_MSE <- perm_SSE / (N - 5)
+  
+  # Calculate the F statistic for this permutation
+  F_perm[i] <- perm_MST / perm_MSE
+}
+
+p_value <- mean(F_perm >= F_obs)
+print(paste("Percentage of F statistics greater than observed F: ", p_value * 100, "%"))
+
+# Optional: Visualize the distribution of permuted F-statistics
+hist(F_perm, main = "Distribution of Permutation F-Statistics", xlab = "F-Statistic", breaks = 50)
+abline(v = F_obs, col = "red", lwd = 2, lty = 2)
+
+# Combine the data into a single data frame with a grouping factor
+group <- factor(c(rep("w1", length(w1)),
+                  rep("w2", length(w2)),
+                  rep("w3", length(w3)),
+                  rep("w4", length(w4)),
+                  rep("w5", length(w5))))
+
+# Combine all data into a single vector
+data <- c(w1, w2, w3, w4, w5)
+
+# Perform the ANOVA
+anova_result <- aov(data ~ group)
+
+# Display the ANOVA table
+summary(anova_result)
+
+```
+Discussion: The data itself does not appear to be normally distributed, but the P/F values derived from the permutation test and the values derived from the anova test are very similar  
+
+
+# Question 3: 
+Refer to the data in Exercise 1. Apply the Kruskal Wallis test to the data and compare to the conclusions with those obtained in Excercise 1.
+```{r}
+group_1 <- c(2.9736, 0.9448, 1.6394, 0.0389, 1.2958)
+group_2 <- c(0.7681, 0.8027, 0.2156, 0.074, 1.5076)
+group_3 <- c(4.8249, 2.2516, 1.5609, 2.0452, 1.0959)
+
+all_data <- c(group_1, group_2, group_3)
+
+N <- length(all_data)
+n <- length(group_1)  # Number of data points per group
+
+# Rank the combined data
+ranks <- rank(all_data)
+
+# Split the ranks back into their respective groups
+ranked_group_1 <- ranks[1:n]
+ranked_group_2 <- ranks[(n+1):(2*n)]
+ranked_group_3 <- ranks[(2*n+1):(3*n)]
+
+# Calculate the observed Kruskal-Wallis statistic
+KW_obs <- 
+  (12 / (N * (N + 1))) * sum(
+    n * (mean(ranked_group_1) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_2) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_3) - (N + 1) / 2)^2
+  )
+
+# Initialize vector to store permuted Kruskal-Wallis statistics
+KW_stats <- numeric(10000)
+
+# Perform 10,000 random permutations
+for (k in 1:10000) {
+  
+  # Shuffle the ranks randomly
+  permuted_ranks <- sample(ranks)
+  
+  # Split the permuted ranks into three groups
+  group_1_perm <- permuted_ranks[1:n]
+  group_2_perm <- permuted_ranks[(n+1):(2*n)]
+  group_3_perm <- permuted_ranks[(2*n+1):(3*n)]
+  
+  # Calculate the permuted Kruskal-Wallis statistic
+  KW_perm <- 
+    (12 / (N * (N + 1))) * sum(
+      n * (mean(group_1_perm) - (N + 1) / 2)^2,
+      n * (mean(group_2_perm) - (N + 1) / 2)^2,
+      n * (mean(group_3_perm) - (N + 1) / 2)^2
+    )
+  
+  # Store the permuted statistic
+  KW_stats[k] <- KW_perm
+}
+
+# Plot the histogram of permuted Kruskal-Wallis statistics
+hist(KW_stats, main = "Distribution of Permuted KW Statistics", xlab = "KW Statistic", breaks = 50)
+abline(v = KW_obs, col = "red", lwd = 2, lty = 2)
+
+# Calculate the percentage of permuted statistics greater than the observed KW statistic
+percentage_greater <- mean(KW_stats > KW_obs) * 100
+
+# Output the observed KW statistic and the percentage
+cat("Observed KW-statistic:", KW_obs, "\n")
+cat("Percentage of generated KW-statistics greater than the observed KW-statistic:", percentage_greater, "%\n")
+
+```
+
+#Question 5
+An agronomist gave scores fro 0 to 5 to denote insect damage to wheat plants that were treated with four insecticides. The data are given in the following table. Use the Kruskal-Wallis test with ties to test whether or not there is a difference among the treatments
+```{r}
+
+t1 <- c(0,2,1,3,1,1)
+t2 <- c(2,1,3,1,3,4)
+t3 <- c(1,3,4,2,2,1)
+t4 <- c(3,4,2,5,3,4)
+
+all_data <- c(t1, t2, t3, t4)
+
+N <- length(all_data)
+
+ranks <- rank(all_data, ties.method = "average")
+
+n <- length(t1)  # since all groups have the same size, you can use any group's length
+
+# Split the ranks back into their respective groups
+ranked_group_1 <- ranks[1:n]
+ranked_group_2 <- ranks[(n+1):(2*n)]
+ranked_group_3 <- ranks[(2*n+1):(3*n)]
+ranked_group_4 <- ranks[(3*n+1):(4*n)]
+
+KW_obs <- 
+  (12 / (N * (N + 1))) * sum(
+    n * (mean(ranked_group_1) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_2) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_3) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_4) - (N + 1) / 2)^2
+  )
+
+KW_obs <- 
+  (12 / (N * (N + 1))) * sum(
+    n * (mean(ranked_group_1) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_2) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_3) - (N + 1) / 2)^2,
+    n * (mean(ranked_group_4) - (N + 1) / 2)^2
+  )
+
+KW_stats <- numeric(10000)
+
+for (k in 1:10000) {
+  permuted_ranks <- sample(ranks)
+  
+  perm_ranked_group_1 <- permuted_ranks[1:n]
+  perm_ranked_group_2 <- permuted_ranks[(n+1):(2*n)]
+  perm_ranked_group_3 <- permuted_ranks[(2*n+1):(3*n)]
+  perm_ranked_group_4 <- permuted_ranks[(3*n+1):(4*n)]
+ 
+  KW_perm <- 
+    (12 / (N * (N + 1))) * sum(
+      n * (mean(perm_ranked_group_1) - (N + 1) / 2)^2,
+      n * (mean(perm_ranked_group_2) - (N + 1) / 2)^2,
+      n * (mean(perm_ranked_group_3) - (N + 1) / 2)^2,
+      n * (mean(perm_ranked_group_4) - (N + 1) / 2)^2
+    )
+
+  KW_stats[k] <- KW_perm
+}
+
+
+# Plot the histogram of permuted Kruskal-Wallis statistics
+hist(KW_stats, main = "Distribution of Permuted KW Statistics", xlab = "KW Statistic", breaks = 50)
+abline(v = KW_obs, col = "red", lwd = 2, lty = 2)
+
+percentage_greater <- mean(KW_stats >= KW_obs)
+
+print(paste("Observed Kruskal-Wallis statistic:", round(KW_obs,2)))
+print(paste("Percentage of permuted statistics greater than observed:", percentage_greater * 100, "%"))
+
+```
+
