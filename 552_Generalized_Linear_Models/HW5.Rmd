@@ -1,0 +1,332 @@
+---
+title: "STAA 552: HW 5"
+author: "YOUR NAME HERE"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '2'
+    includes:
+      in_header: preamble.tex
+header-includes:
+- \usepackage[default]{sourcesanspro}
+- \usepackage[T1]{fontenc}
+mainfont: SourceSansPro
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+See Canvas Calendar for due date.  
+60 points total, 4 points per problem unless otherwise noted.  
+Content for all questions is from section 07 or earlier. 
+Add or delete code chunks as needed.  
+
+# Breast Cancer (Q1 - Q9)
+
+In this group of questions, we will be fitting logistic regression models using training data.  This data is available from Canvas as `BCTrain.csv`.  This includes data from n = 512 subjects.  This data is a subset of a larger data set that is publicly available from UCI Machine Learning Repository and Kaggle as “Breast Cancer Wisconsin (Diagnostic) Data Set”.
+The columns include:
+
+- id number (should NOT be used for model fitting)
+- **diagnosis (0,1) should be used as the response for all analyses.**  Malignant tumors are represented with a value of 1; benign tumors are represented with a value of 0.
+- 10 predictor variables that are computed from a digitized image of a fine needle aspirate (FNA) of a breast mass. They describe characteristics of the cell nuclei present in the image.
+
+The goal is to predict diagnosis (Y) based on the predictor variables (X’s).  
+
+
+:::: {.taskbox data-latex=""}
+## Q1 (2 pts)
+
+Calculate pairwise (Pearson) correlations between all predictors.  Round your result to two decimal places.
+::::
+
+*****
+
+```{r}
+#Q1
+
+```
+*****
+
+:::: {.taskbox data-latex=""}
+## Q2 
+
+**For all further questions**, we will **DROP perimeter, area and concave_points**.  Based on your results from the previous question, explain why this is reasonable.  Be brief, but specific.
+::::
+
+******
+Response  
+
+******
+
+:::: {.taskbox data-latex=""}
+## Q3
+
+Perform model selection using backwards elimination.  This should be done using p-values and with alpha = 0.05.  Show the coefficients table for your final model.  You do NOT need to show the intermediate output, only the final model.  
+
+NOTE: For purposes of predictive modeling, backwards elimination would NOT be a common choice.  We are using this approach here for practice.  
+::::
+
+*****
+
+```{r}
+#Q3
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q4
+
+Perform model selection using **AIC** all subsets selection.  Show the coefficients table for your final model.  You do NOT need to show the intermediate output, only the final model.  
+::::
+
+*****
+```{r}
+#Q4
+
+```
+
+*****
+
+## Q5
+
+Consider your results to the previous questions.
+
+:::: {.taskbox data-latex=""}
+### Q5A (2 pts)
+
+Is it surprising that the selected models (from Q3 and Q4) are different? Briefly comment. 
+::::
+
+*****
+Response
+
+*****
+
+:::: {.taskbox data-latex=""}
+### Q5B (2pts)
+
+Is it surprising that the selected model (from Q4) includes a predictor with p > 0.05?  Briefly comment.
+::::
+
+*****
+Response
+
+*****
+
+**Important Note:** For all further questions, we will use the AIC selected model from Q4. 
+
+:::: {.taskbox data-latex=""}
+## Q6
+
+Calculate McFadden’s "pseudo" R2 value for this model.
+::::
+
+*****
+R2 = 
+
+```{r}
+#Q6
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q7
+
+Run the Hosmer-Lemeshow test to test for lack of fit (using g = 10).   Using alpha = 0.05, give a conclusion in context. 
+::::
+
+*****
+
+Response
+
+```{r}
+#Q7
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q8 (6 pts)
+
+Suppose that a cancer is classified as malignant if $\hat p > 0.5$ and benign if $\hat p \le 0.5$  Calculate the accuracy, TPR (true positive rate = sensitivity), TNR (true negative rate = specificity) for this model (based on the original, **training** data).   
+::::
+
+*****
+Accuracy:   
+TPR:   
+TNR:  
+
+```{r}
+#Q8
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q9 (6 ps)
+
+Now use the **test** data (`BDTest.csv`) to calculate the accuracy, TPR (true positive rate = sensitivity), TNR (true negative rate = specificity) for this model.  
+::::
+
+*****
+Accuracy:    
+TPR:   
+TNR:    
+
+```{r}
+#Q9
+
+```
+
+*****
+
+# Extinction (Q10 - Q16)
+
+A study was conducted in the Krunnit Islands between 1949 and 1959.  In each of N = 18 islands, the "Species at Risk" give the number of bird species present in 1949 (corresponding to $n_i$ = number of "trials").  The "Extinctions" represent those not present in 1959 (corresponding to $y_i$ = number of "events"). This is grouped data.  See the file `Extinction.csv` on Canvas for the data. 
+
+Our goal is to model probability of extinction as a function of island Area.  Hence **extinction** is the event of interest for all questions. 
+
+## Q10 
+
+We will start with some simple exploratory graphs.
+
+:::: {.taskbox data-latex=""}
+### Q10A (2 pts)
+
+Construct boxplots for Area on both the original and log transformed scales. 
+::::
+
+```{r}
+#Q10
+
+```
+
+:::: {.taskbox data-latex=""}
+### Q10B (2 pts)
+
+Construct a scatter plot of proportion extinct vs Area.
+::::
+
+```{r, out.width="70%"}
+#Q11
+
+```
+
+
+## Extinction Model 1 (Q11 - Q12)
+
+For this group of questions, we consider logistic regression with **Area** as the predictor.  
+
+:::: {.taskbox data-latex=""}
+## Q11 (2 pts)
+
+Fit the model and show the `summary()` output.
+::::
+
+******
+
+```{r}
+#Q11
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q12
+
+Conduct a deviance-based lack-of-fit test for Model 1.  Give the test statistic, df and p-value. **Using alpha = 0.10**, give a conclusion in context.  
+::::
+
+*****
+X2 =   
+df =     
+p =   
+Conclusion in context:    
+
+```{r}
+#Q12
+
+```
+*****
+
+
+## Extinction Model 2 (Q13 - Q15)
+
+For this group of questions, we consider logistic regression with **log(Area)** as the predictor.
+
+:::: {.taskbox data-latex=""}
+## Q13 (2 pts)
+
+Fit the model and show the `summary()` output.
+::::
+
+*****
+
+```{r}
+#Q13
+
+```
+*****
+
+:::: {.taskbox data-latex=""}
+## Q14 
+
+Conduct a deviance-based lack-of-fit test for Model 2.  Give the test statistic, df and p-value. Using **alpha = 0.10**, give a conclusion in context.  
+::::
+
+*****
+X2 =    
+df =  
+p =   
+Conclusion in context:    
+
+
+```{r}
+#Q14
+
+```
+*****
+
+
+:::: {.taskbox data-latex=""}
+## Q15
+
+Using Model 2, create a plot of Pearson residuals versus fitted values. Do the residuals indicate any evidence of overdispersion?
+::::
+
+*****
+
+```{r, out.width="70%"}
+#Q15
+
+```
+
+Discussion
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q16 (2 pts)
+
+Comparing Model 1 (using Area) and Model2 (using log(Area)), which model is preferred based on AIC?   
+::::
+
+*****
+Response
+
+*****
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
