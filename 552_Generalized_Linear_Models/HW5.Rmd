@@ -1,6 +1,6 @@
 ---
 title: "STAA 552: HW 5"
-author: "YOUR NAME HERE"
+author: "Matthew Stoebe"
 output:
   pdf_document:
     toc: no
@@ -18,6 +18,12 @@ mainfont: SourceSansPro
 library(knitr)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
+#install.packages("ResourceSelection")
+library(ResourceSelection)
+library(ggplot2)
+library(reshape2)
+library(MASS)
+
 ```
 
 See Canvas Calendar for due date.  
@@ -47,6 +53,25 @@ Calculate pairwise (Pearson) correlations between all predictors.  Round your re
 
 ```{r}
 #Q1
+data <- read.csv("Data/BCTrain.csv")
+
+corr_data <- data[, -1]
+
+coors <- round(cor(corr_data),2)
+print(coors)
+
+melted_coors <- melt(coors)
+
+# Create heatmap
+ggplot(data = melted_coors, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = value), color = "black", size = 3) +  # Add coefficients as text
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(title = "Correlation Heatmap", x = "Features", y = "Features", fill = "Correlation")
+
+data <- data[, !(names(data) %in% c("perimeter", "area", "concave_points", "id"))]
 
 ```
 *****
@@ -59,7 +84,7 @@ Calculate pairwise (Pearson) correlations between all predictors.  Round your re
 
 ******
 Response  
-
+These features are highly correlated and should be dropped to avoid multi-colinearity in the model
 ******
 
 :::: {.taskbox data-latex=""}
@@ -74,6 +99,38 @@ NOTE: For purposes of predictive modeling, backwards elimination would NOT be a 
 
 ```{r}
 #Q3
+#I initially used the step function here but it defaults to AIC. I dont see a function for P value so i will make my own 
+
+backward_elimination_p <- function(model, threshold = 0.05) {
+  model_data <- model$data
+
+  while (TRUE) {
+    #Get Maximum P value 
+    model_summary <- summary(model)
+    p_values <- coef(model_summary)[, "Pr(>|z|)"]
+    p_values <- p_values[-1]
+    max_p <- max(p_values, na.rm = TRUE)
+    
+#Remove Column from maximum P Value if it is above threshold
+    if (max_p > threshold) {
+      var_to_remove <- names(p_values)[which.max(p_values)]
+      formula <- as.formula(
+        paste("diagnosis ~", paste(setdiff(names(p_values), var_to_remove), collapse = " + "))
+      )      
+      model <- glm(formula, data = model_data, family = binomial)
+    } 
+    else {
+      break
+    }
+  }
+  return(model)
+}
+
+full_model <- glm(diagnosis ~ ., data = data, family = binomial)
+final_model <- backward_elimination_p(full_model)
+summary(final_model)
+
+
 
 ```
 
@@ -88,7 +145,9 @@ Perform model selection using **AIC** all subsets selection.  Show the coefficie
 *****
 ```{r}
 #Q4
+step_model <- step(full_model, direction = "both", trace = 0)
 
+summary(step_model)
 ```
 
 *****
@@ -105,7 +164,7 @@ Is it surprising that the selected models (from Q3 and Q4) are different? Briefl
 
 *****
 Response
-
+It is not surprising. Different methods yield different results, and the P value is rather simplistic as it does not consider the number of parameters in the model alongside the goodness of fit. AIC can favor a more complex model with a better fit. 
 *****
 
 :::: {.taskbox data-latex=""}
@@ -116,7 +175,7 @@ Is it surprising that the selected model (from Q4) includes a predictor with p >
 
 *****
 Response
-
+No. There are more complex things to consider than just p value in selecting parameters for a model. P Significance is not supreme in model building or parameter selection. You instead want to look at the incremental uplift you are getting with a parameter relative to other versions of the model. Again, AIC allows us to have a more robust and nuanced view in model selection that the P value elimination does not. 
 *****
 
 **Important Note:** For all further questions, we will use the AIC selected model from Q4. 
@@ -128,10 +187,18 @@ Calculate McFadden’s "pseudo" R2 value for this model.
 ::::
 
 *****
-R2 = 
+R2 = 0.7994026 
 
 ```{r}
 #Q6
+final_model <- step_model
+
+final_loglike <- logLik(final_model)
+null_model <- glm(diagnosis ~ 1, data=data, family=binomial)
+null_loglike <- logLik(null_model)
+
+r2_ish <- 1- (final_loglike/null_loglike)
+r2_ish
 
 ```
 
@@ -149,7 +216,9 @@ Response
 
 ```{r}
 #Q7
+hl_test <- hoslem.test(final_model$fitted.values, data$diagnosis,)
 
+hl_test
 ```
 
 *****
@@ -167,6 +236,20 @@ TNR:
 
 ```{r}
 #Q8
+pred_probs <- predict(final_model, type = "response")
+
+pred_class <- ifelse(pred_probs > 0.5, 1, 0)
+
+conf_matrix <- table(Predicted = pred_class, Actual = data$diagnosis)
+
+# Calculate accuracy, TPR, and TNR
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+tpr <- conf_matrix[2, 2] / sum(conf_matrix[2, ])
+tnr <- conf_matrix[1, 1] / sum(conf_matrix[1, ])
+
+accuracy
+tpr
+tnr
 
 ```
 
@@ -185,6 +268,27 @@ TNR:
 
 ```{r}
 #Q9
+# Q9
+# Load the test data
+test_data <- read.csv("Data/BCTest.csv")
+
+# Get predicted probabilities for the test data
+test_pred_probs <- predict(final_model, newdata = test_data, type = "response")
+
+# Classify based on the threshold of 0.5
+test_pred_class <- ifelse(test_pred_probs > 0.5, 1, 0)
+
+# Confusion matrix for test data
+test_conf_matrix <- table(Predicted = test_pred_class, Actual = test_data$diagnosis)
+
+# Calculate accuracy, TPR, and TNR for test data
+test_accuracy <- sum(diag(test_conf_matrix)) / sum(test_conf_matrix)
+test_tpr <- test_conf_matrix[2, 2] / sum(test_conf_matrix[2, ])
+test_tnr <- test_conf_matrix[1, 1] / sum(test_conf_matrix[1, ])
+
+test_accuracy
+test_tpr
+test_tnr
 
 ```
 
@@ -208,7 +312,15 @@ Construct boxplots for Area on both the original and log transformed scales.
 
 ```{r}
 #Q10
+data <- read.csv("Data/Extinction.csv")
 
+# Boxplot for original Area
+boxplot(data$Area, main = "Boxplot of Area (Original Scale)", ylab = "Area")
+
+# Boxplot for log-transformed Area
+boxplot(log(data$Area), main = "Boxplot of Area (Log Transformed)", ylab = "Log(Area)")
+
+head(data)
 ```
 
 :::: {.taskbox data-latex=""}
@@ -219,7 +331,10 @@ Construct a scatter plot of proportion extinct vs Area.
 
 ```{r, out.width="70%"}
 #Q11
+data$proportion_extinct <- data$Extinctions / data$SpeciesAtRisk
 
+# Scatter plot of proportion extinct vs Area
+plot(data$Area, data$proportion_extinct, main = "Proportion Extinct vs Area", xlab = "Area", ylab = "Proportion Extinct", pch = 19)
 ```
 
 
@@ -237,6 +352,10 @@ Fit the model and show the `summary()` output.
 
 ```{r}
 #Q11
+model1 <- glm(cbind(Extinctions, SpeciesAtRisk - Extinctions) ~ Area, family = binomial, data = data)
+
+# Show the summary of the model
+summary(model1)
 
 ```
 
@@ -256,7 +375,17 @@ Conclusion in context:
 
 ```{r}
 #Q12
+null_model1 <- glm(cbind(Extinctions, SpeciesAtRisk - Extinctions) ~ 1, family = binomial, data = data)
 
+# Deviance-based lack-of-fit test
+deviance_statistic <- deviance(model1) - deviance(null_model1)
+df <- length(coef(model1)) - 1  # degrees of freedom
+p_value <- 1 - pchisq(deviance_statistic, df)
+
+# Display the results
+deviance_statistic
+df
+p_value
 ```
 *****
 
