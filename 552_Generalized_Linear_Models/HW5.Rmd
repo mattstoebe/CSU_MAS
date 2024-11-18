@@ -1,9 +1,9 @@
 ---
-title: "STAA 552: HW 5"
+title: 'STAA 552: HW 5'
 author: "Matthew Stoebe"
 output:
-  pdf_document:
-    toc: no
+ pdf_document:
+    toc: false
     toc_depth: '2'
     includes:
       in_header: preamble.tex
@@ -18,7 +18,6 @@ mainfont: SourceSansPro
 library(knitr)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
-#install.packages("ResourceSelection")
 library(ResourceSelection)
 library(ggplot2)
 library(reshape2)
@@ -221,7 +220,7 @@ hl_test <- hoslem.test(final_model$y, fitted(final_model),g=10)
 hl_test
 ```
 
-With a high p value we can conlude that our model is simply not that good. and is not statistically significant at a .05 level
+With a high p value we can conclude that our model is simply not that good. and is not statistically significant at a .05 level
 *****
 
 :::: {.taskbox data-latex=""}
@@ -270,19 +269,15 @@ TNR:
 ```{r}
 #Q9
 # Q9
-# Load the test data
+#Get Test Data
 test_data <- read.csv("Data/BCTest.csv")
 
-# Get predicted probabilities for the test data
 test_pred_probs <- predict(final_model, newdata = test_data, type = "response")
-
-# Classify based on the threshold of 0.5
 test_pred_class <- ifelse(test_pred_probs > 0.5, 1, 0)
 
-# Confusion matrix for test data
+# Get Metrics
 test_conf_matrix <- table(Predicted = test_pred_class, Actual = test_data$diagnosis)
 
-# Calculate accuracy, TPR, and TNR for test data
 test_accuracy <- sum(diag(test_conf_matrix)) / sum(test_conf_matrix)
 test_tpr <- test_conf_matrix[2, 2] / sum(test_conf_matrix[2, ])
 test_tnr <- test_conf_matrix[1, 1] / sum(test_conf_matrix[1, ])
@@ -354,8 +349,6 @@ Fit the model and show the `summary()` output.
 ```{r}
 #Q11
 model1 <- glm(cbind(Extinctions, SpeciesAtRisk - Extinctions) ~ Area, family = binomial, data = data)
-
-# Show the summary of the model
 summary(model1)
 
 ```
@@ -377,10 +370,9 @@ Conclusion in context: Since the p-value  is less than alpha = 0.10, we reject t
 ```{r}
 #Q12
 deviance_statistic <- model1$deviance
-df <- model2$df.residual
+df <- model1$df.residual
 p_value <- 1 - pchisq(deviance_statistic, df)
 
-# Display the results
 deviance_statistic
 df
 p_value
@@ -404,7 +396,6 @@ Fit the model and show the `summary()` output.
 #Q13
 model2 <- glm(cbind(Extinctions, SpeciesAtRisk - Extinctions) ~ log(Area), family = binomial, data = data)
 
-# Show the summary of the model
 summary(model2)
 ```
 *****
@@ -428,7 +419,6 @@ deviance_statistic <- model2$deviance
 df <- model2$df.residual
 p_value <- 1 - pchisq(deviance_statistic, df)
 
-# Display the results
 deviance_statistic
 df
 p_value
@@ -453,7 +443,7 @@ abline(h = 0, col = "red")
 ```
 
 Discussion
-
+There is no Clear over dispersion in these residuals/
 *****
 
 :::: {.taskbox data-latex=""}
@@ -465,7 +455,7 @@ Comparing Model 1 (using Area) and Model2 (using log(Area)), which model is pref
 *****
 Response
 
-Model two has an AIC of 75 and Model one has an AIC of 87. WIth this in mind, we can select the second model as it is our preferred and more accurate choice.
+Model two has an AIC of 75 and Model one has an AIC of 87. With this in mind, we can select the second model as it is our preferred and more accurate choice.
 
 *****
 
