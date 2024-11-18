@@ -216,11 +216,12 @@ Response
 
 ```{r}
 #Q7
-hl_test <- hoslem.test(final_model$fitted.values, data$diagnosis,)
+hl_test <- hoslem.test(final_model$y, fitted(final_model),g=10)
 
 hl_test
 ```
 
+With a high p value we can conlude that our model is simply not that good. and is not statistically significant at a .05 level
 *****
 
 :::: {.taskbox data-latex=""}
@@ -230,9 +231,9 @@ Suppose that a cancer is classified as malignant if $\hat p > 0.5$ and benign if
 ::::
 
 *****
-Accuracy:   
-TPR:   
-TNR:  
+Accuracy:   0.9414062
+TPR:   0.9392265
+TNR:  0.9425982
 
 ```{r}
 #Q8
@@ -368,18 +369,15 @@ Conduct a deviance-based lack-of-fit test for Model 1.  Give the test statistic,
 ::::
 
 *****
-X2 =   
-df =     
-p =   
-Conclusion in context:    
+X2 = 24.66
+df = 16     
+p = .07   
+Conclusion in context: Since the p-value  is less than alpha = 0.10, we reject the null hypothesis. This suggests that there is evidence of lack of fit for Model 2, and the model does not adequately fit the data.
 
 ```{r}
 #Q12
-null_model1 <- glm(cbind(Extinctions, SpeciesAtRisk - Extinctions) ~ 1, family = binomial, data = data)
-
-# Deviance-based lack-of-fit test
-deviance_statistic <- deviance(model1) - deviance(null_model1)
-df <- length(coef(model1)) - 1  # degrees of freedom
+deviance_statistic <- model1$deviance
+df <- model2$df.residual
 p_value <- 1 - pchisq(deviance_statistic, df)
 
 # Display the results
@@ -404,7 +402,10 @@ Fit the model and show the `summary()` output.
 
 ```{r}
 #Q13
+model2 <- glm(cbind(Extinctions, SpeciesAtRisk - Extinctions) ~ log(Area), family = binomial, data = data)
 
+# Show the summary of the model
+summary(model2)
 ```
 *****
 
@@ -415,15 +416,22 @@ Conduct a deviance-based lack-of-fit test for Model 2.  Give the test statistic,
 ::::
 
 *****
-X2 =    
-df =  
-p =   
-Conclusion in context:    
+X2 = 12.06
+df =  16
+p = .7397   
+Conclusion in context: Since the p-value is greater than alpha = 0.10, we fail to reject the null hypothesis. This suggests that there is no evidence of lack of fit for Model 2, and the model adequately fits the data.
 
 
 ```{r}
 #Q14
+deviance_statistic <- model2$deviance
+df <- model2$df.residual
+p_value <- 1 - pchisq(deviance_statistic, df)
 
+# Display the results
+deviance_statistic
+df
+p_value
 ```
 *****
 
@@ -438,7 +446,10 @@ Using Model 2, create a plot of Pearson residuals versus fitted values. Do the r
 
 ```{r, out.width="70%"}
 #Q15
-
+pearson_resid <- residuals(model2, type = "pearson")
+fitted_values <- fitted(model2)
+plot(fitted_values, pearson_resid, xlab = "Fitted Values", ylab = "Pearson Residuals", main = "Pearson Residuals vs Fitted Values", pch = 19)
+abline(h = 0, col = "red")
 ```
 
 Discussion
@@ -453,6 +464,8 @@ Comparing Model 1 (using Area) and Model2 (using log(Area)), which model is pref
 
 *****
 Response
+
+Model two has an AIC of 75 and Model one has an AIC of 87. WIth this in mind, we can select the second model as it is our preferred and more accurate choice.
 
 *****
 
