@@ -9,7 +9,8 @@ output: html_document
 
 
 ```{r}
-earthquakes_data <- read.csv("Data/earthquakes.csv")
+data <- read.csv("Data/earthquakes.csv")
 
+head(data)
 ```
 
