@@ -5,12 +5,167 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+```{r}
+library(ggplot2)
+```
 
 
+#Question 1
+```{r}
+earthquakes <- read.csv("Data/earthquakes.csv")
+head(earthquakes)
+```
+
+##a Create summary plots of the data. Specifically, create a (line) plot of number of earthquakes per year. Also use acf() to create an autocorrelation plot.
+```{r}
+ggplot(data = earthquakes, aes(x = year, y = quakes)) +
+  geom_line(color = "blue") +
+  labs(title = "Number of Earthquakes per Year (Magnitude > 7.0)",
+       x = "Year",
+       y = "Number of Earthquakes") +
+  theme_minimal()
+
+acf(earthquakes$quakes, main = "Autocorrelation of Earthquake Counts")
+
+
+```
+
+
+##b Provide the estimated mean and simple t-based confidence interval for the mean. We will use this naive approach for purposes of comparison only!
+```{r}
+n <- nrow(earthquakes)
+mean_eq <- mean(earthquakes$quakes)
+sd_eq <- sd(earthquakes$quakes)
+
+df <- n - 1
+
+
+se_eq <- sd_eq / sqrt(n)
+
+# t-value for 95% confidence interval
+alpha <- 0.05
+t_value <- qt(1 - alpha/2, df)
+
+lower_bound <- mean_eq - t_value * se_eq
+upper_bound <- mean_eq + t_value * se_eq
+
+cat("Estimated Mean:", mean_eq, "\n")
+cat("95% t-based Confidence Interval: [", lower_bound, ",", upper_bound, "]\n")
+
+```
+##c Now perform a non-moving block bootstrap with a block length of 8 and R = 5000. Write a function to do this. Show the 12 blocks and the histogram of the resulting bootstrap means
 
 ```{r}
-data <- read.csv("Data/earthquakes.csv")
+set.seed(420)  # For reproducibility
 
-head(data)
+block_length <- 8
+num_blocks <- floor(n / block_length)
+
+# Create blocks
+blocks <- split(earthquakes$quakes, rep(1:num_blocks, each = block_length))
+
+
+non_moving_block_bootstrap <- function(data, block_length, R) {
+  n <- length(data)
+  num_blocks <- floor(n / block_length)
+  blocks <- split(data, rep(1:num_blocks, each = block_length))
+  
+  bootstrap_means <- numeric(R)
+  
+  for (i in 1:R) {
+    # Sample blocks with replacement
+    sampled_blocks <- sample(blocks, size = num_blocks, replace = TRUE)
+    # Concatenate sampled blocks
+    sampled_data <- unlist(sampled_blocks)
+    # Calculate mean
+    bootstrap_means[i] <- mean(sampled_data)
+  }
+  return(bootstrap_means)
+}
+
+# Perform bootstrap
+R <- 5000
+bootstrap_means <- non_moving_block_bootstrap(earthquakes$quakes, block_length, R)
+hist(bootstrap_means, breaks = 30, main = "Histogram of Bootstrap Means",
+     xlab = "Bootstrap Means", col = "grey", border = "black")
+```
+##d Using your boostrap results, construct a 95% confidence interval using the percentile method.
+```{r}
+# Calculate the 2.5th and 97.5th percentiles
+ci_lower <- quantile(bootstrap_means, 0.025)
+ci_upper <- quantile(bootstrap_means, 0.975)
+
+# Output the bootstrap confidence interval
+cat("95% Bootstrap Confidence Interval (Percentile Method): [", ci_lower, ",", ci_upper, "]\n")
+
+```
+##e Compare your bootstrap confidence interval to the simple t-based confidence interval.Which is wider? Briefly explain why this is the case.
+Our bootstrap Confidence interval is wider because it accounts for the autocorrelation in the data.The t based method assumes independent samples which is often not the case with time series data. 
+
+
+#Question 2
+
+##a Create a scatterplot of Unemployed (y) vs GNP (x).
+```{r}
+data(longley)
+plot(longley$GNP, longley$Unemployed,
+     main = "Scatterplot of Unemployed vs GNP",
+     xlab = "GNP",
+     ylab = "Unemployed",
+     pch = 19, col = "blue")
+```
+##b Use cor.test() to calculate (default) Pearson correlation, p-value and 95% confidence interval. You can just print the output
+```{r}
+pearson_result <- cor.test(longley$Unemployed, longley$GNP)
+print(pearson_result)
+```
+##c Use cor.test() again but this time with method = ”spearman” and print the result. Note that a confidence interval is NOT provided.
+```{r}
+spearman_result <- cor.test(longley$Unemployed, longley$GNP, method = "spearman")
+print(spearman_result)
+```
+
+##d Use bootstrap() to perform case resampling bootrap for correlation with R = 5000.Provide a 95% confidence interval using the percentile method.
+
+```{r}
+
+# I was having issues with the bootstrap() function so i swapped to this one. 
+library(boot)
+
+data_longley <- longley[, c("Unemployed", "GNP")]
+correlation_stat <- function(data, indices) {
+  resampled_data <- data[indices, ]
+  return(cor(resampled_data$Unemployed, resampled_data$GNP))
+}
+
+# Perform bootstrapping
+R <- 5000
+boot_results <- boot(data_longley, statistic = correlation_stat, R = R)
+bootstrap_estimates <- boot_results$t
+
+
+# Calculate the 95% confidence interval using the percentile method
+ci_lower <- quantile(bootstrap_estimates, 0.025)
+ci_upper <- quantile(bootstrap_estimates, 0.975)
+
+
+cat("95% Bootstrap Confidence Interval: [", ci_lower, ",", ci_upper, "]\n")
+
+```
+##e Finally, implement a permutation test of H0 : ρ = 0 where ρ is the population correlation. Perform 5000 permutations and report your permutation based p-value (twosided).
+```{r}
+obs_cor <- cor(longley$Unemployed, longley$GNP, method='spearman')
+
+n_perm <- 5000
+perm_cor <- numeric(n_perm)
+
+for (i in 1:n_perm) {
+  permuted_gnp <- sample(longley$GNP)
+  perm_cor[i] <- cor(longley$Unemployed, permuted_gnp,  method='spearman')
+}
+
+# two-sided p-value
+p_value <- (sum(abs(perm_cor) >= abs(obs_cor)) + 1) / (n_perm + 1)
+cat("Permutation p-value:", p_value)
 ```
 
