@@ -1,0 +1,156 @@
+---
+title: "573_HW_5"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+install.packages("astsa")
+
+```
+
+#Question 1
+
+```{r}
+library(MARSS)
+library(astsa) # Contains the global temperature data
+
+# Load the data
+library(MARSS)
+library(astsa) # this package contains the data
+Y <- cbind(xglobtemp,xglobtempl)
+ts.plot(Y, col=c(6,4), ylab='Temperature Deviations')
+legend("topleft", legend = c("Land & Ocean", "Land"), col = c(6, 4), lty = 1)
+
+time <- time(Y)
+```
+##a
+```{r}
+# Define the model list
+model.list <- list(
+  Z = matrix(1, nrow = 2, ncol = 1),                      
+  B = matrix(1),                                           
+  U = matrix("delta"),                                     
+  Q = matrix("q"),                                         
+  R = matrix(list("r11", "r12", "r12", "r22"), nrow = 2),  
+  x0 = matrix(-0.35),                                      
+  V0 = matrix(1)                                           
+)
+
+# Fit the model
+fit <- MARSS(Y, model = model.list, method = "BFGS")
+
+logLik(fit)
+fit$AICc
+residuals <- residuals(fit)
+
+
+```
+##b
+What are the unknown parameters? What are your estimates of the unknown parameters? Write down
+the fitted model. (The estimates of the variance parameters do not match the book, because the book
+returns estimates of the cholesky decomposition chol(R) instead of the variance-covariance matrix R.)
+```{r}
+coef_estimates <- coef(fit, type = "vector")
+print(coef_estimates)
+```
+
+##c
+What are the standard errors of your estimates in (b). Hint: use MARSSparamCIs function.
+```{r}
+
+param_CIs <- MARSSparamCIs(fit)
+print(param_CIs$par.se)
+
+```
+##d 
+```{r}
+states <- fit$states
+
+time_sequence <- seq_along(Y[, 1])  
+plot(time_sequence, states[1, ], type = "l", col = "red", ylab = "Temperature Deviations", 
+     xlab = "Time", main = "Smoothed Global Temperature Anomalies", lwd = 5)
+lines(time_sequence, Y[, 1], col = 6, lty = 2)
+lines(time_sequence, Y[, 2], col = 4, lty = 2)
+legend("topleft", legend = c("Smoothed State", "Land & Ocean", "Land"), 
+       col = c("red", 6, 4), lty = c(1, 2, 2))
+```
+##e
+
+Unconstrained R Assumptions
+- Errors vt1 and vt2 can have different variances.
+- There may be nonzero covariance between the errors
+
+Diagonal and Unequal R Assumptions
+- Errors Vt1 and vt2 can have different variances
+- There is no covariance between the errors => Observation errors are uncorrelated
+
+Diagonal and Equal R:
+- Errors are uncorrelated and have the same variance
+
+##f
+Fit the two models in (e). Compare the AIC values of the three different models for R, which one is
+better?
+```{r}
+
+fit_unconstrained <- fit  # From part (b)
+
+model_diag_unequal <- model.list
+model_diag_unequal$R <- matrix(list("r11", 0, 0, "r22"), 2, 2)
+fit_diag_unequal <- MARSS(Y, model = model_diag_unequal, method = "BFGS")
+
+model_diag_equal <- model.list
+model_diag_equal$R <- matrix(list("r11", 0, 0, "r11"), 2, 2)
+fit_diag_equal <- MARSS(Y, model = model_diag_equal, method = "BFGS")
+
+AIC_values <- data.frame(
+  Model = c("Unconstrained R", "Diagonal and Unequal R", "Diagonal and Equal R"),
+  AICc = c(fit_unconstrained$AICc, fit_diag_unequal$AICc, fit_diag_equal$AICc)
+)
+
+print(AIC_values)
+
+```
+
+#Question 2
+Modify the model above to make it slightly more flexible. We keep the state equation the same as problem 1,
+since the random walk model with drift makes sense for this data set as we have seen in the previous lecture.
+However, we will modify the observation equation to allow for different coefficients (a1, a2) for the two series,
+and we will estimate the initial state parameters x0 ∼ N(μ0, σ2) instead of fixing it.
+
+##a
+
+```{r}
+
+
+Y <- cbind(xglobtemp,xglobtempl)
+
+# Plot the data to visualize
+ts.plot(Y, col = c(6, 4), ylab='Temperature Deviations', main = 'Global Temperature Deviations')
+legend("topleft", legend = c("Land & Ocean", "Land"), col = c(6, 4), lty = 1)
+
+dim(Y)
+
+model_modified <- list(
+  Z = matrix(c("a1", "a2"), nrow = 2, ncol = 1),             # Observation matrix with estimated coefficients
+  A = matrix(0, nrow = 2, ncol = 1),                         # Observation intercept matrix set to zero
+  B = matrix(1),                                             # State transition matrix (random walk)
+  U = matrix("delta"),                                       # State intercept (to estimate)
+  Q = matrix("q"),                                           # State noise variance (to estimate)
+  R = matrix(list("r11", "r12", "r12", "r22"), nrow = 2, ncol = 2),    # Observation noise covariance matrix
+  x0 = matrix("x0", nrow = 1, ncol = 1),                     # Initial state mean (to estimate)
+  V0 = matrix("V0", nrow = 1, ncol = 1)                      # Initial state covariance (to estimate)
+)
+
+fit_modified <- MARSS(Y, model = model_modified, method = "BFGS", 
+                      control = list(maxit = 500)) # Increased max iterations if needed
+```
+
+
+```{r}
+MARSSinfo()
+```
+
