@@ -1,0 +1,41 @@
+---
+title: "562_HW_4"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+set.seed(123)  
+n <- 10
+theta_true <- 4
+num_samples <- 100000
+
+# Generate samples from Uniform(2, 5)
+samples <- matrix(runif(n * num_samples, min = 2, max = 5), nrow = num_samples, ncol = n)
+
+sample_means <- rowMeans(samples)
+theta_mom <- 4 * sample_means - 10
+
+Y_min <- apply(samples, 1, min)
+theta_mle <- 2 * Y_min
+
+mse_mom <- mean((theta_mom - theta_true)^2)
+mse_mle <- mean((theta_mle - theta_true)^2)
+
+# Set up breakpoints for histograms
+breaks <- seq(min(c(theta_mom, theta_mle)), max(c(theta_mom, theta_mle)), length.out = 50)
+
+par(mfrow = c(2, 1))
+hist(theta_mom, breaks = breaks, main = "Histogram of MOM Estimator", xlab = "Theta Estimate", col = "grey")
+hist(theta_mle, breaks = breaks, main = "Histogram of MLE Estimator", xlab = "Theta Estimate", col = "grey")
+
+cat("MSE of MOM estimator:", mse_mom, "\n")
+cat("MSE of MLE estimator:", mse_mle, "\n")
+
+```
+
