@@ -1,0 +1,261 @@
+---
+title: "STAA 552: HW 6"
+author: "YOUR NAME HERE"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '2'
+    includes:
+      in_header: preamble.tex
+header-includes:
+- \usepackage[default]{sourcesanspro}
+- \usepackage[T1]{fontenc}
+mainfont: SourceSansPro
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+library(tidyverse)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+See Canvas Calendar for due date.  
+56 points total, 4 points per problem unless otherwise noted.  
+Add or delete code chunks as needed.  
+Content for Q1-Q8 is from section 09 or earlier.  
+Content for Q9-Q13 is from section 10 or earlier.  
+
+# Toxicity (Q1 - Q8)
+
+This data is from CDA.  Rodent studies are commonly used to test and regulate substances posing potential danger to developing fetuses.  This study administered an industrial solvent to pregnant mice.  Each mouse was exposed to one of five concentration levels (0, 62.5, 125, 250, 500) for 10 days early in pregnancy.    Later the fetuses were classified as dead, malformed or normal.  
+
+The data is available from Canvas as Toxicity.csv.
+
+:::: {.taskbox data-latex=""}
+## Q1
+
+Start by summarizing the data by converting the counts to (row) proportions.  Specifically, give the proportion dead, malformed and normal for each concentration.  
+::::
+
+```{r}
+#Q1
+ToxData <- read.csv("Toxicity.csv")
+
+```
+
+# Toxicity Nominal Logistic Regression (Q2 - Q5)
+
+Fit a **baseline category logit** regression model to the data.  This model treats the response as **nominal**.  
+
+:::: {.taskbox data-latex=""}
+## Q2 (2 pts)
+
+Fit the model using the provided code and show the coefficients table.  
+
+Notes:  
+(1) Dead = 1, Malformation = 2, Normal = 3 (baseline/reference).  
+(2) This code may generate warnings, but proceed with analysis.  
+::::
+
+******
+
+```{r}
+#Q2
+library(VGAM)
+ToxModel1 <- vglm(cbind(dead, malformation, normal) ~ concentration, 
+                  family = multinomial, data = ToxData)
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q3 (8 pts)
+
+Calculate the two estimated conditional odds ratios from this model (dead vs normal, malformed vs normal) and provide a **detailed interpretation** for each.  
+::::
+
+*****
+Response
+
+```{r}
+#Q3
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q4 
+
+Use a likelihood ratio test to test for an effect of concentration (versus the null model) and make a conclusion in context.  
+::::
+
+
+*****
+
+Response
+
+```{r}
+#Q4
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q5 (6 pts)
+
+Create a graph of the (3) fitted curves representing the predicted probabilities (dead, malformed and normal) over the range of concentration. 
+::::
+
+```{r}
+#Q5
+
+```
+
+
+# Toxicity Ordinal Logistic Regression (Q6 - Q8)
+
+Fit a **proportional odds** regression model to the data. This model treats the response as **ordinal**.  
+
+:::: {.taskbox data-latex=""}
+## Q6 (2 pts)
+
+Fit the model using the provided code and show the coefficients table.  
+
+Notes:  
+(1) Dead < Malformation < Normal.  
+(2) This code may generate warnings, but proceed with analysis.   
+::::
+
+******
+
+```{r}
+#Q6
+ToxModel2 <- vglm(cbind(dead, malformation, normal) ~ concentration, 
+                  family = cumulative(parallel=TRUE), data = ToxData)
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q7 
+
+Provide the estimated odds ratio corresponding to concentration and provide a **detailed interpretation**.  
+::::
+
+*****
+Response
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q8 (6 pts)
+
+Create a graph of the (3) fitted curves representing the predicted probabilities (dead, malformed and normal) over the range of concentration. 
+::::
+
+```{r}
+#Q8
+
+```
+
+# Harbor Seals (Q9 - Q13)
+
+Harbor seals in Alaska “haul out” onto landing sites to rest and warm themselves. While hauled out, they are relatively easy to count during aerial surveys (see Figure on Canvas).
+
+Ecologists are interested in determining an "optimal" date in late summer or fall to conduct counts, meaning a date on which maximum numbers of hauled-out harbor seals could be counted. They consider a data set
+consisting of the count of SEALS by haul-out location (12 distinct sites, in the variable LOCNUMBER) and DATE, measured in days since August 15 (DATE = 0 for August 15, DATE = 1 for August 16, DATE = 2 for August
+17, etc.) Historical count data across multiple years are in the data set Harbor_Seals.csv, available from Canvas.
+
+:::: {.taskbox data-latex=""}
+## Q9
+
+Fit a quasi-poisson model (with link = log) including LOCNUMBER (as.factor) and including DATA as a quadratic.  This can be done using the poly(DATE, 2).  Show the summary output and discuss whether over-dispersion is present in these data.
+::::
+
+*****
+```{r}
+#Q9
+
+```
+
+Comment
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q10
+
+Further, construct a plot of Pearson residuals vs fitted values.  Add horizontal references lines at +/-3.  Does this diagnostic plot suggest that over-dispersion is present in these data? Briefly discuss.
+Note: The residual plot is the same whether we use poisson or quasi-poisson.
+::::
+
+*****
+```{r}
+#Q10
+
+```
+Comment 
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q11 (2 pts)
+
+Use your fitted model to predict the number of hauled-out harbor seals at location 16, 33 days after August 15.
+::::
+
+*****
+```{r}
+#Q11
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q12 (6 pts)
+
+Plot the predicted values versus DATE and address the ecologists’ question about an optimum date for aerial surveys. What is the optimum date? Add a vertical line at that date.  Note: For this question, you do not need to create smooth curves.  Just plotting the predicted points is fine.
+::::
+
+*****
+Optimum date is ?
+
+```{r}
+#Q12
+
+```
+
+*****
+
+:::: {.taskbox data-latex=""}
+## Q13
+
+Consider the plot from the previous question.  
+
+(a, 2pts)  Explain the importance of the **quadratic** term for determining "optimum" date.  In other words, what would happen if we had included DATE, but without the quadratic?  
+::::
+
+*****
+Response 
+
+*****
+
+:::: {.taskbox data-latex=""}
+(b, 2pts)  How would the "optimum" date be affected if we included an **interaction** between LOCNUMBER and DATE?
+::::
+
+*****
+Response
+
+*****
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
