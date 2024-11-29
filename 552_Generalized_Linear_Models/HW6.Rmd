@@ -17,6 +17,8 @@ mainfont: SourceSansPro
 #Retain this code chunk!!!
 library(knitr)
 library(tidyverse)
+library(dplyr)
+library(tidyr)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 ```
@@ -41,8 +43,22 @@ Start by summarizing the data by converting the counts to (row) proportions.  Sp
 
 ```{r}
 #Q1
-ToxData <- read.csv("Toxicity.csv")
+ToxData <- read.csv("Data/Toxicity.csv")
 
+print(ToxData)
+
+proportion_data <- ToxData %>%
+  rowwise() %>%
+  mutate(Total = dead + malformation + normal) %>%
+  mutate(
+    Prop_Dead = dead / Total,
+    Prop_Malformed = malformation / Total,
+    Prop_Normal = normal / Total
+  ) %>%
+  select(concentration, Prop_Dead, Prop_Malformed, Prop_Normal)
+
+# Display the proportions
+print(proportion_data)
 ```
 
 # Toxicity Nominal Logistic Regression (Q2 - Q5)
@@ -67,6 +83,11 @@ library(VGAM)
 ToxModel1 <- vglm(cbind(dead, malformation, normal) ~ concentration, 
                   family = multinomial, data = ToxData)
 
+summary_model1 <- summary(ToxModel1)
+print(summary_model1)
+
+
+
 ```
 
 *****
@@ -82,10 +103,15 @@ Response
 
 ```{r}
 #Q3
+odds_ratios <- exp(coef(ToxModel1))
 
+print(odds_ratios)
 ```
 
 *****
+
+- For each one unit increase in concentration, the odds of malformation increase by 1.2% (multiplicative effect: initial odds ration * 1.012))
+- For each one unit increase in concentration, the odds of death increase by 1.4% (multiplicative effect: initial odds ration * 1.014)
 
 :::: {.taskbox data-latex=""}
 ## Q4 
@@ -100,9 +126,26 @@ Response
 
 ```{r}
 #Q4
+ToxModel_null <- vglm(cbind(dead, malformation, normal) ~ 1, 
+                  family = multinomial, data = ToxData)
+
+
+
+logLik_null <- logLik(ToxModel_null)
+logLik_full <- logLik(ToxModel1)
+
+LR_stat <- 2*((logLik_full) - logLik_null)
+
+p_value <- pchisq(LR_stat, df = 2, lower.tail = FALSE)
+
+
+cat("Likelihood Ratio Statistic:", LR_stat, "\n")
+cat("p-value:", p_value, "\n")
+
+lrtest(ToxModel1,ToxModel_null)
 
 ```
-
+We can conclude that our model is signifficantly better than the null model with a very very low p value
 *****
 
 :::: {.taskbox data-latex=""}
@@ -113,7 +156,30 @@ Create a graph of the (3) fitted curves representing the predicted probabilities
 
 ```{r}
 #Q5
+library(ggplot2)
+library(reshape2)
 
+new_conc <- data.frame(concentration = seq(min(ToxData$concentration),
+                                          max(ToxData$concentration),
+                                          length.out = 100))
+
+pred_probs <- predict(ToxModel1, newdata = new_conc, type = "response")
+
+plot_data <- cbind(new_conc, pred_probs)
+plot_data_melt <- melt(plot_data, id.vars = "concentration",
+                       variable.name = "Status",
+                       value.name = "Probability")
+
+# Plot using ggplot2
+ggplot(plot_data_melt, aes(x = concentration, y = Probability, color = Status)) +
+  geom_line(size = 1.2) +
+  labs(title = "Predicted Probabilities by Concentration",
+       x = "Concentration",
+       y = "Predicted Probability") +
+  theme_minimal() +
+  scale_color_manual(values = c("red", "brown", "grey"),
+                     labels = c("Dead", "Malformation", "Normal")) +
+  theme(text = element_text(size = 12))
 ```
 
 
@@ -138,19 +204,32 @@ Notes:
 ToxModel2 <- vglm(cbind(dead, malformation, normal) ~ concentration, 
                   family = cumulative(parallel=TRUE), data = ToxData)
 
+summary2 = summary(ToxModel2)
+print(summary2)
+
+
 ```
 
 *****
 
 :::: {.taskbox data-latex=""}
 ## Q7 
+```{r}
+
+```
 
 Provide the estimated odds ratio corresponding to concentration and provide a **detailed interpretation**.  
 ::::
+```{r}
+odds_ratios <- exp(coef(ToxModel2))
+
+print(odds_ratios)
+```
 
 *****
 Response
 
+For each 1 unit increase in the concentration, the odds of being in the next higher category of normal > malformed > dead increase by .9% 
 *****
 
 :::: {.taskbox data-latex=""}
@@ -162,7 +241,25 @@ Create a graph of the (3) fitted curves representing the predicted probabilities
 ```{r}
 #Q8
 
+cumulative_probs <- predict(ToxModel2, newdata = new_conc, type = "response")
+
+# Create the plot directly using ggplot2
+ggplot() +
+  geom_line(aes(x = new_conc$concentration, y = cumulative_probs[, 1], color = "Dead"), size = 1.2) +
+  geom_line(aes(x = new_conc$concentration, y = cumulative_probs[, 2], color = "Malformation"), size = 1.2) +
+  geom_line(aes(x = new_conc$concentration, y = cumulative_probs[, 3], color = "Normal"), size = 1.2) +
+  labs(title = "Predicted Probabilities by Concentration (Ordinal Model)",
+       x = "Concentration",
+       y = "Predicted Probability") +
+  scale_color_manual(values = c("red", "brown", "grey"),
+                     labels = c("Dead", "Malformation", "Normal")) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        text = element_text(size = 12))
+
+
 ```
+
 
 # Harbor Seals (Q9 - Q13)
 
@@ -182,10 +279,20 @@ Fit a quasi-poisson model (with link = log) including LOCNUMBER (as.factor) and 
 ```{r}
 #Q9
 
+# Read the data
+Harbor_Seals <- read.csv("Data/Harbor_Seals.csv")
+
+# Fit the quasi-Poisson model with LOCNUMBER as a factor and DATE as a quadratic
+model_quasi_pois <- glm(SEALS ~ factor(LOCNUMBER) + poly(DATE, 2), 
+                        family = quasipoisson(link = "log"), 
+                        data = Harbor_Seals)
+
+# Display the summary of the model
+summary(model_quasi_pois)
 ```
 
 Comment
-
+Our Dispersion parameter is at 9.6. this is significantly high may indicate over dispersion in the data. 
 *****
 
 :::: {.taskbox data-latex=""}
@@ -198,10 +305,19 @@ Note: The residual plot is the same whether we use poisson or quasi-poisson.
 *****
 ```{r}
 #Q10
+ggplot() +
+  geom_point(aes(x = fitted(model_quasi_pois), y = residuals(model_quasi_pois, type = "pearson")), 
+             alpha = 0.6) +
+  geom_hline(yintercept = c(-3, 3), linetype = "dashed", color = "red") +
+  labs(title = "Pearson Residuals vs Fitted Values",
+       x = "Fitted Values",
+       y = "Pearson Residuals") +
+  theme_minimal()
+
 
 ```
 Comment 
-
+There are way too many data points outside of the 3sd range. This indicates significant over dispersion as discussed above. 
 *****
 
 :::: {.taskbox data-latex=""}
@@ -213,6 +329,16 @@ Use your fitted model to predict the number of hauled-out harbor seals at locati
 *****
 ```{r}
 #Q11
+
+new_data_Q11 <- data.frame(
+  LOCNUMBER = factor(16, levels = unique(Harbor_Seals$LOCNUMBER)),
+  DATE = 33
+)
+
+predicted_count <- predict(model_quasi_pois, newdata = new_data_Q11, type = "response")
+
+cat("Predicted number of hauled-out harbor seals at location 16 on day 33:", round(predicted_count, 2))
+
 
 ```
 
@@ -229,7 +355,26 @@ Optimum date is ?
 
 ```{r}
 #Q12
+# Generate a sequence and predict date values
+DATE_seq <- seq(min(Harbor_Seals$DATE), max(Harbor_Seals$DATE), by = 1)
+predicted_counts <- predict(model_quasi_pois, 
+                            newdata = data.frame(LOCNUMBER = factor(16, levels = unique(Harbor_Seals$LOCNUMBER)),
+                                                 DATE = DATE_seq), 
+                            type = "response")
 
+optimum_date <- DATE_seq[which.max(predicted_counts)]
+
+
+# Plot the predicted counts vs DATE
+ggplot() +
+  geom_point(aes(x = DATE_seq, y = predicted_counts), color = "blue", alpha = 0.6) +
+  geom_vline(xintercept = optimum_date, linetype = "dashed", color = "red") +
+  labs(title = "Predicted Number of Harbor Seals vs DATE",
+       x = "Days since August 15",
+       y = "Predicted Number of Haul-Out Harbor Seals") +
+  theme_minimal()
+
+cat("Optimum Date is:", optimum_date, " Days after August 15th")
 ```
 
 *****
@@ -244,7 +389,7 @@ Consider the plot from the previous question.
 
 *****
 Response 
-
+The quadratic term allows the possibility that the relationship between date and the number os seals is nonlinear. This is expected as these data tend to be cyclic. By having a quadratic term we get something that is logically maximizeable whereas a linear relationship maximizes either at 0 or at the max value. 
 *****
 
 :::: {.taskbox data-latex=""}
@@ -253,7 +398,7 @@ Response
 
 *****
 Response
-
+This would allow the optimum date to vary depending on which location we are looking at. As a result, there may be multiple optimum dates (not if you take the global maximum, but for practical purposes).if you are looking on a per Location basis. This may actually be ideal as it is not reasonable for ecologists to photograph all locations on the same day. By allowing for different optimum dates per location you could photograph multiple different locations on its respective maximum day. 
 *****
 
 # Appendix
