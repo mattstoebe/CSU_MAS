@@ -1,0 +1,87 @@
+---
+title: "573_HW_6"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(astsa)
+plot(qinfl,ylab="rate")
+lines(qintr,col="blue",lty=2,lwd=2)
+legend("topleft",c("Inflation","Interest Rate"),
+col=c("black","blue"),lty=c(1,2))
+```
+
+```{r}
+N <- length(qinfl)
+Z <- array(0,dim =c(1,2,N))
+Z[1,1,] <- rep(1,N)
+Z[1,2,] <- qintr
+
+library(MARSS)
+model <- list(
+  B="diagonal and unequal",# The AR parameter(s) of latent
+  U=matrix(c("u1","u2"),2,1),
+  A=matrix(0,1,1), # We're ignoring this
+  Q="diagonal and unequal", # Variance of the latent process
+  Z= Z, # Relates Y to X
+  R=matrix("r",1,1), # Variance of the observed process
+  x0=matrix(1,2,1), # Initial state vector
+  V0=diag(0.01,2),
+  tinitx=0)
+
+fit <- MARSS(qinfl, model=model, method = "kem")
+fit <- MARSS(qinfl, model=model, method = "BFGS", inits = fit)
+```
+
+```{r}
+model_ar <- list(
+  B = matrix(list(1, 0,
+                  0, "phi"), 2, 2),
+  U = matrix(c("0", "ub"), 2, 1),   
+  A = matrix("a",1,1),
+  Q = "diagonal and unequal",
+  Z = Z,
+  R = matrix("r",1,1),
+  x0 = matrix(c("x01", "x02"), 2, 1),
+  V0 = diag(0.01, 2),
+  tinitx = 0
+)
+
+inits_ar <- list(
+  x0 = matrix(c(0, 0), 2, 1) # or another guess
+)
+
+fit_ar <- MARSS(qinfl, model=model_ar, method="kem", inits=inits_ar)
+fit_ar <- MARSS(qinfl, model=model_ar, method="BFGS", inits=fit_ar)
+```
+
+
+```{r}
+# Extract filtered and smoothed states
+kf <- MARSSkf(fit_ar)               
+filtered_states <- kf$xtt          
+smoothed_states <- fit_ar$states
+
+#print(filtered_states)
+
+time_index <- seq_along(qinfl)  
+
+plot(
+  time_index, filtered_states[2, ], type = "l", col = "blue", lty = 1, 
+  ylab = expression(beta[t]), xlab = "Time", main = "Filtered vs Smoothed beta_t"
+)
+lines(time_index, smoothed_states[2, ], col = "red", lty = 2) # Add smoothed states
+legend("bottomright", legend = c("Filtered", "Smoothed"), col = c("blue", "red"), lty = c(1, 2))
+
+
+```
+
+
