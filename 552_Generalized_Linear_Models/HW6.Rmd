@@ -1,9 +1,12 @@
 ---
-title: "STAA 552: HW 6"
+title: 'STAA 552: HW 6'
 author: "YOUR NAME HERE"
 output:
+  word_document:
+    toc: false
+    toc_depth: '2'
   pdf_document:
-    toc: no
+    toc: false
     toc_depth: '2'
     includes:
       in_header: preamble.tex
@@ -214,9 +217,6 @@ print(summary2)
 
 :::: {.taskbox data-latex=""}
 ## Q7 
-```{r}
-
-```
 
 Provide the estimated odds ratio corresponding to concentration and provide a **detailed interpretation**.  
 ::::
