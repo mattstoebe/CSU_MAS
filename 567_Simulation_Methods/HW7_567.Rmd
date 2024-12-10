@@ -1,0 +1,48 @@
+---
+title: "HW7_567"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+prob_a <- pnorm(1) - pnorm(0)
+print(prob_a)
+
+```
+
+```{r}
+n <- 100000
+
+Z <- rnorm(n)
+
+indicator <- (Z >= 0) & (Z <= 1)
+P_estimate_b <- mean(indicator)
+variance_estimate_b <- var(indicator)
+
+cat("Monte Carlo Estimate:", P_estimate_b, "\n")
+cat("Variance Estimate:", variance_estimate_b, "\n")
+
+```
+
+```{r}
+n <- 100000
+
+U <- runif(n, 0, 1)
+
+weights <- dnorm(U)
+P_estimate_c <- mean(weights)
+variance_estimate_c <- var(weights)
+
+cat("Importance Sampling Estimate:", P_estimate_c, "\n")
+cat("Variance Estimate:", variance_estimate_c, "\n")
+
+```
+
