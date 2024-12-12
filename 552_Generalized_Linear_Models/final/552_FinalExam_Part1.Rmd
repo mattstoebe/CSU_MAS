@@ -1,0 +1,117 @@
+---
+title: "STAA 552: Final Exam Part 1"
+author: "Your Name Here"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+library(tidyverse)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+Honor Pledge: I have worked independently on this exam. I have read the exam instructions. I have not given, received, or used any unauthorized assistance on this exam.   
+**YOUR NAME HERE**
+
+**Instructions:** 
+
+- This exam is due by Sunday Dec 15 at midnight. 
+- **Students are required to work independently on the exam.**  Do NOT discuss the exam with anyone else (including other students).  Do NOT post questions about the exam to Canvas.
+- You may use the textbook, class notes, examples, HW solutions **posted** in the current Canvas course.  You may use any other publicly available (print or online) references or resources that you find helpful.  Use of homework "helper" websites (ex: Chegg, NoteHall, etc) is NOT allowed.  Use of chatbots (ex: ChatGPT) is NOT allowed.
+- For some questions, there may be more than one possible analysis or graph that could be used for full credit. Choose one approach, making a reasonable choice and justifying if needed.
+- For any questions that require calculations, you should provide R code for full credit.
+- Given this is the final exam, you should present your best work.   Graphs should include informative labels (including units if applicable).   I will deduct points for things like printing full data to knitted document, unreadable tables, unclear, excess or unnecessary output, etc.
+- Use $\alpha$ = 0.05 and/or 95\% confidence where needed.
+- All questions are worth 4 points except where noted.  Maximum score is 100.
+
+
+\newpage
+
+# Asthma (Q1 - Q4)
+
+A study was conducted to investigate whether fenoterol (by inhaler) may be associated with death in asthma patients.  Records were obtained for a group of 117 patients who died of asthma between August 1981 and July 1983.  For each asthma death, four additional records (matched by age, ethnicity and hospital) were selected from asthma admissions.  There are 117 asthma deaths; of these 60 had been prescribed fenoterol.  There are 468 other asthma admissions; of these 189 had been prescribed fenoterol. The total number of subjects is n = 585.
+
+## Q1
+
+What kind of study is this?  Briefly justify your answer.  
+
+Hint: To get started, consider observational study vs experiment.  But provide more detail if applicable.  
+
+*****
+Response
+This is an observational study and is set up as case controll. They do not randomly assign people to one treatemtn or another but instead look back at a sample of people and see what the results of their behavior were 
+*****
+
+## Q2
+
+Create a 2x2 summary table of counts.  Make a choice about appropriate X and put this variable in rows.  Make a choice about appropriate Y and put this variable in columns.  Label your table so that it is interpretable, but no need to make it publication quality.
+
+*****
+```{r}
+#Q2
+table <- matrix(c(117-60, 60, 468-189, 189), 
+                nrow = 2, 
+                byrow = TRUE,
+                dimnames = list(
+                  "Fenoterol" = c("Not Prescribed", "Prescribed"),
+                  "Outcome" = c("Death", "Survival")
+                ))
+print(table)
+```
+
+*****
+
+## Q3 (6 pts)
+
+(a, 2pts) Identify and provide an estimate of an appropriate parameter to summarize the association between the two variables.  
+(b, 1pt) Provide a corresponding 95\% confidence interval.  
+(c, 3pts) Make a conclusion about association in context.  Use the confidence interval to justify your response. Be sure to mention the direction of association (regardless of "statistical significance").  
+
+*****
+(a)  0.6441541
+(b)  0.4278361 - 0.9684754
+(c)  Being prescribed Fenoterol when compared to control decreases the odds of death by by about 35%. The 95% confidence interval does not include 1 which strengthens the conclusion that prescription improves the odds of survival. 
+
+```{r}
+#Q3
+library(epitools)
+
+or_result <- oddsratio(table)
+
+or <- or_result$measure[2,1]
+or_lower <- or_result$measure[2,2]
+or_upper <- or_result$measure[2,3]
+
+or
+or_lower
+or_upper
+```
+*****
+
+## Q4 
+
+Now run an appropriate statistical test of association between the two variables.  
+(a, 1 pt) State the name of the test.  
+(b, 1 pt) Provide a p-value.  
+(c, 2 pts) Make a conclusion about association in context. 
+
+*****
+(a)  Chi Squared Test
+(b)  .04258
+(c)  There is a significant relationship between prescription and death when compared to non prescription. Patients who were prescribed hav ea signifficant lower chance of death.  
+
+```{r}
+#Q4
+chi_test <- chisq.test(table)
+chi_test
+```
+
+
+*****
+
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```

@@ -56,11 +56,14 @@ model_ar <- list(
 )
 
 inits_ar <- list(
-  x0 = matrix(c(0, 0), 2, 1) # or another guess
+  x0 = matrix(c(0, 0), 2, 1)
 )
 
 fit_ar <- MARSS(qinfl, model=model_ar, method="kem", inits=inits_ar)
 fit_ar <- MARSS(qinfl, model=model_ar, method="BFGS", inits=fit_ar)
+```
+```{r}
+
 ```
 
 

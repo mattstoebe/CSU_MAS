@@ -1,0 +1,143 @@
+---
+title: "573_FinalExam"
+author: "Matthew Stoebe"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+## a 
+Which plot (Left or Right) of the LJung-box statistics suggests autocorrelation exists in the time series.Justify your answer. (2 pts)
+
+The left  plot indicates that there is autocorrelation as the different lag values have signifficance below the p value line. 
+
+## b
+What are the null and alternative hypotheses corresponding to the p-value the arrow points to? (3 pts)
+
+- Null Hypothesis: there is no autocorrelation up to a a specific lag
+- Alternative hypothesis: there is some autocorrelation at one or more legs
+
+# Question 2
+Im assuming here that "quantities" refer to either predicting, filtering, smoothing, and forecasting.It seems that the quantities of interest are defined in the question itself?
+
+## a
+current position and velocity would be a filtering problem
+
+## c (why is this out of order?)
+Predicting during the huricane wold be a forecasting problem
+
+## b 
+this would be a smoothing operation
+
+
+# Question 3
+
+Fit HHMM model with two hidden states 
+
+```{r}
+library(depmixS4)
+library(astsa)
+
+data(qinfl)
+
+mod <- depmix(response = qinfl ~ 1, 
+              data = data.frame(qinfl=qinfl), 
+              nstates = 2, 
+              family = gaussian())
+
+fitmod <- fit(mod)
+
+summary(fitmod)
+
+```
+
+# Fit linear Gaussian state-space model 
+```{r}
+library(MARSS)
+inflation <- qinfl
+
+Y <- matrix(inflation, nrow = 1)
+
+model.list <- list(
+  Z = matrix(1),
+  A = matrix(0),
+  B = matrix("b1"),
+  U = matrix("u1"),
+  Q = matrix("q1"),
+  R = matrix("r1"),
+  x0 = matrix("x0"),
+  V0 = matrix("v0")
+)
+
+
+fit_initial <- MARSS(Y, model = model.list, method = "kem")
+fit_final <- MARSS(Y, model = model.list, inits = fit_initial, method = "BFGS")
+
+
+summary(fit_final)
+
+states = fit_final$states
+time_index <- seq_along(qinfl)  
+
+states <- as.numeric(fit_final$states)
+qinfl_data <- as.numeric(qinfl)
+
+plot.ts(qinfl_data, type = "l", col = "black", lwd = 2,
+        ylab = "Rate",
+        main = "Observed Inflation vs. Smoothed State")
+lines(states, col = "blue", lwd = 2)
+
+legend("topleft", legend = c("Observed Inflation", "Smoothed State"),
+       col = c("black", "blue"), lwd = 2)
+
+
+```
+This is similar to stochastic regression as it allows for the relationships to vary with time instead of being set. 
+
+## c
+HMM assumes that the process swaps between discrete spaces with specific feature sets while gaussian state assumes that the evolution is continual. 
+
+## d
+Stochastic Regression
+```{r}
+data(qintr)
+
+len <- length(qinfl)
+Z <- array(NA, c(1, 2, len))
+Z[1, 1, ] <- 1
+Z[1, 2, ] <- qintr
+
+model_list <- list(
+  B = diag(2),
+  U = "zero",
+  A = matrix(0,1,1),
+  Q = "diagonal and unequal",
+  Z = Z,
+  R = matrix("r",1,1),
+  x0 = matrix(c("x01","x02"), 2, 1),
+  V0 = diag(0.01, 2),
+  tinitx = 0
+)
+
+inits <- list(
+  x0 = matrix(c(0, 0), 2, 1)
+)
+
+fit_init <- MARSS(qinfl, model=model_list, method="kem", inits=inits)
+fit_final <- MARSS(qinfl, model=model_list, method="BFGS", inits=fit_init)
+
+summary(fit_final)
+
+```
+
+## e
+in model d, inflation is described by another observed variable with a time varying slope. this is not available in model b. 
+
+## f
+This really depends on how you view inflation and its relation to time. I would personally choose the final model as it has a better view of the general macroeconomic enviroment with the incorporation of interest rate.
