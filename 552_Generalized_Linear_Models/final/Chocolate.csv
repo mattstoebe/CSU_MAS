@@ -1,0 +1,433 @@
+Company ,Bar_Name,Ref_ID,Cocoa,Country,Rating
+Habitual,one hundred,1205,100,Canada,1
+Olivia,Carribean-Raw,688,76,Canada,1
+Chocolats Privilege,Xoconusco,1219,70,Canada,2
+Choklat,Ocumare,377,80,Canada,2
+Desbarres,"Kilombero, batch 41",1916,72,Canada,2
+Chaleur B,Uganda,1426,70,Canada,2
+Choklat,"Porcelana, Tabasco",377,70,Canada,2
+Habitual,Papua New Guinea,1197,80,Canada,2
+Habitual,Campesino w/ nibs,1197,74,Canada,2
+Habitual,Downtown London,1201,65,Canada,2
+Olivia,Carribean,688,76,Canada,2
+Olivia,Carribean,688,85,Canada,2
+organicfair,Maya Mountain,1161,74,Canada,2
+organicfair,La Red,1165,72,Canada,2
+organicfair,Nicaraqua,1165,72,Canada,2
+Palette de Bine,Lachua,1720,70,Canada,2
+Palette de Bine,"Alto Beni, Palos Blancos",1239,72,Canada,2
+Palette de Bine,"Camino Verde P., Balao, Guayas",1303,75,Canada,2
+Soma,"Apurimac, El Quinacho Co-op",1073,70,Canada,2
+Soma,"Grenada, Black Science",676,70,Canada,2
+Ambrosia,Belize,1494,64,Canada,3
+Choklat,Brazilian,377,70,Canada,3
+Choklat,Brazilian,377,80,Canada,3
+Choklat,Ocumare,377,70,Canada,3
+Habitual,Africa meets Latina,1201,70,Canada,3
+Habitual,Amazonas,1201,80,Canada,3
+Hummingbird,Bolivia,1307,70,Canada,3
+Hummingbird,"Bolivia, Bo-nib-ia, w/ nibs",1311,70,Canada,3
+Hummingbird,Momotombo,1311,70,Canada,3
+Olivia,Carribean-Raw,688,85,Canada,3
+organicfair,Caribe,1165,72,Canada,3
+organicfair,Mindo,1165,72,Canada,3
+Palette de Bine,Maya Mtn,1720,72,Canada,3
+Sirene,"Somia Plantation, 2012",1502,100,Canada,3
+Sirene,"Camino Verde P., Balao, Guayas, 2012",1506,100,Canada,3
+Sirene,Lachua w/ cane sugar,1614,73,Canada,3
+Soma,Hispaniola,377,70,Canada,3
+Soma,Conacado,387,70,Canada,3
+Ambrosia,Madagascar,1494,66,Canada,3
+Ambrosia,Dominican Republic,1498,75,Canada,3
+Ambrosia,Papua New Guinea,1498,63,Canada,3
+Ambrosia,Venezuela,1498,70,Canada,3
+Chocosol,"Chiapas, Lacandon Jungle, Oaxacom Mtn",682,65,Canada,3
+Choocsol,"Chiapas, Lacandon Jungle, Oaxacom Mtn",1832,75,Canada,3
+East Van Roasters,Peru,1343,70,Canada,3
+Eau de Rose,Tumaco,1812,70,Canada,3
+Eau de Rose,Arauca,1812,70,Canada,3
+Habitual,Dominican Republic,1197,75,Canada,3
+Habitual,Sharkey,1201,66,Canada,3
+Hummingbird,"Ocumare, Cumboto",1097,70,Canada,3
+Marigold's Finest,Cacao Nib Crunch,1808,75,Canada,3
+Palette de Bine,"Silvestre, La Paz, Beni",1570,70,Canada,3
+Palette de Bine,"San Juan Estate, Gran Couva",1570,70,Canada,3
+Sirene,"Lachua w/ maple sugar, batch 5",1614,73,Canada,3
+Sirene,Pisa,1650,73,Canada,3
+Soma,"Camino Verde, Black S., batch cvu6030.0",1832,70,Canada,3
+Soma,La Dalia,1307,70,Canada,3
+Soma,Little Big Man,1339,70,Canada,3
+Soma,Java,1030,70,Canada,3
+Soma,Chef's Blend,1077,70,Canada,3
+Soma,Orinoco,1173,70,Canada,3
+Soma,Noula Coop,817,70,Canada,3
+Soul,Dominican Republic,1932,70,Canada,3
+Soul,Ecuador,1936,75,Canada,3
+Soul,Papua New Guinea,1936,77,Canada,3
+Ambrosia,Peru,1498,68,Canada,4
+East Van Roasters,Madagascar,1343,70,Canada,4
+Habitual,Trinitario,1197,70,Canada,4
+Hummingbird,Lam Dong,1542,70,Canada,4
+Hummingbird,Zorzal Reserva w/ Charles Kerchner,1387,70,Canada,4
+Monarque,Oko Caribe,1812,72,Canada,4
+Palette de Bine,Kokoa Kamili,1574,72,Canada,4
+Palette de Bine,Duo- Gran Couva & Camino Verde,1399,75,Canada,4
+Sirene,Wild Bolivia,1788,73,Canada,4
+Sirene,Kokoa Kamili Coop,1856,73,Canada,4
+Soma,"Oko Caribe, Duarte P., Collab w Chocosol",1820,62,Canada,4
+Soma,"Sambirano Valley, Black Science, B-60307.0",1820,70,Canada,4
+Soma,"Bahia Black, batch bra50722.1",1828,70,Canada,4
+Soma,CSB Chama,1594,70,Canada,4
+Soma,"La Tronca, Matagalpa",1227,70,Canada,4
+Soma,"Camino Verde P., Balao, Guayas",1307,80,Canada,4
+Soma,Cahabon Region,951,70,Canada,4
+Soma,Eastern Promises,967,70,Canada,4
+Soma,Papua New Guinea,983,85,Canada,4
+Soma,"Alto Beni, Wild Bolivian",676,70,Canada,4
+Soma,Chuao,688,70,Canada,4
+Soma,Africa,377,70,Canada,4
+Soma,Papua New Guinea,387,70,Canada,4
+Soul,Madagascar,1936,70,Canada,4
+Soul,Venezuela,1936,75,Canada,4
+Soul,Tanzania,1940,80,Canada,4
+Christopher Morel (Felchlin),"Maranon Canyon, Fortunato No. 4",666,68,Canada,4
+East Van Roasters,Dominican Republic,1343,70,Canada,4
+Hummingbird,Hispaniola,1311,70,Canada,4
+Hummingbird,Amazonas,1097,70,Canada,4
+Palette de Bine,Lam Dong,1574,72,Canada,4
+Palette de Bine,Sambirano,1239,78,Canada,4
+Palette de Bine,Gran Couva,1399,70,Canada,4
+Sirene,"Esmeraldas, Salazar Farm",1860,73,Canada,4
+Sirene,"Somia Plantation, 2012",1339,67,Canada,4
+Sirene,"Somia Plantation, 2012",1339,73,Canada,4
+Sirene,"Camino Verde P., Balao, Guayas",1343,73,Canada,4
+Soma,"Abstract S. w/ Jamaica nibs,batch abs60323.0",1828,75,Canada,4
+Soma,"Chuno, San Jose de Bocay, Pantasma R.,B.S.",1828,70,Canada,4
+Soma,Maranon Canyon,1259,70,Canada,4
+Soma,"Espiritu Santo, 'Smoke Monster'",1307,70,Canada,4
+Soma,"Rizek Cacao, Domin. Rep.",1019,77,Canada,4
+Soma,"Sangre Grande P., Trinidad",1073,70,Canada,4
+Soma,Patanemo,1077,70,Canada,4
+Soma,O'ahu,833,70,Canada,4
+Soma,Carenero Superior,951,70,Canada,4
+Soma,"Elvesia P., Black Science",682,70,Canada,4
+Soma,Black Science Blend 1,607,70,Canada,4
+Soma,Madagascar,387,70,Canada,4
+Soma,Ocumare,387,70,Canada,4
+Soma,"Tien Giang, Black S., batch VIT60420.0",1828,70,Canada,5
+Soma,Porcelana,1594,75,Canada,5
+Soma,Crazy 88,1077,88,Canada,5
+Soma,"Maracaibo, El Vigia",1077,70,Canada,5
+Soma,Equator,1081,67,Canada,5
+Soma,"Bachelor's Hall E., St. Thomas Parish",1177,70,Canada,5
+Soma,"Dual Origins, Sambirano, Elvesia",867,70,Canada,5
+Soma,"Dancing in Your Head, 5 bean blend",867,70,Canada,5
+Soma,Peruvian,676,64,Canada,5
+Soma,"Three Amigos(Chuao, Wild Bolivia, D.R.)",676,70,Canada,5
+Bouga Cacao (Tulicorp),"El Oro, Hacienda de Oro",341,100,Ecuador,1
+Cacaoyere (Ecuatoriana),Pichincha,259,91,Ecuador,1
+Caoni (Tulicorp),Esmeraldas,237,77,Ecuador,1
+Hoja Verde (Tulicorp),Arriba,414,80,Ecuador,1
+Pacari,Raw,266,100,Ecuador,1
+Cacaoyere (Ecuatoriana),Bolivar,245,82,Ecuador,2
+Caoni (Tulicorp),Manabi,237,77,Ecuador,2
+Hoja Verde (Tulicorp),Manabi,414,80,Ecuador,2
+Kallari (Ecuatoriana),Diego/ original micro,248,85,Ecuador,2
+Kallari (Ecuatoriana),Cacao Nacional W.F.,263,75,Ecuador,2
+Pacari,Esmeraldas,224,60,Ecuador,2
+Republica del Cacao (aka Confecta),"Los Rios, Vinces",439,75,Ecuador,2
+Aequare (Gianduja),"Los Rios, Quevedo, Arriba",370,55,Ecuador,2
+Caoni (Tulicorp),Los Rios,245,77,Ecuador,2
+Chchukululu (Tulicorp),Arriba,486,55,Ecuador,2
+Hacienda El Castillo,Don Homero- Cerecita Valley,1327,55,Ecuador,2
+Kallari (Ecuatoriana),Roberto,245,75,Ecuador,2
+Kallari (Ecuatoriana),Diego 48hr/ W.F. blend prototype,248,85,Ecuador,2
+Pacari,"Ecuador, raw",817,85,Ecuador,2
+Pacari,Manabi,224,65,Ecuador,2
+Aequare (Gianduja),"Los Rios, Quevedo, Arriba",370,70,Ecuador,3
+Caoni (Tulicorp),Manabi,266,55,Ecuador,3
+Chchukululu (Tulicorp),Los Rios,252,75,Ecuador,3
+Hacienda El Castillo,Don Homero- Cerecita Valley,1327,70,Ecuador,3
+Hoja Verde (Tulicorp),Arriba,414,72,Ecuador,3
+Kallari (Ecuatoriana),Sisa 36hr/ W. F. blend prototype,241,70,Ecuador,3
+Kallari (Ecuatoriana),Diego 60hr/ W.F. blend prototype,248,85,Ecuador,3
+Kallari (Ecuatoriana),Cacao Nacional W.F.,269,85,Ecuador,3
+Pacari,Los Rios,224,72,Ecuador,3
+Republica del Cacao (aka Confecta),Manabi,147,75,Ecuador,3
+Bouga Cacao (Tulicorp),"El Oro, Hacienda de Oro",316,77,Ecuador,3
+Caoni (Tulicorp),Los Rios,269,55,Ecuador,3
+Hoja Verde (Tulicorp),Arriba,414,58,Ecuador,3
+La Pepa de Oro,Vinces,713,60,Ecuador,3
+Montecristi,Manabi,1654,70,Ecuador,3
+Pacari,Garaua,1415,70,Ecuador,3
+Republica del Cacao (aka Confecta),Esmeraldas,494,75,Ecuador,3
+To'ak (Ecuatoriana),Manabi,1418,81,Ecuador,3
+Cacaoyere (Ecuatoriana),Amazonia,237,63,Ecuador,4
+Cacaoyere (Ecuatoriana),Esmeraldas,237,71,Ecuador,4
+Caoni (Tulicorp),Esmeraldas,269,55,Ecuador,4
+Hoja Verde (Tulicorp),Manabi,414,58,Ecuador,4
+Kallari (Ecuatoriana),Sisa's Secret/ original micro,241,70,Ecuador,4
+Montecristi,Manabi,1654,63,Ecuador,4
+Montecristi,Manabi,1658,85,Ecuador,4
+Pacari,Cumbia,1415,70,Ecuador,4
+Pacari,Nube- prototype,721,70,Ecuador,4
+Pacari,Raw,266,70,Ecuador,4
+Republica del Cacao (aka Confecta),El Oro,147,67,Ecuador,4
+Pacari,Montubia,1415,70,Ecuador,4
+Republica del Cacao (aka Confecta),Los Rios,170,75,Ecuador,4
+Pacari,"Sierra Nevada, Tutu Iku",1848,70,Ecuador,5
+Pacari,Tangara,1415,70,Ecuador,5
+Pacari,Piura,863,70,Ecuador,5
+Rancho San Jacinto,Ecuador,565,75,Ecuador,3
+Bonnat,One Hundred,81,100,France,1
+Valrhona,Le Noir Extra Amer,147,85,France,1
+Cacao Barry,Tanzania,300,75,France,1
+Cacao Barry,Venezuela,141,72,France,1
+Michel Cluizel,Carre Amer,24,60,France,1
+Michel Cluizel,Carre Grand Noir,24,85,France,1
+Michel Cluizel,Noir Infini,81,99,France,1
+Pralus,Cuyagua,451,75,France,1
+Pralus,Dominican Republic-Organic,280,75,France,1
+Alain Ducasse,Chuao,1061,75,France,2
+Alain Ducasse,"Piura, Perou",1173,75,France,2
+Ara,Chiapas,1379,72,France,2
+Bonnat,Equateur,123,75,France,2
+Valrhona,Abinao,153,85,France,2
+Valrhona,Gran Couva 2005 P.,75,64,France,2
+A. Morin,Kpime,1676,70,France,2
+A. Morin,Carenero,1315,70,France,2
+A. Morin,Panama,1011,70,France,2
+A. Morin,Colombie,1015,70,France,2
+Alain Ducasse,Trinite,1215,65,France,2
+Alain Ducasse,Vietnam,1215,75,France,2
+Ara,Equateur,1379,75,France,2
+Bernachon,Nature,797,55,France,2
+Bonnat,"Porcelana, Apotequil",336,75,France,2
+Cemoi,Equateur,404,72,France,2
+Durand,Madagascar,841,82,France,2
+Kaoka (Cemoi),Noir,404,70,France,2
+Kaoka (Cemoi),Ecuador,423,80,France,2
+La Maison du Chocolat (Valrhona),"Cuana, 2013",1121,74,France,2
+Laia aka Chat-Noir,"Madagascar, Batch 59/100",1590,75,France,2
+Laia aka Chat-Noir,"Vietnam, Batch 50/100",1590,75,France,2
+Laia aka Chat-Noir,Cuba,1434,70,France,2
+Laia aka Chat-Noir,Trinidad-Tobago,1438,68,France,2
+Santome,Sao Tome,761,70,France,2
+Valrhona,Le Noir Amer,157,71,France,2
+A. Morin,Atsane,1676,70,France,3
+A. Morin,Madagascar,1011,70,France,3
+A. Morin,Birmanie,1015,70,France,3
+Alain Ducasse,Madagascar,1215,75,France,3
+Ara,Madagascar,1375,75,France,3
+Ara,Trincheras,1379,75,France,3
+Bonnat,Ivory Coast,331,75,France,3
+Bonnat,"Porcelana, Tabasco, Marfil de Blanco",336,75,France,3
+Bonnat,"Xoconusco, cacao Real",395,75,France,3
+Bonnat,Ceylan,81,75,France,3
+Cacao Barry,Santo Domingo,586,70,France,3
+Cacao Barry,Mexico,147,66,France,3
+Debauve & Gallais (Michel Cluizel),Papua New Guinea,423,64,France,3
+Erithaj (A. Morin),Ham Luong,1209,80,France,3
+La Maison du Chocolat (Valrhona),Kuruba,439,60,France,3
+Laia aka Chat-Noir,"Cuba, Batch 59/100",1590,75,France,3
+Laia aka Chat-Noir,"Ivory Coast, Batch 56/100",1594,75,France,3
+Michel Cluizel,Tamarina,24,70,France,3
+Pralus,Papouasie,199,75,France,3
+Pralus,"Sambirano Valley, Le 100%",202,100,France,3
+Pralus,"Monte Alegre (Itacare), Brazil",105,75,France,3
+Pralus,Equateur,40,75,France,3
+Pralus,Vanuatu,40,75,France,3
+Pralus,Cuba,99,75,France,3
+Pralus,"Caracas, Venezuela and Ghana",99,75,France,3
+Valrhona,Araguani,117,72,France,3
+Valrhona,Caraibe,63,66,France,3
+Valrhona,"Porcelana, Maracaibo, Palmira P. 2005",75,64,France,3
+A. Morin,Brazil,1011,70,France,3
+A. Morin,Papua New Guinea,1015,70,France,3
+A. Morin,Piura,1019,70,France,3
+Bonnat,"Los Colorados, Santo Domingo, Equateur",1418,75,France,3
+Bonnat,Gabon,1042,75,France,3
+Bonnat,Jamaique,761,75,France,3
+Erithaj (A. Morin),Ben Tre,1205,70,France,3
+Erithaj (A. Morin),Ba Lai,1209,74,France,3
+La Maison du Chocolat (Valrhona),Tobago,1145,60,France,3
+La Maison du Chocolat (Valrhona),"Acarigua, w/ nibs",1189,56,France,3
+La Maison du Chocolat (Valrhona),Akosombo,346,68,France,3
+Laia aka Chat-Noir,"Peru, Batch 51/100",1590,75,France,3
+Laia aka Chat-Noir,"Bahia, Batch 148",1642,75,France,3
+Pralus,Peru,1446,75,France,3
+Pralus,"Porcelana, S. of Lake Maracaibo",717,75,France,3
+Pralus,Ghana,40,75,France,3
+Raoul Boulanger,Piura,1872,75,France,3
+Valrhona,Caraque,709,56,France,3
+Valrhona,"Porcelana, Maracaibo, Palmira P. 2006",162,64,France,3
+A. Morin,Akata,1680,70,France,4
+A. Morin,Quilla,1704,70,France,4
+A. Morin,Cuba,1315,70,France,4
+A. Morin,Sur del Lago,1315,70,France,4
+A. Morin,Chanchamayo Province,1019,70,France,4
+A. Morin,Bolivia,797,70,France,4
+Bonnat,Selva Maya,1912,75,France,4
+Bonnat,Maragnam,1038,75,France,4
+Bonnat,Cuba,629,75,France,4
+Bonnat,"Cusco, Cacao Cusco",629,75,France,4
+Bonnat,Piura Blanco,629,75,France,4
+Bonnat,Juliana,672,75,France,4
+Cacao Barry,Grand 'Anse,1716,65,France,4
+Chloe Chocolat,Blend No. 1,672,70,France,4
+La Maison du Chocolat (Valrhona),Loma Sotavento,891,66,France,4
+La Maison du Chocolat (Valrhona),Grenada,741,68,France,4
+La Maison du Chocolat (Valrhona),"Porcelana, Pariguan",346,69,France,4
+La Maison du Chocolat (Valrhona),"Cuana, 2008",230,74,France,4
+Laia aka Chat-Noir,"Sao Tome, Batch 151",1638,75,France,4
+Michel Cluizel,"Carenero Superior, Concepcion",117,66,France,4
+Michel Cluizel,Vila Gracinda,135,67,France,4
+Pralus,Chuao,486,75,France,4
+Pralus,"Monte Alegre, Diego Badero",280,75,France,4
+Pralus,Tanzania,105,75,France,4
+Pralus,Sao Tome & Principe,5,75,France,4
+Pralus,Trinidad,5,75,France,4
+Pralus,"Java, Indonesie",32,75,France,4
+Pralus,"Barlovento, Venezuela",32,75,France,4
+Pralus,Colombie,40,75,France,4
+Pralus,"Djakarta, Java and Ghana",99,75,France,4
+Valrhona,"Andoa, Grand Cru blend",1145,70,France,4
+Valrhona,"Loma Sotavento, 2013",1153,64,France,4
+Valrhona,Nyangbo,395,68,France,4
+Valrhona,"Sambirano, Ampamakia 2005, Millot P.",75,64,France,4
+Vietcacao (A. Morin),"Ben Tre, Mekong Delta, MoCay",951,70,France,4
+A. Morin,Agua Grande,1876,63,France,4
+A. Morin,Puerto Cabello,1319,70,France,4
+A. Morin,Equateur,1011,70,France,4
+A. Morin,Peru,797,63,France,4
+Bonnat,Surfin,1418,65,France,4
+Bonnat,Libanio,629,75,France,4
+Bonnat,Trinite,24,75,France,4
+Debauve & Gallais (Michel Cluizel),Venezuela,263,66,France,4
+La Maison du Chocolat (Valrhona),Orinoco,445,60,France,4
+Laia aka Chat-Noir,"Lam Dong, Batch 153",1642,75,France,4
+Michel Cluizel,"Chiapas, Mokaya P.",963,66,France,4
+Pralus,"Madagascar, Nosy Be Isle.",5,75,France,4
+Un Dimanche A Paris,Dominican Republic,709,63,France,4
+Valrhona,Tainori,327,64,France,4
+Valrhona,Alpaco,370,66,France,4
+Valrhona,Chuao 2002 P.,129,65,France,4
+A. Morin,Pablino,1319,70,France,5
+A. Morin,Chuao,1015,70,France,5
+A. Morin,Chanchamayo Province,1019,63,France,5
+Bonnat,Kaori,1339,75,France,5
+Bonnat,Haiti,629,75,France,5
+Bonnat,"Madagascar, 100% criollo",629,75,France,5
+Bonnat,"Porcelana, Venezuela",199,75,France,5
+Bonnat,"Ocumare, Puerto Cabello",32,75,France,5
+Bonnat,"Maracaibo, El Rosario",48,75,France,5
+Bonnat,Madagascar,75,75,France,5
+Bonnat,Chuao,81,75,France,5
+Michel Cluizel,Los Ancones P.,24,67,France,5
+Michel Cluizel,Mangaro P.,24,65,France,5
+Michel Cluizel,Maralumi P.,24,64,France,5
+Pralus,Claudio Corallo w/ nibs,162,75,France,5
+Pralus,Jamaique,32,75,France,5
+Pralus,Fortissima,93,80,France,5
+Tobago Estate (Pralus),"Roxborough, Tobago",895,70,France,5
+Valrhona,"Piura, Illanka, Quemazon",1510,63,France,5
+Valrhona,"Otucan, Grand Cru",931,69,France,5
+Valrhona,"Porcelana, Pedegral",757,64,France,5
+Valrhona,Manjari,129,64,France,5
+Valrhona,Guanaja,63,70,France,5
+Artisan du Chocolat,Venezuela,486,100,U.K.,1
+Artisan du Chocolat,Brazil Rio Doce,363,72,U.K.,1
+Hotel Chocolat,"Island Growers, 2012, 120hr c.",1113,100,U.K.,1
+Damson,Crayfish Bay aka Non Pariel Estate,1666,70,U.K.,1
+Paul Young,"Madagascar, w/ shell",1271,73,U.K.,1
+Willie's Cacao,"Java, Indonesian Black",1109,100,U.K.,1
+Artisan du Chocolat,"Ocumare, Venezuela",355,75,U.K.,2
+Chocolarder,Peru,1482,65,U.K.,2
+Chocolarder,Dominican Republic,1514,80,U.K.,2
+Dormouse,"Rio Caribe, Batch 7",1672,70,U.K.,2
+Duffy's,Star of Ecuador,523,70,U.K.,2
+Green & Black's (ICAM),Dark,15,70,U.K.,2
+Hotel Chocolat (Coppeneur),"Los Rios, H. Iara, 2012, 120hr c.",1113,100,U.K.,2
+Hotel Chocolat (Coppeneur),Uganda,296,80,U.K.,2
+Artisan du Chocolat,Panama,745,72,U.K.,2
+Artisan du Chocolat,Java,355,72,U.K.,2
+Artisan du Chocolat (Casa Luker),"Orinoqua Region, Arauca",1181,72,U.K.,2
+Black River (A. Morin),Blue Mountain Region,1331,70,U.K.,2
+Chocolarder,Peru + nibs,1482,65,U.K.,2
+Damson,O'Payo,1666,70,U.K.,2
+Dormouse,Non Pariel Estate,1880,75,U.K.,2
+Dormouse,"Colombia, Batch 9",1676,80,U.K.,2
+Dormouse,"Madagascar, Batch 8",1676,77,U.K.,2
+Forever Cacao,Rio Eni,1267,72,U.K.,2
+Hotel Chocolat,"Pepiniere, single Cote",1654,70,U.K.,2
+Hotel Chocolat (Coppeneur),"Chanchamayo, Pichanadi, 2012, 60hr c.",1109,100,U.K.,2
+Hotel Chocolat (Coppeneur),"Conacado, 2012, 120hr c.",1113,100,U.K.,2
+Hotel Chocolat (Coppeneur),Ecuador,552,70,U.K.,2
+Hotel Chocolat (Coppeneur),Chuao,600,70,U.K.,2
+Hotel Chocolat (Coppeneur),Tanzania,296,75,U.K.,2
+Paul Young,"Madagascar, w/ shell",1271,64,U.K.,2
+Pump Street Bakery,Honduras,1688,80,U.K.,2
+Pump Street Bakery,"Patanemo Vil., Carabobo State, Tisano family",1223,75,U.K.,2
+Pump Street Bakery,Guantupi River,1227,85,U.K.,2
+Seaforth,Dominican Republic,1658,70,U.K.,2
+Seaforth,Grenada,1658,70,U.K.,2
+Solkiki,"Maranon, Fortunato No. 4",1840,68,U.K.,2
+Solkiki,"Castillo, Hispaniola, unroasted",1840,85,U.K.,2
+Artisan du Chocolat,Madagascar,363,80,U.K.,3
+Artisan du Chocolat,Peru,363,75,U.K.,3
+Beau Cacao,"Asajaya E, NW Borneo, b. #132/4500",1948,73,U.K.,3
+Damson,Robson Estate,1610,70,U.K.,3
+Doble & Bignall,Puerto Cabello,1688,85,U.K.,3
+Duffy's,"Bocas del Toro, Tierra Oscura",697,72,U.K.,3
+Hotel Chocolat (Coppeneur),Trinidad,1038,75,U.K.,3
+Hotel Chocolat (Coppeneur),"Los Rios, H. Iara",1065,90,U.K.,3
+Hotel Chocolat (Coppeneur),"Somia Plantation, Akesson, 2012",1065,72,U.K.,3
+Hotel Chocolat (Coppeneur),"Los Rios, H. Iara, 96hr c.",623,80,U.K.,3
+Hotel Chocolat (Coppeneur),"Island Growers, 120hr c.",623,65,U.K.,3
+Hotel Chocolat (Coppeneur),Santo Domingo,552,70,U.K.,3
+Hotel Chocolat (Coppeneur),St. Lucia,245,72,U.K.,3
+Hotel Chocolat (Coppeneur),Uba Budo,300,72,U.K.,3
+Pump Street Bakery,Guantupi River,1223,75,U.K.,3
+Willie's Cacao,Los Llanos,1227,88,U.K.,3
+Willie's Cacao,Sambirano,593,71,U.K.,3
+Willie's Cacao,San Martin,457,70,U.K.,3
+Artisan du Chocolat,"Trinidad, Heritage, Limited ed.",1193,72,U.K.,3
+Artisan du Chocolat,Costa Rica,600,72,U.K.,3
+Artisan du Chocolat,Ba Ria Vung Tau Province,600,72,U.K.,3
+Artisan du Chocolat,Dominican Republic,363,72,U.K.,3
+Beau Cacao,"Serian E., NW Borneo, b. #134/3800",1948,72,U.K.,3
+Chocablog,Ecuador,1454,70,U.K.,3
+Doble & Bignall,"Panama, Raven",1371,72,U.K.,3
+Doble & Bignall,"Puerto Cabello, Mantuano",1371,72,U.K.,3
+Duffy's,"Nicaliso, Xoco",697,71,U.K.,3
+Hotel Chocolat (Coppeneur),"Island Growers, 96hr c.",623,65,U.K.,3
+Pump Street Bakery,"Akessons Estate, Sambirano, Ambanja",1223,72,U.K.,3
+Willie's Cacao,Rio Caribe,457,72,U.K.,3
+Artisan du Chocolat,Bali,600,72,U.K.,4
+Damson,Los Rios,1610,70,U.K.,4
+Doble & Bignall,Johe,1407,72,U.K.,4
+Duffy's,"Chuno, Xoco",1331,70,U.K.,4
+Duffy's,Dominican Republic,661,65,U.K.,4
+Duffy's,Ocumare,765,71,U.K.,4
+Duffy's,Panama,516,70,U.K.,4
+Hotel Chocolat (Coppeneur),Mekong Delta & Dong Nai,1038,80,U.K.,4
+Hotel Chocolat (Coppeneur),"Los Rios, H. Iara, 2012",1065,82,U.K.,4
+Hotel Chocolat (Coppeneur),Sambirano,809,66,U.K.,4
+Pump Street Bakery,"Chocoan Rainforest, Teroro Escondido, ESM",1872,77,U.K.,4
+Pump Street Bakery,"Crayfish Bay Estate, 2014",1502,70,U.K.,4
+Pump Street Bakery,"Akesson's, batch 4411",1530,74,U.K.,4
+Rococo (Grenada Chocolate Co.),"Gru Grococo, St. Andrews",923,66,U.K.,4
+Willie's Cacao,Hacienda Las Trincheras,593,72,U.K.,4
+Artisan du Chocolat,"Colombia, Casa Luker",947,72,U.K.,4
+Artisan du Chocolat,Jamaica,531,72,U.K.,4
+Artisan du Chocolat,Congo,300,72,U.K.,4
+Duffy's,"Rico Rugoso, Xoco",1331,76,U.K.,4
+Duffy's,Ocumare,923,72,U.K.,4
+Duffy's,"Indio Rojo, Xoco",623,72,U.K.,4
+Duffy's,"Corazon del Ecuador, Calceta beans",516,72,U.K.,4
+Duffy's,Star of Peru,523,70,U.K.,4
+Willie's Cacao,Java,593,69,U.K.,4
+Artisan du Chocolat,Haiti,729,72,U.K.,5
+Duffy's,"Rio Dulce, Xoco",1662,70,U.K.,5
+Hotel Chocolat,"Marcial, single Cote, 2012",1030,70,U.K.,5
+Willie's Cacao,Los Llanos,1848,70,U.K.,5

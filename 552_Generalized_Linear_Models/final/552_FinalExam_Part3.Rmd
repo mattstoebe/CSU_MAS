@@ -1,0 +1,160 @@
+---
+title: "STAA 552: Final Exam Part 3"
+author: "Matthew Stoebe"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+library(tidyverse)
+library(ggplot2)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+**Honor Code from Part 1 applies here, too.**
+
+# Chocolate (Q14 - Q19)
+
+We consider Ratings (1-5 scale) for n = 432 different chocolate bars.  We consider two predictors: Cocoa (%) and Country.  **Rating is the response variable for all models.**
+
+The data is available from Canvas as Chocolate.csv. 
+
+The data includes the following variables:
+
+- Company, Bar_Name and Ref_ID: should NOT be used for model fitting
+- Cocoa (%)
+- Country: Canada, Ecuador, France or U.K. 
+- Rating: 1 = Disappointing, 2 = Passable, 3 = Satisfactory, 4 = Praiseworthy, 5 = Premium  
+
+Note: Some of the results may be surprising.
+
+## Q14 (2 pts)
+
+Create a summary table of **Country** and Rating.  For each country, this table should give the proportion of bars with each rating.  For example, for Canadian chocolate bars what proportion have rating 1, 2, etc?
+
+*****
+```{r}
+#Q14
+choc <- read.csv("Chocolate.csv")
+choc$Country <- factor(choc$Country, levels = c("Canada", "Ecuador", "France", "U.K."))
+
+
+prop_table <- choc %>%
+  group_by(Country, Rating) %>%
+  summarize(n = n()) %>%
+  mutate(prop = n / sum(n)) %>%
+  select(Country, Rating, prop)
+
+prop_table
+
+```
+
+*****
+
+## Q15 (2 pts)
+
+Create a summary table giving the number of observations and the mean(**Cocoa**), for each value of Rating. 
+
+*****
+```{r}
+#Q15
+summary_by_rating <- choc %>%
+  group_by(Rating) %>%
+  summarize(
+    count = n(),
+    mean_cocoa = mean(Cocoa, na.rm = TRUE)
+  )
+
+summary_by_rating
+```
+
+*****
+
+## Q16 
+
+Fit an appropriate model including only additive effects (no interaction).  Show the coefficients table (including coefficient estimates and Wald test p-values).  For consistency, use vlgm() to fit the model.
+
+*****
+```{r}
+#Q16
+library(VGAM)
+model <- vglm(Rating ~ Cocoa + Country, 
+              family = multinomial(refLevel = 1),
+              data = choc)
+
+summary(model)
+```
+
+*****
+
+## Q17 (6 pts)
+
+Using your model, create a graph of the (smooth) fitted curves representing the predicted probability of "Praiseworthy" or better (P(Y $\ge$ 4)) over the range of Cocoa.  There should be 4 fitted curves, color coded by Country.
+
+```{r, out.width = "85%"}
+#Q17
+
+cocoa_seq <- data.frame(Cocoa = seq(min(choc$Cocoa), max(choc$Cocoa), length.out = 100))
+plot_data <- expand.grid(Cocoa = cocoa_seq$Cocoa, Country = levels(choc$Country))
+pred_probs <- predict(model, newdata = plot_data, type = "response")
+
+
+plot_data$P_ge_4 <- pred_probs[,4] + pred_probs[,5]
+
+
+ggplot(plot_data, aes(x = Cocoa, y = P_ge_4, color = Country)) +
+  geom_line() +
+  labs(
+    title = "Predicted Probability of Rating > 3 by Cocoa Percentage and Country",
+    x = "Cocoa",
+    y = "Probability of Rating > 3"
+  ) +
+  theme_minimal()
+
+```
+
+## Q18 
+
+Using your model, provide a detailed one sentence **interpretation** of the coefficient corresponding to **Cocoa** in context. 
+
+*****
+Response
+
+For every one unit increase in cocoa concentration, the log odds of being rated at 2,3,4,5 instead of 1 decrease by between 11% and 18%. (depending on the comparison being made)
+
+*****
+
+## Q19 (6 pts)
+
+After controlling for Cocoa, is there evidence of differences in chocolate ratings between **Countries**?  Run an appropriate test.  Use the test results and the graph from Q17 to briefly discuss the Countries.  
+
+*****
+
+```{r}
+# Q19
+model_reduced <- vglm(Rating ~ Cocoa,
+                      family = multinomial(refLevel = 1),
+                      data = choc)
+
+model_full <- model
+
+dev_full <- deviance(model_full)
+dev_reduced <- deviance(model_reduced)
+LRT <- dev_reduced - dev_full
+p_value <- pchisq(LRT, 1, lower.tail = FALSE)
+p_value
+
+```
+
+Discussion:
+There is still a significant difference after controlling for Cocoa. this is evident above where the full model is signifficantly better than the model with just cocoa. 
+
+You can also see this in the plot. The trend is consistent for cooca between the countries but there is still a seperation between them that seems to be driven by country. 
+******
+
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
