@@ -1,13 +1,16 @@
 ---
-title: "STAA 552: Final Exam Part 4"
+title: 'STAA 552: Final Exam Part 4'
 author: "Your Name Here"
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 #Retain this code chunk!!!
 library(knitr)
 library(tidyverse)
+library(ggplot2)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 ```
@@ -32,7 +35,17 @@ Create a scatter plot showing number of seizures Post vs Pre treatment with obse
 
 ```{r, out.width = "85%"}
 #Q20
+epilepsy <- read.csv("epilepsy.csv")
+epilepsy$Trt <- factor(epilepsy$Trt, levels = c("placebo", "progabide"))
 
+
+ggplot(epilepsy, aes(x=Pre, y=Post, color=Trt)) +
+  geom_point() +
+  stat_smooth(method="glm",
+              method.args = list(family = poisson(link="log")),
+              formula = y ~ x,
+              se = FALSE) +
+  theme_minimal()
 ```
 
 
@@ -43,7 +56,8 @@ For **Model 1**, fit a Poisson regression model (with log link), using Post as t
 *****
 ```{r}
 #Q21
-
+Model1 <- glm(Post ~ Age + Trt + log(Pre), data = epilepsy, family = poisson)
+summary(Model1)
 ```
 
 *****
@@ -58,7 +72,10 @@ Response
 ```{r}
 #Q22
 
+exp_coef <- exp(coef(Model1)["Trtprogabide"])
+exp_coef
 ```
+Controlling for age and pre-treatment seizure frequency, patients on progabide have .78 times the post-treatment seizure rate of those on placebo
 
 *****
 
@@ -68,7 +85,7 @@ Using **Model 1**, briefly discuss whether we should consider simplifying the mo
 
 *****
 Response
-
+Both features in model 1 are highly significant so we dont need to simplify the model
 *****
 
 ## Q24 
@@ -79,10 +96,19 @@ Using **Model 1**, do we have evidence of lack of fit (or over-dispersion)?  Pro
 
 ```{r}
 #Q24
+pearson_res <- residuals(Model1, type = "pearson")
 
+plot(fitted(Model1), pearson_res,
+     xlab = "Fitted values", ylab = "Pearson Residuals",
+     main = "Pearson Residuals vs Fitted Values")
+abline(h = 0, col = "red", lty = 2)
+
+prop_greater_2 <- sum(abs(pearson_res) > 2) / length(pearson_res)
+cat("Proportion of residuals > 2 in absolute value:", prop_greater_2, "\n")
 ```
 
 Discussion:
+There are more extreme residuals than you would expect.
 
 *****
 
@@ -92,7 +118,7 @@ Regardless of your answer to Q24, if we were concerned that there was lack of fi
 
 *****
 Response
-
+We would use a quasipoisson instead of regular poisson
 *****
 
 ## Q26
@@ -102,7 +128,8 @@ Regardless of your answer to Q24, fit a model similar to Model 1 but allowing fo
 *****
 ```{r}
 #Q26
-
+Model2 <- glm(Post ~ Age + Trt + log(Pre), data = epilepsy, family = quasipoisson)
+summary(Model2)
 ```
 
 *****
@@ -115,7 +142,7 @@ Note: Comparing the various epilepsy models, you may find that the conclusion ab
 
 *****
 Response
-
+When we account for over dispersion in the data, we see that the effect is no longer significant. 
 *****
 
 # Appendix
