@@ -1,0 +1,123 @@
+---
+title: "STAA 552: Final Exam Part 4"
+author: "Your Name Here"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+library(tidyverse)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+**Honor Code from Part 1 applies here, too.**
+
+# Epilepsy (Q20 - Q27)
+
+To study the anti-epileptic drug progabide, researchers randomly assigned subjects suffering from epileptic seizures to receive either progabide or placebo.  The goal of the study is to evaluate whether progabide is effective in reducing seizures as compared to placebo.  We want to control for Age and the number or Pre-treatment seizures.  **Post is the response variable for all models.** We will work with n = 58 subjects.  The data is available from Canvas as epilepsy.csv.  
+
+The data includes the following variables:
+
+- ID: ID number (should NOT be used for model fitting)
+- Age: age (in years)
+- Trt: placebo or progabide
+- Pre: number of epileptic seizures in the 8 weeks prior to start of treatment
+- Post:  number epileptic seizures in the 8 weeks after start of treatment.  
+
+## Q20 
+
+Create a scatter plot showing number of seizures Post vs Pre treatment with observations color coded by Trt. Overlay separate Poisson regression curves (with log link) for each Trt.
+
+```{r, out.width = "85%"}
+#Q20
+
+```
+
+
+## Q21
+
+For **Model 1**, fit a Poisson regression model (with log link), using Post as the response and including Age, Trt and log(Pre) as predictors.   Show the coefficients table (including coefficient estimates and Wald test p-values).   
+
+*****
+```{r}
+#Q21
+
+```
+
+*****
+
+## Q22
+
+Using **Model 1**, provide a detailed one sentence **interpretation** of the coefficient corresponding to **Trt** in context. 
+
+*****
+Response
+
+```{r}
+#Q22
+
+```
+
+*****
+
+## Q23 (2 pts)
+
+Using **Model 1**, briefly discuss whether we should consider simplifying the model by dropping predictors.
+
+*****
+Response
+
+*****
+
+## Q24 
+
+Using **Model 1**, do we have evidence of lack of fit (or over-dispersion)?  Provide one piece of evidence and briefly discuss. (If multiple pieces of evidence are provided, the first will be graded.)
+
+*****
+
+```{r}
+#Q24
+
+```
+
+Discussion:
+
+*****
+
+## Q25 (2 pts)
+
+Regardless of your answer to Q24, if we were concerned that there was lack of fit due to model "mis-specification", briefly mention one thing we could try (using available data).  
+
+*****
+Response
+
+*****
+
+## Q26
+
+Regardless of your answer to Q24, fit a model similar to Model 1 but allowing for over-dispersion.  Show the coefficients table (including coefficient estimates and Wald test p-values). We will call this **Model 2**.
+
+*****
+```{r}
+#Q26
+
+```
+
+*****
+
+## Q27 (2 pts)
+
+Based on **Model 2**, what can we conclude about effectiveness of Trt?
+
+Note: Comparing the various epilepsy models, you may find that the conclusion about effectiveness of Trt varies. 
+
+*****
+Response
+
+*****
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
