@@ -1,0 +1,364 @@
+---
+title: "HW1"
+author: "Your Name"
+output: pdf_document
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 4, tidy = TRUE)
+
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+# Problem 1
+
+```{r prob1, results='hide'}
+## load the data
+library(ggplot2)
+
+## take a look
+#head(diamonds)
+
+#################################
+## Continue your analysis here ##
+#################################
+
+
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(alpha = 0.2) +
+  labs(title = "Price vs. Carat", x = "Carat", y = "Price (USD)")
+
+print("There is a strange slashing that seems to occur through the plot between the high one karat diamonds, and the 2 carat line. This may indicate that some carats are being rounded up when the are close to 2.")
+
+summary(diamonds[, c("carat","price","depth","table","x","y","z")])
+print("The Minimum X, Y, Z dimensions are 0. this should not be possible and indicates a data entry or rounding error")
+
+ggplot(diamonds, aes(x = x, y = y)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  labs(title = "Scatterplot of Carat vs. Price",
+       x = "x",
+       y = "y") +
+  theme_minimal()
+print(".")
+
+ggplot(diamonds, aes(x = x, y = z)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  labs(title = "Scatterplot of Carat vs. Price",
+       x = "x",
+       y = "y") +
+  theme_minimal()
+print("This problem is also evident when you compare X to Z. There is one data ponit with x=5 and z = 35. this does not seem reasonable")
+```
+
+\hstart
+
+-There is a strange slashing that seems to occur through the plot between the high one karat diamonds, and the 2 carat line. This may indicate that some carats are being rounded up when the are close to 2.
+-The Minimum X, Y, Z dimensions are 0. this should not be possible and indicates a data entry or rounding error
+-There are two extreme outliers in X and Y. It seems unrealistic to have a diamond whose x is around8 and y is around 60
+-This problem is also evident when you compare X to Z. There is one data ponit with x=5 and z = 35. this does not seem reasonable
+
+\hstop
+
+# Problem 2
+
+```{r prob2, results = 'hide'}
+## load the data
+library(MASS)
+
+## take a look
+head(Boston)
+```
+
+## Problem 2(a)
+
+Here are the results:
+
+```{r prob2a}
+## from the hint
+library(GGally)
+
+data("Boston")
+ggpairs(Boston)
+
+print("This is interesting. There are many complex shapes shown by the ggpairs image. additionally, several bimodal distributions and super L shaped or skewed distributions. These features seem to be very distinct from eachother which is a good thing. ")
+
+```
+
+\hstart
+
+* There is no clear correlation or colinearity issue.
+* The distributions of the features are novel with many different skwed, bimodal, and L shaped distributions. this indicates that some feature engineering may be needed when fitting a linear model
+
+\hstop
+
+## Problem 2(b)
+
+```{r prob2b}
+#R code for problem 2b
+predictors <- c("crim", "zn", "indus", "chas", "nox", "rm", "age", 
+                "dis", "rad", "tax", "ptratio", "black", "lstat", "chas")
+
+results <- data.frame(Predictor = character(), Coefficient = numeric(), P_Value = numeric())
+
+# Loop through each predictor, fit the model, and extract the p-value
+for (predictor in predictors) {
+  formula <- as.formula(paste("medv ~", predictor))
+  model <- lm(formula, data = Boston)
+  
+  p_value <- summary(model)$coefficients[2, 4]
+  coefficient <- summary(model)$coefficients[2, 1] # Coefficient (slope)
+
+  results <- rbind(results, data.frame(Predictor = predictor, Coefficient = coefficient, P_Value = p_value))
+}
+
+print(results)
+
+```
+
+## Problem 2(c)
+
+\hstart
+
+The following variables are statistically significant in the SLR models:
+
+* It appears that all predictors are statistically signifficant albeit to varyaing levels. 
+
+\hstop
+
+## Problem 2(d)
+```{r prob2d}
+lm_full <- lm(medv ~ ., data = Boston)
+summary(lm_full)
+```
+
+## Problem 2(e)
+
+\hstart
+
+The majority of features come back as statistically significant. The only ones which are not are: 
+- indus
+- age
+
+\hstop
+
+## Problem 2(f)
+
+\hstart
+
+The coeficients are actually larger in the multiple regression scenerio. This model also has a more reasonable Rsquared at .74 than any of the SLR models. This all makes sense as it is able to controll for multiple factors.
+
+\hstop
+
+# Problem 3
+
+## Problem 3(a)
+
+\hstart
+
+Increasing df makes the spline conform to the data more closely. This can eventually lead to overfitting
+
+\hstop
+
+## Problem 3(b)
+
+\hstart
+
+Overfitting the data occurs when you are actually fitting your model to the natural error in the data, not jsut the signal. This results in strong train - metric performance, but weakened test metric performance as you are describing the actual sample at hand more than the general population. A great example of this is a decision tree where you can almost always reach 100% accuracy (unless you have duplicate datapoitns with different lables) but as you increase the depth of your tree and you try to get closer to 100% you begin to actuallly fit the charictaristic of the dataset instead of the population.
+
+\hstop
+
+## Problem 3(c)
+
+```{r prob3c}
+library(tidyverse)
+
+traindata <- read_csv("training_data.csv")
+testdata  <- read_csv("test_data.csv")
+
+df_values <- seq(2, 10, by = 0.5)
+
+results <- data.frame(df = df_values,
+                      TrainMSE = NA,
+                      TestMSE  = NA)
+
+for(i in seq_along(df_values)){
+  # Fit spline
+  fit_spline <- smooth.spline(traindata$xval, traindata$yval, df = df_values[i])
+  
+  # Training MSE
+  yhat_train <- predict(fit_spline, traindata$xval)$y
+  train_err  <- mean((traindata$yval - yhat_train)^2)
+  
+  # Test MSE
+  yhat_test <- predict(fit_spline, testdata$xval)$y
+  test_err  <- mean((testdata$yval - yhat_test)^2)
+  
+  # Store
+  results$TrainMSE[i] <- train_err
+  results$TestMSE[i]  <- test_err
+}
+
+results_long <- pivot_longer(results, cols = c("TrainMSE","TestMSE"),
+                             names_to = "Set", values_to = "MSE")
+
+ggplot(results_long, aes(x = df, y = MSE, color = Set)) +
+  geom_line(size = 1) +
+  geom_point() +
+  labs(title = "Training vs. Test MSE by Degrees of Freedom",
+       x = "Degrees of Freedom (df)",
+       y = "MSE") +
+  theme_minimal()
+
+test_mse_smooth = min(results$TestMSE)
+cat("Minimum MSE:", test_mse_smooth)
+
+```
+
+## Problem 3(d)
+
+\hstart
+
+either df = 4.5 or 5 would be ideal in this case as this is where test mse minimizes. Its worth noting that one its rare for your MSE to be lower than train mse like it is here. Id like to see this on a cross fold or something else to confirm. 
+
+\hstop
+
+
+## Problem 4(a)
+
+
+\hstart
+
+```{r}
+library(caret)
+
+knn_model_k10 <- knnreg(yval ~ xval, data = traindata, k = 10)
+
+
+```
+
+\hstop
+
+
+## Problem 4(b)
+
+\hstart
+
+```{r}
+yhat_test_k10 <- predict(knn_model_k10, newdata = testdata)
+
+test_mse_k10 <- mean((testdata$yval - yhat_test_k10)^2)
+print(paste("Test MSE for k = 10:", test_mse_k10))
+```
+
+\hstop
+
+## Problem 4(c)
+
+\hstart
+
+```{r}
+# Range of k values
+k_values <- 2:100
+results_knn <- data.frame(k = k_values, TestMSE = NA)
+
+# Loop over k values
+for (k in k_values) {
+  knn_model <- knnreg(yval ~ xval, data = traindata, k = k)
+  yhat_test <- predict(knn_model, newdata = testdata)
+  test_mse <- mean((testdata$yval - yhat_test)^2)
+  
+  results_knn$TestMSE[results_knn$k == k] <- test_mse
+}
+
+ggplot(results_knn, aes(x = k, y = TestMSE)) +
+  geom_line(color = "blue") +
+  geom_point() +
+  labs(title = "KNN Test MSE vs. Number of Neighbors (k)",
+       x = "Number of Neighbors (k)",
+       y = "Test MSE") +
+  theme_minimal()
+
+```
+
+\hstop
+
+
+## Problem 4(d)
+
+\hstart
+
+```{r}
+# Optimal k
+best_k <- results_knn$k[which.min(results_knn$TestMSE)]
+print(paste("Best k:", best_k))
+
+best_test_mse <- min(results_knn$TestMSE)
+print(paste("KNN Minimum Test MSE:", best_test_mse))
+
+print(paste("Splines Test MSE:", test_mse_smooth))
+print(ifelse(best_test_mse < test_mse_smooth,
+             "KNN provides a lower test MSE",
+             "Smoothing splines provide a lower test MSE"))
+
+```
+
+\hstop
+
+## Problem 4(e)
+
+\hstart
+
+```{r}
+smooth_spline <- smooth.spline(traindata$xval, traindata$yval, df = 5.5)
+
+x_seq <- seq(min(traindata$xval), max(traindata$xval), length.out = 500)
+smooth_fit <- data.frame(xval = x_seq, yval = predict(smooth_spline, x_seq)$y, Fit = "Smoothing Spline")
+
+knn_model_best <- knnreg(yval ~ xval, data = traindata, k = best_k)
+
+knn_fit <- data.frame(xval = x_seq, yval = predict(knn_model_best, newdata = data.frame(xval = x_seq)), Fit = "KNN Fit")
+
+fit_data <- rbind(smooth_fit, knn_fit)
+
+ggplot(traindata, aes(x = xval, y = yval)) +
+  geom_point(color = "grey", alpha = 0.9) +
+  geom_line(data = fit_data, aes(x = xval, y = yval, color = Fit), size = 1) +
+  labs(
+    title = "Training Data with Overlayed Fits",
+    x = "X",
+    y = "Y",
+    color = "Fit Type"
+  ) +
+  theme_minimal()
+
+
+```
+
+\hstop
+
+
+
+<!-- STUDENTS: STOP HERE
+DO NOT EDIT THE SECTION BELOW -->
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+

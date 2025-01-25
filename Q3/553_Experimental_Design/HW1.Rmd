@@ -1,0 +1,95 @@
+---
+title: "STAA 553: HW1"
+author: "YOUR NAME HERE"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+See Canvas Calendar for due date.  
+14 points total, 2 points per problem unless otherwise noted.  
+Add or delete code chunks as needed.  
+Content for all questions is from Sections 1 and 2.  
+
+
+# Hand Washing 1 (Q1 - Q5)
+
+An investigator is planning a hand-washing study.  They want to evaluate the effect of water temperature (60, 80, 100 or 120 F) on bacterial count on people’s palms after hand-washing.  They plan to recruit a total of n = 32 subjects and will randomly assign each subject to wash their hands with a single water temperature.
+
+## Q1
+
+Identify the experimental units.
+
+*****
+Response 
+
+*****
+
+## Q2
+
+Identify the treatment (or factor) and number of levels. 
+
+*****
+Response
+
+*****
+
+## Q3
+
+Identify the response variable.
+
+*****
+Response
+
+*****
+
+## Q4
+
+Suggest one approach that could be used to "reduce noise" when conducting this study.  This is a "common sense" question with many possible correct answers, not something you will find in a textbook.
+
+*****
+Response
+
+*****
+
+## Q5
+
+Use R `sample()` to randomly assign 32 subjects to temperatures (60, 80, 100 or 120 F) requiring balance (equal number of subjects per temperature).  Show a summary table giving the number of subjects per treatment.
+
+*****
+```{r}
+#Q5
+
+```
+*****
+
+# Hand Washing 2 (Q6 - Q7)
+
+We continue with the hand-washing study.  But now suppose that each subject will be asked to wash their hands 4 times (on 4 different days), such that each subject experiences all 4 water temperatures.  This is an example of a blocked or repeated measures design. 
+
+## Q6
+
+Name one benefit of this design as compared to the original design.
+
+*****
+Response
+
+*****
+
+## Q7
+
+Suggest one way that randomization could be incorporated into this study design.
+
+*****
+Response
+
+*****
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```

@@ -1,0 +1,47 @@
+---
+title: "575_HW1"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+# Part 1b
+
+y <- 57
+n <- 100
+theta_val <- seq(0,1, by=.1)
+lik_vals <- dbinom(y,size=n, prob=theta_val)
+
+plot(theta_val, lik_vals, type = "h")
+
+#Part 1C
+
+#This would be a uniform distribution from 0 to 1
+prior <- rep(1/length(theta_val), times = length(theta_val))
+
+plot(theta_val, prior, type = "h")
+
+
+#e
+
+num <- prior * lik_vals
+post <- num / sum(num)
+
+plot(theta_val, post, "h")
+```
+
+```{r}
+#part2 
+theta_grid <- seq(0,1,length=1000)
+g_theta <- dbinom(57, size=100, prob=theta_grid)
+
+plot(theta_grid, g_theta, type="h")
+
+
+theta_grid <- seq(0,1,length.out=1000)
+betas <- dbeta(theta_grid, 58,44)
+
+plot(theta_grid, betas, type="h")
+```
+
