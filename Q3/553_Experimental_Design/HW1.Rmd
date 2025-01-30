@@ -1,6 +1,6 @@
 ---
 title: "STAA 553: HW1"
-author: "YOUR NAME HERE"
+author: "Matthew Stoebe"
 output: pdf_document
 ---
 
@@ -26,7 +26,8 @@ An investigator is planning a hand-washing study.  They want to evaluate the eff
 Identify the experimental units.
 
 *****
-Response 
+Response: 
+The experimental units are the 32 subjects who will wash their hands with different water termperatures
 
 *****
 
@@ -35,7 +36,8 @@ Response
 Identify the treatment (or factor) and number of levels. 
 
 *****
-Response
+Response: 
+The Factor is the water temperature including  each of the 4 water temperatures and potentially a no "non washing" control. In a way this assumes that washing has some effect compared to non washing as that is not the focus of this study, 
 
 *****
 
@@ -44,7 +46,8 @@ Response
 Identify the response variable.
 
 *****
-Response
+Response: 
+The response is the bacterial count on the subjects hands after washing, or some measure of teh delta before and after washing. 
 
 *****
 
@@ -53,7 +56,12 @@ Response
 Suggest one approach that could be used to "reduce noise" when conducting this study.  This is a "common sense" question with many possible correct answers, not something you will find in a textbook.
 
 *****
-Response
+Response: 
+One source of noise will be the baseline amount of bacteria on peoples hands. you are unlikely to be able to control for this unless you use some advanced method. To reduce this noise, you should randomly assign treatments to the people, or do some sort of blocking where you block by a baseline germ count (before hand washing) amount. 
+
+This is important because there may be different effect levels at different germ - start count levels. ie, someone with few germs to begin with may see a smaller percent reduction or difference between water temps than someone with a large amount of germs. 
+
+You could also do things like standardize the amount of time washed for, the washing technique, and the type of soap used.
 
 *****
 
@@ -64,7 +72,11 @@ Use R `sample()` to randomly assign 32 subjects to temperatures (60, 80, 100 or 
 *****
 ```{r}
 #Q5
-
+set.seed(123)
+temps <- c("60F", "80F", "100F", "120F")
+temp_vector <- rep(temps, each = 8)
+assignments <- sample(temp_vector)
+table(assignments)
 ```
 *****
 
@@ -77,7 +89,8 @@ We continue with the hand-washing study.  But now suppose that each subject will
 Name one benefit of this design as compared to the original design.
 
 *****
-Response
+Response:
+This pairing design will control for same person differences as I had discussed above this may also increase the power of the test and allows you to use someting like a Friedman test or still anova if you want a parametric approach. 
 
 *****
 
@@ -86,7 +99,9 @@ Response
 Suggest one way that randomization could be incorporated into this study design.
 
 *****
-Response
+
+Response:
+You could randomize the day and time that each temperature wash was assigned to each person. This could break some weird correlations between certain days and times being systematically different than others. You could of course also control for this if you think the effect was large enough by having the washings occur once a week same day dame time. 
 
 *****
 
