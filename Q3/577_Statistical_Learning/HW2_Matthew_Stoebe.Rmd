@@ -1,0 +1,293 @@
+---
+title: "STAA 577: HW2"
+author: "Matthew Stoebe"
+output: pdf_document
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+library(splines)
+
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 4, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+# Problem 1
+
+\hstart
+
+\[p(x) = \frac{e^{\beta_0 + \beta_1x}}{1 + e^{\beta_0 + \beta_1x}}\]
+
+\begin{align*}
+\frac{p(x)}{1-p(x)} &= \frac{\frac{e^{\beta_0 + \beta_1x}}{1 + e^{\beta_0 + \beta_1x}}}
+{1-\frac{e^{\beta_0 + \beta_1x}}{1 + e^{\beta_0 + \beta_1x}}} \\[1em]
+&= \frac{\frac{e^{\beta_0 + \beta_1x}}{1 + e^{\beta_0 + \beta_1x}}}
+{\frac{1 + e^{\beta_0 + \beta_1x}}{1 + e^{\beta_0 + \beta_1x}} - \frac{e^{\beta_0 + \beta_1x}}{1 + e^{\beta_0 + \beta_1x}}} \\[1em]
+&= \frac{\frac{e^{\beta_0 + \beta_1x}}{1 + e^{\beta_0 + \beta_1x}}}{\frac{1}{1 + e^{\beta_0 + \beta_1x}}} \\[1em]
+&= e^{\beta_0 + \beta_1x}
+\end{align*}
+
+\hstop
+
+# Problem 2
+
+(a)
+
+\hstart
+
+\begin{align*}
+odds = .37 = \frac{p}{1-p} \\[1em]
+.37*(1-p) = .37-.37p = p \\[1em]
+.37 = 1p + .37p = 1.37p \\[1em]
+p = \frac{.37}{1.37} = .27
+\end{align*}
+
+\hstop
+
+(b)
+
+\hstart
+
+\begin{align*}
+odds =  \frac{p}{1-p} = \frac{.16}{1-.16}\\[1em]
+odds = \frac{.16}{.84} = .19
+\end{align*}
+
+\hstop
+
+
+# Problem 3
+
+(a)
+
+\hstart
+
+\begin{align*}
+\hat{\beta}_0 + \hat{\beta}_1(30) + \hat{\beta}_2(3.25) &= -5 + 0.1 \times 30 + 1 \times 3.25 \\
+&= -5 + 3 + 3.25 \\
+&= 1.25
+\end{align*}
+
+\[\hat{p} = \frac{e^{1.25}}{1 + e^{1.25}} = \frac{3.4903}{1 + 3.4903} \approx 0.78\]
+
+\hstop
+
+(b)
+
+\hstart
+
+\begin{align*}
+\log\left(\frac{0.60}{1-0.60}\right) &= \beta_0 + \beta_1(x) + \hat{\beta}_2(3.25) \\[1em]
+0.4054 &\approx -5 + 0.1h + 1(3.25) \\[1em]
+h &\approx 21.6 \text{ hours}
+\end{align*}
+
+\hstop
+
+# Problem 4
+
+(a)
+```{r prob4a}
+##R code for problem 4a
+titanic = read.csv("titanic.csv")
+
+glmOut <- glm(
+  survived ~ factor(passenger_class) + gender + ns(age, 3) + ns(fare_paid, 3),
+  data = titanic,
+  family = binomial
+)
+
+summary(glmOut)
+
+```
+
+\hstart
+
+The fitted beta for female is 2.6192. If we exponentiate this we get  an odds value of 13.92. This means that women had signifficantly higher odds of surviving 
+
+\hstop
+
+(b)
+```{r prob4b}
+#R code for problem 4b
+new.df <- data.frame(
+  passenger_class = 2,
+  gender          = "woman",
+  age            = 25,
+  fare_paid      = 20
+)
+
+prob.survive <- predict(glmOut, newdata = new.df, type = "response")
+prob.survive
+
+```
+\hstart
+
+The Probability of surviving under these conditions is .812
+
+\hstop
+
+
+(c)
+
+```{r prob4c}
+#R code for problem 4c
+ new.df <- data.frame(
+  passenger_class = 3,
+  gender          = "man",
+  age            = 15,
+  fare_paid      = 10
+)
+
+prob.survive <- predict(glmOut, newdata = new.df, type = "response")
+prob.survive
+
+```
+
+\hstart
+
+This Child has approximately a .12 probability of survival
+
+\hstop
+
+# Problem 5
+
+(a)
+```{r prob5a, fig.width=6, fig.height=4, out.width="100%"}
+##R code for problem 5a
+library(ISLR)
+library(reshape2)  # For reshaping data
+
+ggplot(Weekly, aes(x = Volume)) +
+  geom_histogram(binwidth = 0.1, fill="blue", color="black", alpha=0.7) +
+  theme_minimal() +
+  ggtitle("Distribution of Trading Volume") +
+  xlab("Volume") +
+  ylab("Frequency")
+
+library(corrplot)
+cor_matrix <- cor(Weekly[, c("Lag1", "Lag2", "Lag3", "Lag4", "Lag5", "Volume", "Today")])
+
+corrplot(cor_matrix, 
+         method = "color",
+         type = "upper",  
+         tl.col = "black",
+         tl.srt = 45,
+         addCoef.col = "black", 
+         number.cex = 0.8)
+
+```
+
+\hstart
+
+The Correlation between these features is is so low that I wouldnt even proceed to train a model in this case. 
+
+\hstop
+
+(b)
+```{r prob5b}
+#R code for problem 5b
+glm.weekly <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,
+                  data = Weekly, family = binomial)
+summary(glm.weekly)
+
+```
+\hstart
+
+Only the Lag2 feature appears significant. this is not surprising as the correlation was so low above. This feature set is quite weak. 
+
+\hstop
+
+
+(c)
+
+```{r prob5c}
+#R code for problem 5c
+prob <- predict(glm.weekly, type="response")
+pred <- ifelse(prob > 0.5, "Up", "Down")
+
+table(Predicted=pred, Actual=Weekly$Direction)
+mean(pred == Weekly$Direction)  # fraction of correct predictions
+
+```
+\hstart
+
+This Model is terrible and overly optimistic. It predicts the marekt to go up almost 90% of thhe time when it only goes up around 60% of the time. 
+
+The correct prediction rate is 56 percent which is terrible. This is almost as bad as always predicting the market to go up. 
+
+Additionally, We are evaluating on the train set here which makes this performance even more terrible. 
+
+\hstop
+
+(d)
+
+```{r prob5d}
+#R code for problem 5d
+train <- (Weekly$Year <= 2009)
+Weekly.train <- Weekly[train, ]
+Weekly.test  <- Weekly[!train, ]
+
+glm.train <- glm(Direction ~ Lag2, data=Weekly.train, family=binomial)
+prob.test <- predict(glm.train, Weekly.test, type="response")
+pred.test <- ifelse(prob.test > 0.5, "Up", "Down")
+
+table(Predicted=pred.test, Actual=Weekly.test$Direction)
+mean(pred.test == Weekly.test$Direction)
+
+```
+\hstart
+
+This model supposedly performs better but we are using a poor eval metric. Again this is overly optimistic predicting up in all but 3 cases. Recall may be 100% but our precision is terribly low.
+
+\hstop
+
+
+# Problem 6
+```{r prob7}
+#R code for problem 7
+
+```
+
+
+```{r prob7_finalmodel, echo = T, eval = F}
+
+heart_train <- read.csv("heart_training.csv")
+heart_test  <- read.csv("heart_test.csv")
+
+glm.final <- glm(target ~ age + slope + thalach,
+                 data = heart_train, family = binomial)
+summary(glm.final)
+prob.test <- predict(glm.final, heart_test, type = "response")
+pred.test <- ifelse(prob.test > 0.5, 1, 0)
+
+cat("Final Accuracy", mean(pred.test == heart_test$target))
+
+```
+
+\hstart
+
+Test Data Accuracy is .8166. This is technically data leakage as we are doing feature and model selection on the test set. 
+
+\hstop
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+
