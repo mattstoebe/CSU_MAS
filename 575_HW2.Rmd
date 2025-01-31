@@ -1,0 +1,93 @@
+---
+title: "575_HW2"
+author: "Matthew Stoebe"
+date: "2025-01-31"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Q3.3 Page 228
+```{r}
+#Mice from group A are approximately Poisson-distributed with a mean of 12. We dont know what mice from B are
+y_A <- c(12,9,12,14,13,13,15,8,15,6)
+sy_A <- sum(y_A); n_A <- length(y_A)
+
+y_B <- c(11,11,10,9,9,8,7,10,6,8,8,9,7)
+sy_B <- sum(y_B); n_B <- length(y_B)
+
+#Prior A
+a_A <- 120
+b_A <- 10
+
+#Prior B
+a_B <- 12
+b_B <- 1
+posterior_stats_gamma_poisson <- function(y, a, b, cred_level = 0.95) {
+  # Summaries of data
+  sy <- sum(y)
+  n  <- length(y)
+  
+  # Posterior shape and rate
+  post_a <- a + sy
+  post_b <- b + n
+  
+  # Posterior credible interval (using 100*(cred_level)%)
+  alpha_low  <- (1 - cred_level)/2
+  alpha_high <- 1 - alpha_low
+  ci <- pgamma(c(alpha_low, alpha_high), shape = post_a, rate = post_b)
+  
+  # Posterior mean and variance (for Gamma(shape=post_a, rate=post_b))
+  post_mean <- post_a / post_b
+  post_var  <- post_a / (post_b^2)
+  
+  # Print results
+  cat("Posterior shape:", post_a, "\n")
+  cat("Posterior rate: ", post_b, "\n")
+  cat(paste0(100*cred_level, "% Credible Interval: [", 
+             ci[1], ", ", ci[2], "]\n"))
+  cat("Posterior Mean:    ", round(post_mean, 3), "\n")
+  cat("Posterior Variance:", round(post_var, 3), "\n\n")
+  
+  # Return as a list if needed for further manipulation
+  return(invisible(list(shape = post_a, 
+                        rate  = post_b,
+                        ci    = ci,
+                        mean  = post_mean,
+                        var   = post_var)))
+}
+
+cat("Results for Population A:\n")
+res_A <- posterior_stats_gamma_poisson(y_A, a_A, b_A)
+
+cat("Results for Population B:\n")
+res_B <- posterior_stats_gamma_poisson(y_B, a_B, b_B)
+
+```
+
+```{r}
+n_seq <- 1:50
+posterior_means_B <- sapply(n_seq, function(n_cur) {
+  # Posterior shape and rate for each hypothetical prior b_B = n_cur
+  post_a_B <- a_B + sy_B
+  post_b_B <- n_cur + n_B
+  # Return the posterior mean
+  post_a_B / post_b_B
+})
+
+plot(n_seq, posterior_means_B, type="b", pch=19,
+     xlab="n in prior Gamma(12, n)", ylab="Posterior Mean of B",
+     main="Posterior Mean vs. Prior Rate 'n' (for Gamma(12, n))")
+abline(h=res_B$mean, col="red", lty=2)
+legend("topright", legend="Posterior mean for B with varying prior rate",
+       col="black", lty=1, pch=19)
+```
+
+#Q3.3 Page 228
+
+```{r}
+
+```
+
