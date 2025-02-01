@@ -1,0 +1,225 @@
+---
+title: "STAA 553: HW2"
+author: "YOUR NAME HERE"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+See Canvas Calendar for due date.   
+40 points total, 2 points per problem unless otherwise noted.  
+Add or delete code chunks as needed.  
+Content for most questions is from Section 03 or earlier.  
+Unadjusted pairwise comparisons (Q6) is discussed in Section 04.  
+
+# Weight Loss (Q1 - Q7)
+
+Ott & Longnecker describe a weight loss study with g = 5 treatments (C, T1, T2, T3, T4).  Trt C represents a "control" treatment.  The response variable is weight loss (in pounds).  A total of 50 (human) subjects were randomly assigned to treatments such that there are n = 10 subjects per treatment.  The data is available from Canvas as WtLoss.csv.
+
+
+## Q1 (3 pts)
+
+Calculate a table of summary statistics including sample size, mean, sd by Trt group.  
+
+```{r}
+#Q1
+
+```
+
+## Q2
+
+Create an appropriate summary plot of the data.
+
+```{r, out.width = "80%"}
+#Q2
+
+```
+
+# Q3 
+
+Fit an appropriate one-way model with default contrasts.
+
+## Q3A
+
+Show the design matrix.
+
+```{r}
+#Q3A
+
+```
+
+## Q3B
+
+Show the coefficient (or parameter) estimates.
+
+***** 
+```{r}
+#Q3B
+
+```
+
+*****
+
+## Q3C (5 pts)
+
+Use the coefficient (or parameter) estimates to calculate the predicted mean for each of the treatments.   Notes: You must show your work to get full credit for this question.  Use echo = TRUE to show your work for this question.  
+
+*****
+```{r, echo = TRUE}
+#Q3C
+#C
+
+#T1
+
+#T2
+
+#T3
+
+#T4
+
+```
+
+*****
+
+# Q4 
+
+Now consider the diagnostic plots.
+
+## Q4A
+
+Show the plots of Residuals vs Fitted values and QQplot of residuals
+
+```{r}
+#Q4
+par(mfrow = c(1,2))
+
+```
+
+## Q4B
+
+Using a plot from above, briefly discuss whether the assumption of **equal variance** is satisfied.  Note: In your discussion, make it clear what plot you are using to evaluate this assumption.
+
+*****
+Response
+
+*****
+
+
+## Q4C
+
+Using a plot from above, briefly discuss whether the assumption of **normality** is satisfied.  Note: In your discussion, make it clear what plot you are using to evaluate this assumption.
+
+*****
+Response
+
+*****
+
+# Q5 
+
+Provide an appropriate one-way ANOVA table.
+
+## Q5A
+
+Show the ANOVA table.
+
+*****
+```{r}
+#Q5
+
+```
+
+*****
+
+## Q5B
+
+State the null hypothesis corresponding to the F-test.  Be specific.
+
+*****
+Response
+
+*****
+
+## Q5C
+
+Make a conclusion for the F-test **in context**.  
+
+*****
+Response
+
+*****
+
+# Q6 
+
+Use the emmeans package to calculate the following.
+
+## Q6A
+
+Show the emmeans (estimated marginal means).
+
+*****
+```{r}
+#Q6A
+
+```
+
+*****
+
+## Q6B
+
+Show the unadjusted pairwise comparisons.  Hint: Use adjust = "none".
+
+*****
+```{r}
+#Q6B
+
+```
+
+*****
+
+## Q6C (4 pts)
+
+Using the result from the previous question, briefly summarize your conclusions **in context** using alpha = 0.05.  Note: it may be easier to discuss which comparisons do NOT show evidence of differences.  
+
+*****
+Response
+
+*****
+
+# Q7 
+
+Now refit the one-way model using one "alternate" parameterization from Section 03 notes or example.  Use echo = TRUE to show your work for this question.  
+
+## Q7A 
+
+Show the coefficient (or parameter) estimates.
+
+*****
+
+```{r, echo = TRUE}
+#Q7A
+
+```
+
+*****
+
+## Q7B
+
+Use the predict() function to calculate the model based predicted means.  Note: These predicted means should (exactly) match the "simple" means from Q1 and the emmeans from Q6A.
+
+*****
+```{r}
+#Q7B
+
+```
+
+*****
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
