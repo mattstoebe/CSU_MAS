@@ -29,6 +29,22 @@ Calculate a table of summary statistics including sample size, mean, sd by Trt g
 
 ```{r}
 #Q1
+library(dplyr)
+library(readr)
+
+wtloss <- read.csv("WtLoss.csv")
+
+summary_stats <- wtloss %>%
+  group_by(Trt) %>%
+  summarise(
+    n = n(),
+    mean = mean(Loss, na.rm = TRUE),
+    sd = sd(Loss, na.rm = TRUE)
+  )
+
+# Display the summary table
+summary_stats
+
 
 ```
 
@@ -38,6 +54,12 @@ Create an appropriate summary plot of the data.
 
 ```{r, out.width = "80%"}
 #Q2
+library(ggplot2)
+
+ggplot(wtloss, aes(x = Trt, y = Loss)) +
+  geom_boxplot(fill = "lightblue", color = "darkblue") +
+  labs(x = "Treatment",y = "Weight Loss (lbs)") +
+  theme_minimal()
 
 ```
 
@@ -51,6 +73,10 @@ Show the design matrix.
 
 ```{r}
 #Q3A
+mod1 <- aov(Loss ~ Trt, data = wtloss)
+
+design_matrix <- model.matrix(~ Trt, data = wtloss)
+head(design_matrix)
 
 ```
 
@@ -61,6 +87,7 @@ Show the coefficient (or parameter) estimates.
 ***** 
 ```{r}
 #Q3B
+coef(mod1)
 
 ```
 
@@ -73,16 +100,29 @@ Use the coefficient (or parameter) estimates to calculate the predicted mean for
 *****
 ```{r, echo = TRUE}
 #Q3C
+
+coefs <- coef(mod1)
 #C
+pred_C <- coefs["(Intercept)"]
 
 #T1
+pred_T1 <- coefs["(Intercept)"] + coefs["TrtT1"]
 
 #T2
+pred_T2 <- coefs["(Intercept)"] + coefs["TrtT2"]
 
 #T3
+pred_T3 <- coefs["(Intercept)"] + coefs["TrtT3"]
 
 #T4
+pred_T4 <- coefs["(Intercept)"] + coefs["TrtT4"]
 
+# Combine predictions into a data frame
+predicted_means <- data.frame(
+  Treatment = c("C", "T1", "T2", "T3", "T4"),
+  Predicted_Mean = c(pred_C, pred_T1, pred_T2, pred_T3, pred_T4)
+)
+predicted_means
 ```
 
 *****
@@ -98,6 +138,8 @@ Show the plots of Residuals vs Fitted values and QQplot of residuals
 ```{r}
 #Q4
 par(mfrow = c(1,2))
+plot(mod1, which = 1)
+plot(mod1, which = 2)
 
 ```
 
@@ -107,6 +149,7 @@ Using a plot from above, briefly discuss whether the assumption of **equal varia
 
 *****
 Response
+In the Residuals vs Fitted values, I see no clear funnel shape, and a generally random scatter. this makes me comfortable with our equality of variance assumption.
 
 *****
 
@@ -117,6 +160,7 @@ Using a plot from above, briefly discuss whether the assumption of **normality**
 
 *****
 Response
+Looking at the Q-Q plot, we see geneneral normality. there are deviations at the tails which do raise question, but it is only a few data poitns so I believe we can continue with the normal assumption.
 
 *****
 
@@ -131,6 +175,7 @@ Show the ANOVA table.
 *****
 ```{r}
 #Q5
+anova(mod1)
 
 ```
 
@@ -142,6 +187,7 @@ State the null hypothesis corresponding to the F-test.  Be specific.
 
 *****
 Response
+H0: All treatment means are equal.
 
 *****
 
@@ -151,6 +197,7 @@ Make a conclusion for the F-test **in context**.
 
 *****
 Response
+We can reject the null hypothesis and conclude that there is evidence that at least one treatment group has a mean weight loss different from the others.
 
 *****
 
@@ -165,6 +212,10 @@ Show the emmeans (estimated marginal means).
 *****
 ```{r}
 #Q6A
+#install.packages("emmeans")
+library(emmeans)
+emm <- emmeans(mod1, ~ Trt)
+emm
 
 ```
 
@@ -177,6 +228,7 @@ Show the unadjusted pairwise comparisons.  Hint: Use adjust = "none".
 *****
 ```{r}
 #Q6B
+pairs(emm, adjust = "none")
 
 ```
 
@@ -188,13 +240,14 @@ Using the result from the previous question, briefly summarize your conclusions 
 
 *****
 Response
+All Comparisons are significant except T1-T4 and T2-T3. we also see that all treatments are signifficantly differen tthan the controll. This indicates that treatment 1 and treatment 4 are signifficantly better than the controll, but about the same as eachother. The same goes for T2 and T3. Additionally, the T1, T4 group appears to outperform the T2 and T3 group. 
 
 *****
 
 # Q7 
 
 Now refit the one-way model using one "alternate" parameterization from Section 03 notes or example.  Use echo = TRUE to show your work for this question.  
-
+Using the Sum To Zero param
 ## Q7A 
 
 Show the coefficient (or parameter) estimates.
@@ -203,6 +256,10 @@ Show the coefficient (or parameter) estimates.
 
 ```{r, echo = TRUE}
 #Q7A
+options(contrasts = c("contr.sum", "contr.poly"))
+mod2 <- aov(Loss ~ Trt, data = wtloss)
+
+coef(mod2)
 
 ```
 
@@ -215,6 +272,20 @@ Use the predict() function to calculate the model based predicted means.  Note: 
 *****
 ```{r}
 #Q7B
+newdata <- wtloss
+distinct_predictions <- predict(mod2, newdata = newdata)
+
+prediction_df <- data.frame(Trt = newdata$Trt, predicted = distinct_predictions)
+
+summary_stats <- prediction_df %>%
+  group_by(Trt) %>%
+  summarise(
+    n = n(),
+    predicted_mean = mean(predicted, na.rm = TRUE),
+  )
+
+summary_stats
+
 
 ```
 
