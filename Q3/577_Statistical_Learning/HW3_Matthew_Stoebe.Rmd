@@ -50,25 +50,75 @@ start here, insert homework below -->
 # Problem 3a
 
 ```{r prob3a}
+trainingdata <- read.csv("heart_training.csv")
+testdata <- read.csv("heart_test.csv")
+
+# Convert selected variables to factor in both data sets
+factor_vars <- c("sex", "cp", "fps", "exang", "restecg")
+for(v in factor_vars) {
+  if(v %in% names(trainingdata)) trainingdata[[v]] <- as.factor(trainingdata[[v]])
+  if(v %in% names(testdata)) testdata[[v]] <- as.factor(testdata[[v]])
+}
+
+
+logit_model <- glm(target ~ age + sex + cp + trestbps + thalach + exang + oldpeak + ca + thal,
+                   data = trainingdata, family = binomial)
+train_pred_prob <- predict(logit_model, type = "response")
+train_pred_class <- ifelse(train_pred_prob > 0.5, 1, 0)
+
+train_accuracy <- mean(train_pred_class == trainingdata$target)
+cat("Logistic Regression - Training Accuracy:", round(train_accuracy, 3), "\n")
+
+
+test_pred_prob <- predict(logit_model, newdata = testdata, type = "response")
+test_pred_class <- ifelse(test_pred_prob > 0.5, 1, 0)
+test_accuracy <- mean(test_pred_class == testdata$target)
+cat("Logistic Regression - Test Accuracy:", round(test_accuracy, 3), "\n")
 
 ```
 
 \hstart
 
-* training accuracy: (insert answer)
-* test accuracy: (insert answer)
+* training accuracy: (.852)
+* test accuracy: (.817)
 
 \hstop
 
 # Problem 3b
 
 ```{r prob3b}
+heart_dis <- rep("Yes", nrow(trainingdata))
+heart_dis[trainingdata$target == 0] <- "No"
+trainingdata$heart_dis <- heart_dis
 
 ```
 
 # Problem 3c
 
 ```{r prob3c}
+
+p_age <- ggplot(trainingdata, aes(x = age, color = heart_dis)) +
+  geom_density(size = 1) +
+  labs(title = "Density of Age", x = "Age", y = "Density") +
+  theme_minimal()
+
+p_trestbps <- ggplot(trainingdata, aes(x = trestbps, color = heart_dis)) +
+  geom_density(size = 1) +
+  labs(title = "Density of Resting BP", x = "trestbps", y = "Density") +
+  theme_minimal()
+
+p_oldpeak <- ggplot(trainingdata, aes(x = oldpeak, color = heart_dis)) +
+  geom_density(size = 1) +
+  labs(title = "Density of Oldpeak", x = "oldpeak", y = "Density") +
+  theme_minimal()
+
+p_thalach <- ggplot(trainingdata, aes(x = thalach, color = heart_dis)) +
+  geom_density(size = 1) +
+  labs(title = "Density of Maximum Heart Rate", x = "thalach", y = "Density") +
+  theme_minimal()
+
+combined_plot <- (p_age | p_trestbps) / (p_oldpeak | p_thalach)
+print(combined_plot)
 
 ```
 
@@ -77,37 +127,82 @@ start here, insert homework below -->
 ```{r prob3d}
 library(MASS) # package containing lda function
 
+
+trainingdata$target <- as.factor(trainingdata$target)
+testdata$target <- as.factor(testdata$target)
+
+lda_model <- lda(target ~ age + sex + cp + trestbps + thalach + exang + oldpeak + ca + thal,
+                 data = trainingdata)
+
+lda_train_pred <- predict(lda_model)$class
+lda_train_accuracy <- mean(lda_train_pred == trainingdata$target)
+cat("LDA - Training Accuracy:", round(lda_train_accuracy, 3), "\n")
+
+lda_test_pred <- predict(lda_model, newdata = testdata)$class
+lda_test_accuracy <- mean(lda_test_pred == testdata$target)
+cat("LDA - Test Accuracy:", round(lda_test_accuracy, 3), "\n")
+
+
 ```
 
 \hstart
 
-* training accuracy: (insert answer)
-* test accuracy: (insert answer)
+* training accuracy: (.84)
+* test accuracy: (.817)
 
 \hstop
 
 # Problem 3e
 
 ```{r prob3e}
+qda_model <- qda(target ~ age + sex + cp + trestbps + thalach + exang + oldpeak + ca + thal,
+                 data = trainingdata)
+
+# Predictions on training data:
+qda_train_pred <- predict(qda_model)$class
+qda_train_accuracy <- mean(qda_train_pred == trainingdata$target)
+cat("QDA - Training Accuracy:", round(qda_train_accuracy, 3), "\n")
+
+# Predictions on test data:
+qda_test_pred <- predict(qda_model, newdata = testdata)$class
+qda_test_accuracy <- mean(qda_test_pred == testdata$target)
+cat("QDA - Test Accuracy:", round(qda_test_accuracy, 3), "\n")
 
 ```
 
 \hstart
 
-* training accuracy: (insert answer)
-* test accuracy: (insert answer)
+* training accuracy: (.885)
+* test accuracy: (.8)
 
 \hstop
 
 # Problem 3f
 
 ```{r prob3f}
+library(dplyr)
+library(class)
+
+# Select only the predictor variables:
+training_knn <- trainingdata %>% 
+  dplyr::select(age, sex, cp, trestbps, thalach, exang, oldpeak, ca, thal)
+
+testing_knn <- testdata %>% 
+  dplyr::select(age, sex, cp, trestbps, thalach, exang, oldpeak, ca, thal)
 
 ```
 
 # Problem 3g
 
 ```{r prob3g}
+# Define which variables are numeric:
+num_vars <- c("age", "trestbps", "oldpeak", "thalach")
+
+training_knn <- training_knn %>% 
+  mutate(across(all_of(num_vars), scale))
+
+testing_knn <- testing_knn %>% 
+  mutate(across(all_of(num_vars), scale))
 
 ```
 
@@ -115,12 +210,18 @@ library(MASS) # package containing lda function
 # Problem 3h
 
 ```{r prob3h}
+set.seed(420)  # for reproducibility
+
+knn_pred <- knn(train = training_knn, test = testing_knn, cl = trainingdata$target, k = 14)
+
+knn_test_accuracy <- mean(knn_pred == testdata$target)
+cat("KNN (k = 14) - Test Accuracy:", round(knn_test_accuracy, 3), "\n")
 
 ```
 
 \hstart
 
-* test accuracy: (insert answer)
+* test accuracy: (0.817)
 
 \hstop
 
@@ -128,12 +229,59 @@ library(MASS) # package containing lda function
 # Problem 4
 
 ```{r prob4}
+head(Boston)
+
+trn_samples <- sample(1:nrow(Boston), 440, replace = FALSE)
+training_Boston <- Boston[trn_samples, ]
+testing_Boston <- Boston[-trn_samples, ]
+training_Boston$crimMedian <- training_Boston$crim > median(training_Boston$crim)
+testing_Boston$crimMedian <- testing_Boston$crim > median(training_Boston$crim)
+
+logit_boston <- glm(crimMedian ~ . - crim - crimMedian,
+                    data = training_Boston, family = binomial)
+
+# Predictions on training and test sets:
+train_pred_boston <- ifelse(predict(logit_boston, type = "response") > 0.5, TRUE, FALSE)
+test_pred_boston <- ifelse(predict(logit_boston, newdata = testing_Boston, type = "response") > 0.5, TRUE, FALSE)
+
+train_acc_boston <- mean(train_pred_boston == training_Boston$crimMedian)
+test_acc_boston <- mean(test_pred_boston == testing_Boston$crimMedian)
+
+cat("Boston Logistic Regression - Training Accuracy:", round(train_acc_boston, 3), "\n")
+cat("Boston Logistic Regression - Test Accuracy:", round(test_acc_boston, 3), "\n")
+
+lda_boston <- lda(crimMedian ~ . - crim - crimMedian, data = training_Boston)
+
+lda_train_pred <- predict(lda_boston)$class
+lda_test_pred <- predict(lda_boston, newdata = testing_Boston)$class
+
+lda_train_acc <- mean(lda_train_pred == training_Boston$crimMedian)
+lda_test_acc <- mean(lda_test_pred == testing_Boston$crimMedian)
+
+cat("Boston LDA - Training Accuracy:", round(lda_train_acc, 3), "\n")
+cat("Boston LDA - Test Accuracy:", round(lda_test_acc, 3), "\n")
+
+library(class)
+
+train_knn_boston <- training_Boston %>% dplyr::select(-crim, -crimMedian)
+test_knn_boston <- testing_Boston %>% dplyr::select(-crim, -crimMedian)
+
+train_knn_boston_scaled <- scale(train_knn_boston)
+test_knn_boston_scaled <- scale(test_knn_boston,
+                                center = attr(train_knn_boston_scaled, "scaled:center"),
+                                scale = attr(train_knn_boston_scaled, "scaled:scale"))
+
+knn_boston_pred <- knn(train = train_knn_boston_scaled,
+                       test = test_knn_boston_scaled,
+                       cl = training_Boston$crimMedian, k = 5)
+knn_boston_test_acc <- mean(knn_boston_pred == testing_Boston$crimMedian)
+cat("Boston KNN (k = 5) - Test Accuracy:", round(knn_boston_test_acc, 3), "\n")
 
 ```
 
 \hstart
 
-* (insert answer)
+* It appears that the knn model performs the best in terms of test accuracy. LDA is the second best, and Logistic Regression is the worst. It may be worth continuing this analysis and tuning the number of neighbors used in KNN to opimize our prediction. This would require a third holdout set to prevent data leakage and train set hacking. 
 
 \hstop
 
