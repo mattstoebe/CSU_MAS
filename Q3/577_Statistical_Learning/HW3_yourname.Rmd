@@ -1,0 +1,145 @@
+---
+title: 'STAA 577: HW3'
+author: "Your Name"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes:
+- \usepackage{xcolor}
+- \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+library(patchwork)
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 4, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+# Problem 1
+
+\hstart
+
+(insert answer). It is encouraged to type the answer using latex. 
+
+\hstop
+
+
+# Problem 2
+
+\hstart
+
+(insert answer). It is encouraged to type the answer using latex. 
+
+\hstop
+
+
+# Problem 3a
+
+```{r prob3a}
+
+```
+
+\hstart
+
+* training accuracy: (insert answer)
+* test accuracy: (insert answer)
+
+\hstop
+
+# Problem 3b
+
+```{r prob3b}
+
+```
+
+# Problem 3c
+
+```{r prob3c}
+
+```
+
+# Problem 3d 
+
+```{r prob3d}
+library(MASS) # package containing lda function
+
+```
+
+\hstart
+
+* training accuracy: (insert answer)
+* test accuracy: (insert answer)
+
+\hstop
+
+# Problem 3e
+
+```{r prob3e}
+
+```
+
+\hstart
+
+* training accuracy: (insert answer)
+* test accuracy: (insert answer)
+
+\hstop
+
+# Problem 3f
+
+```{r prob3f}
+
+```
+
+# Problem 3g
+
+```{r prob3g}
+
+```
+
+
+# Problem 3h
+
+```{r prob3h}
+
+```
+
+\hstart
+
+* test accuracy: (insert answer)
+
+\hstop
+
+
+# Problem 4
+
+```{r prob4}
+
+```
+
+\hstart
+
+* (insert answer)
+
+\hstop
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+
