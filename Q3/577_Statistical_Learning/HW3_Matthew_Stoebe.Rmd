@@ -1,6 +1,6 @@
 ---
 title: 'STAA 577: HW3'
-author: "Your Name"
+author: "Matthew Stoebe"
 output:
   pdf_document: default
   html_document:
