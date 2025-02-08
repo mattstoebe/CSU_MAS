@@ -1,0 +1,36 @@
+---
+title: "575_Quiz1"
+author: "Matthew Stoebe"
+date: "2025-02-08"
+output: pdf_document
+---
+
+
+```{r}
+
+alpha <- 1
+beta  <- 1
+
+y <- c(3.0, 2.2, 1.5, 4.2, 2.7)
+
+n <- length(y)
+
+alpha_post <- alpha + n
+beta_post  <- beta  + sum(y)
+
+cat("Posterior shape  =", alpha_post, "\n")
+cat("Posterior rate   =", beta_post,  "\n")
+
+
+Nsim <- 1000
+
+lambda_samp <- rgamma(Nsim, shape = alpha_post, rate = beta_post)
+y_pred      <- rexp(Nsim,  rate = lambda_samp)
+
+plot(density(y_pred), 
+     main = "Posterior Predictive Distribution",
+     xlab = "Simulated time until next flood")
+
+
+```
+
