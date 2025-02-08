@@ -11,7 +11,7 @@ output: pdf_document
 alpha <- 1
 beta  <- 1
 
-y <- c(3.0, 2.2, 1.5, 4.2, 2.7)
+y <- c(1.5, 2.3, 7.7, 4.2, 1.1, .9, 4.3)
 
 n <- length(y)
 
