@@ -172,7 +172,7 @@ print(combined_plot)
 # Problem 3d 
 
 ```{r prob3d}
-library(MASS) # package containing lda function
+library(MASS)
 
 
 trainingdata$target <- as.factor(trainingdata$target)
@@ -272,7 +272,6 @@ cat("KNN (k = 14) - Test Accuracy:", round(knn_test_accuracy, 3), "\n")
 # Problem 4
 
 ```{r prob4}
-head(Boston)
 
 trn_samples <- sample(1:nrow(Boston), 440, replace = FALSE)
 training_Boston <- Boston[trn_samples, ]
