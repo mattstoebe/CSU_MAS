@@ -1,0 +1,261 @@
+---
+title: "STAA 553: HW3"
+author: "YOUR NAME HERE"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+See Canvas Calendar for due date.   
+40 points total, 2 points per problem unless otherwise noted.  
+Add or delete code chunks as needed.  
+Content for all questions is from Section 05 or earlier.   
+
+# Weight Loss (Q1 - Q5)
+
+We return to the weight loss study from HW2.  Ott & Longnecker describe a weight loss study with g = 5 treatments (C, T1, T2, T3, T4).  The response variable is weight loss (in pounds).  A total of 50 (human) subjects were randomly assigned to treatments such that there are n = 10 subjects per treatment.  The data is available from Canvas as WtLoss.csv.
+
+## Q1 (0 pts)
+
+Fit an appropriate model (with default contrasts) and show the ANOVA table. Because we already did this for HW2, this question is worth 0 pts.
+
+***** 
+```{r}
+#Q1
+
+```
+
+*****
+
+## Q2
+
+Use the emmeans package to calculate Tukey adjusted pairwise comparisons. 
+
+### Q2A
+
+Show the Tukey adjusted comparisons (including estimates and p-values).  
+
+*****
+```{r}
+#Q2A
+
+```
+
+*****
+
+### Q2B
+
+Comparing Tukey comparisons to unadjusted comparisons (from previous assignment), do we find evidence of more or fewer differences?  Use alpha = 0.05.
+
+*****
+Response
+
+*****
+
+### Q2C
+
+From the previous question, we can see that Tukey has lower power to detect differences, as compared to the unadjusted method.  So what is the benefit of using Tukey’s method?
+
+*****
+Response 
+
+*****
+
+### Q2D
+
+Construct a Tukey adjusted CLD display.  
+
+*****
+```{r}
+#Q2D
+
+```
+
+*****
+
+### Q2E (4 pts)
+
+Calculate the Tukey adjusted 95\% ME for pairwise comparisons (ex: $\mu_i - \mu_j$).  This is the HSD value.  Notes: You must show your work to get full credit for this question.  Use echo = TRUE to show your work for this question.  
+
+*****
+```{r, echo = TRUE}
+#Q2E
+
+```
+
+*****
+
+## Q3
+
+Use the emmeans package to calculate Dunnett adjusted pairwise comparisons vs control (Trt = C).  
+
+### Q3A
+
+Show the Dunnett adjusted comparisons (including estimates and p-values) 
+
+*****
+```{r}
+#Q3A
+
+```
+
+*****
+
+### Q3B (4 pts)
+
+Using the result from the previous question, briefly summarize your conclusions (in context) using alpha = 0.05.  
+
+*****
+Response
+
+*****
+
+## Q4 (2 pts per contrast)
+
+Use the emmeans package to estimate and test the following contrasts.   For this question, additional information about the treatments is needed:  
+C = Standard  
+T1 = Drug therapy with exercise and with counseling  
+T2 = Drug therapy with exercise but no counseling  
+T3 = Drug therapy no exercise but with counseling  
+T4 = Drug therapy no exercise and no counseling  
+
+A.	Compare the mean for control versus the average of (the means for) the four other treatments.
+B.	Compare the averages of (the means for) the treatments with exercise versus those without exercise.  (Ignore the control.)
+C.	Compare the averages of (the means for) the treatments with counseling versus the control.  (Ignore treatments without counseling.)
+
+*****
+```{r}
+#Q4
+
+```
+
+*****
+
+## Q5 
+
+Use the car package to perform a simultaneous test of the provided orthogonal contrasts.  Recall that when testing contrasts with the car package, it is easiest to use the no intercept (or cell means) model.  Just run the code here.  
+
+```{r}
+#Q5
+OrtConMat <- matrix(
+             c(4, -1, -1, -1, -1,
+               0, 3, -1, -1, -1,
+               0, 0, 2, -1, -1,
+               0, 0, 0, 1, -1),
+              nrow = 4, byrow = TRUE)
+```
+
+### Q5A
+
+Show the result of the simultaneous test.  Note: This should exactly match the one-way ANOVA F-test from Q1.
+
+*****
+```{r}
+#Q5A
+
+```
+
+*****
+
+### Q5B
+
+Check one pair of contrasts (given in rows) for orthogonality.  
+
+*****
+```{r, echo = TRUE}
+#Q5B
+
+```
+*****
+
+# Breakfast Study (Q6 - Q9)
+
+A study was done to examine whether breakfast choice was associated with cholesterol levels in children.  A total of n=35 fourth and fifth graders were included in the study.  Based on survey response, children were identified as one of  (g = 4) four (BKFST) breakfast types: Cereal_F (cereal with fiber), Cereal_O (other cereal), Other_Br (other breakfast) or Skip (no breakfast).    The response variable was plasma total cholesterol (TC).  The data is available from Canvas as Breakfast.csv.
+
+Notes: 
+- The BMI variable is not used in this analysis.
+- The sample sizes are unequal because this is an observational study.
+
+## Q6
+
+Calculate a table of summary statistics including sample size, mean, sd by BKFST group.  
+
+*****
+```{r}
+#Q6
+
+```
+
+*****
+
+## Q7
+
+Fit an appropriate model (with default contrasts) and show the ANOVA table.
+
+*****
+```{r}
+#Q7
+
+```
+
+*****
+
+## Q8 
+
+Use the emmeans package to calculate the emmeans (estimated marginal means).
+
+## Q8A
+
+Show the emmeans table.
+
+*****
+```{r}
+#Q8A
+
+```
+
+*****
+
+## Q8B
+
+Considering the results from the previous question, discuss how sample size effects SE.
+
+*****
+Response 
+
+*****
+
+## Q9
+
+Use the emmeans package to calculate Tukey adjusted pairwise comparisons. 
+
+### Q9A
+
+Show the Tukey adjusted comparisons (including estimates and p-values).
+
+*****
+```{r}
+#Q9A
+
+```
+
+*****
+
+### Q9B
+
+Considering the results from the previous question, identify the comparison with either the largest OR smallest SE and discuss the sample sizes corresponding to this comparison.  
+
+*****
+Response
+
+*****
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
