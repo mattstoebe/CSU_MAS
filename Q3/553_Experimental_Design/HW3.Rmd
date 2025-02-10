@@ -89,7 +89,21 @@ Construct a Tukey adjusted CLD display.
 *****
 ```{r}
 #Q2D
+library(emmeans)
+library(multcomp) 
+library(multcompView)   
 
+mod1 <- lm(Loss ~ Trt, data = dat)
+emm <- emmeans(mod1, specs = ~ Trt)
+
+cld_tukey <- cld(
+  emm, 
+  alpha   = 0.05,
+  Letters = "abcdef",
+  adjust  = "tukey"
+)
+
+cld_tukey
 
 ```
 
@@ -132,7 +146,6 @@ Show the Dunnett adjusted comparisons (including estimates and p-values)
 *****
 ```{r}
 #Q3A
-# We assume "C" is the reference level
 dunnett_contr <- contrast(emm, method = "trt.vs.ctrl", ref = "C", adjust="mvt")
 dunnett_contr
 
@@ -166,7 +179,6 @@ C.	Compare the averages of (the means for) the treatments with counseling versus
 *****
 ```{r}
 #Q4
-# Setup a named list of contrast vectors to pass to contrast()
 my_contrasts <- list(
   "A" = c( 1, -0.25, -0.25, -0.25, -0.25 ),
   "B" = c(0, 0.5, 0.5, -0.5, -0.5),
@@ -201,7 +213,9 @@ Show the result of the simultaneous test.  Note: This should exactly match the o
 *****
 ```{r}
 #Q5A
-mod_cm <- lm(Loss ~ 0 + Trt, data=dat)  # cell means model
+library(car)
+
+mod_cm <- lm(Loss ~ 0 + Trt, data = dat)
 linearHypothesis(mod_cm, hypothesis.matrix = OrtConMat)
 
 ```
@@ -217,7 +231,7 @@ Check one pair of contrasts (given in rows) for orthogonality.
 #Q5B
 c1 <- OrtConMat[1, ] 
 c2 <- OrtConMat[2, ]
-sum(c1 * c2)  # if 0 => orthogonal
+sum(c1 * c2)
 
 ```
 *****
@@ -237,7 +251,16 @@ Calculate a table of summary statistics including sample size, mean, sd by BKFST
 *****
 ```{r}
 #Q6
+bdat = read.csv("Breakfast.csv")
+library(dplyr)
 
+bdat %>%
+  group_by(BKFST) %>%
+  summarise(
+    n = n(),
+    Mean_TC = mean(TC, na.rm = TRUE),
+    SD_TC   = sd(TC, na.rm = TRUE)
+  )
 ```
 
 *****
@@ -249,7 +272,8 @@ Fit an appropriate model (with default contrasts) and show the ANOVA table.
 *****
 ```{r}
 #Q7
-
+mod_bkf <- lm(TC ~ BKFST, data = bdat)
+anova(mod_bkf)
 ```
 
 *****
@@ -266,6 +290,8 @@ Show the emmeans table.
 ```{r}
 #Q8A
 
+emm_bkf <- emmeans(mod_bkf, specs = ~ BKFST)
+emm_bkf
 ```
 
 *****
@@ -276,6 +302,7 @@ Considering the results from the previous question, discuss how sample size effe
 
 *****
 Response 
+Increased sample size leads to smaller standard errors
 
 *****
 
@@ -290,6 +317,7 @@ Show the Tukey adjusted comparisons (including estimates and p-values).
 *****
 ```{r}
 #Q9A
+pairs(emm_bkf, adjust = "tukey")
 
 ```
 
@@ -301,7 +329,7 @@ Considering the results from the previous question, identify the comparison with
 
 *****
 Response
-
+Other to skip has teh greatest stander error this makes sense because they have 8 and 5 samples respecitvely which is the samllest two accross all groups
 *****
 
 # Appendix
