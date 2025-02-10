@@ -29,6 +29,15 @@ Fit an appropriate model (with default contrasts) and show the ANOVA table. Beca
 ```{r}
 #Q1
 
+dat <- read.csv("WtLoss.csv")
+dat$Trt <- factor(dat$Trt, levels = c("C","T1","T2","T3","T4"))
+
+head(dat)
+
+mod1 <- lm(Loss ~ Trt, data=dat)
+anova(mod1)
+
+
 ```
 
 *****
@@ -43,7 +52,13 @@ Show the Tukey adjusted comparisons (including estimates and p-values).
 
 *****
 ```{r}
-#Q2A
+#
+library(emmeans)
+
+emm <- emmeans(mod1, specs = ~ Trt)
+tukey_pairs <- pairs(emm, adjust = "tukey")
+tukey_pairs
+
 
 ```
 
@@ -55,7 +70,7 @@ Comparing Tukey comparisons to unadjusted comparisons (from previous assignment)
 
 *****
 Response
-
+Yes there are fewer differences. In the last assignment, we saw all but 1 were signifficant. here it is all but 4.
 *****
 
 ### Q2C
@@ -64,7 +79,7 @@ From the previous question, we can see that Tukey has lower power to detect diff
 
 *****
 Response 
-
+Tukey helps controll our false discovery rate. This is importnat because at a .05 alpha level, 1/20 experiments is excpected to have a false positive. This becomes more likely as we move from doing one experiment to many. By adjusting with tukey, we keep the p value where it should be accross many experiments. 
 *****
 
 ### Q2D
@@ -74,6 +89,7 @@ Construct a Tukey adjusted CLD display.
 *****
 ```{r}
 #Q2D
+
 
 ```
 
@@ -86,6 +102,20 @@ Calculate the Tukey adjusted 95\% ME for pairwise comparisons (ex: $\mu_i - \mu_
 *****
 ```{r, echo = TRUE}
 #Q2E
+
+anova_out <- anova(mod1)
+MSE <- anova_out$"Mean Sq"[2] 
+df_error <- anova_out$"Df"[2]
+g <- length(levels(dat$Trt))
+n <- 10
+
+alpha <- 0.05
+q_crit <- qtukey(p = 1 - alpha, nmeans = g, df = df_error)
+
+HSD <- q_crit * sqrt(MSE / n)
+
+HSD
+
 
 ```
 
@@ -102,6 +132,9 @@ Show the Dunnett adjusted comparisons (including estimates and p-values)
 *****
 ```{r}
 #Q3A
+# We assume "C" is the reference level
+dunnett_contr <- contrast(emm, method = "trt.vs.ctrl", ref = "C", adjust="mvt")
+dunnett_contr
 
 ```
 
@@ -113,6 +146,7 @@ Using the result from the previous question, briefly summarize your conclusions 
 
 *****
 Response
+Treatments 1,2 and 4 have a signifficant difference from controll at an alpha = .05 level
 
 *****
 
@@ -132,6 +166,15 @@ C.	Compare the averages of (the means for) the treatments with counseling versus
 *****
 ```{r}
 #Q4
+# Setup a named list of contrast vectors to pass to contrast()
+my_contrasts <- list(
+  "A" = c( 1, -0.25, -0.25, -0.25, -0.25 ),
+  "B" = c(0, 0.5, 0.5, -0.5, -0.5),
+  "C" = c(-1, 0.5, 0, 0.5, 0)
+)
+
+contrast(emm, my_contrasts, adjust="none")
+
 
 ```
 
@@ -158,6 +201,8 @@ Show the result of the simultaneous test.  Note: This should exactly match the o
 *****
 ```{r}
 #Q5A
+mod_cm <- lm(Loss ~ 0 + Trt, data=dat)  # cell means model
+linearHypothesis(mod_cm, hypothesis.matrix = OrtConMat)
 
 ```
 
@@ -170,6 +215,9 @@ Check one pair of contrasts (given in rows) for orthogonality.
 *****
 ```{r, echo = TRUE}
 #Q5B
+c1 <- OrtConMat[1, ] 
+c2 <- OrtConMat[2, ]
+sum(c1 * c2)  # if 0 => orthogonal
 
 ```
 *****
