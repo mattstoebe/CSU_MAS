@@ -1,0 +1,221 @@
+---
+title: "STAA 577: HW4"
+author: "Matthew Stoebe"
+output: pdf_document
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 4, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+# Problem 1 
+
+\hstart
+
+Cross Validation is a better way to estimate the models error on unseen data as it splits hte data into multiple train-test splits to fit and test k models on different test sets. This helps reduce the bias of our test set evaluation. 
+
+
+\hstop
+
+# Problem 2
+
+\hstart
+
+- k-fold compared to validation set
+  + adv: More robust method of validation as we validate against many different training sets
+  + adv: Reduced bias
+  + disadv: Higher computational cost as we most fit k models
+  
+- k-fold compared to LOOCV
+  + adv: Lower computational cost as we need to fit 1 model for each row in LOOCV
+  + adv: Lower Variance
+  + disadv: Slightly more biased
+
+\hstop
+
+
+# Problem 3
+
+\hstart
+
+insert answer. Separate each part. 
+
+\hstop
+
+
+# Problem 4a
+
+```{r prob4a, echo = F, results="hide"}
+#Problem 4a
+
+```
+
+\hstart
+
+No output needed
+
+\hstop
+
+# Problem 4b and c
+
+```{r prob4b, echo = T}
+# Problem 4b
+
+```
+
+\hstart
+
+LOOCV accuracy: (insert answer)
+
+\hstop
+
+# Problem 4d
+
+```{r 4d}
+# Problem 4d
+library(boot)
+        
+# cost function
+errorfun <- function(obs, phat = 0){ 
+  mean(round(phat) != obs) 
+}
+
+# fit model
+glmOut <- glm(target ~ age + sex + cp + trestbps + thalach + 
+              exang + oldpeak + ca + thal, data = heart, family = binomial)
+
+# get CV error
+cvOut <- cv.glm(data = heart, glmOut, cost = errorfun, K = nobs)
+
+# get CV accuracy
+accur = 1 - cvOut$delta[1]
+accur
+```
+
+\hstart
+
+No output needed. Just verifying the LOOCV accuracy.
+
+\hstop
+
+# Problem 5a
+
+```{r prob5a}
+# Problem 5a
+set.seed(577)
+x <- rnorm(100)
+y <- x - 2*x^2 + rnorm(100)
+simdata <- data.frame(x = x, y = y)
+```
+
+\hstart
+
+No output needed. 
+
+\hstop
+
+# Problem 5b 
+
+```{r prob5b}
+#Problem 5b
+
+```
+
+\hstart
+
+* insert answer
+* insert answer
+
+\hstop
+
+# Problem 5c
+
+```{r prob5c}
+# Problem 5c
+library(caret)
+trainCtrlOpts <- trainControl(method = "cv", number = 10)
+cvOut <- train(y ~ x + I(x^2), data = simdata, method = "lm", trControl = trainCtrlOpts)
+cvOut$results$RMSE
+```
+
+
+\hstart
+
+* Model (a) RMSE: (insert answer)
+* Model (b) RMSE: (insert answer)
+* Model (c) RMSE: (insert answer)
+* Model (d) RMSE: (insert answer)
+
+\hstop
+
+# Problem 5d
+
+\hstart
+
+* insert answer
+* insert answer
+
+\hstop
+
+# Problem 5e
+
+```{r prob5e}
+# Problem 5e
+
+```
+
+\hstart
+
+insert answer
+
+\hstop
+
+# Problem 5f
+
+```{r prob5f}
+# Problem 5f
+
+```
+
+\hstart
+
+insert answer
+
+\hstop
+
+
+# Problem 5g
+
+```{r prob5g}
+# Problem 5g
+
+```
+
+\hstart
+
+insert answer
+
+\hstop
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+
