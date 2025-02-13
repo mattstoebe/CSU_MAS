@@ -1,0 +1,321 @@
+---
+title: "STAA 577: HW4"
+author: "Matthew Stoebe"
+output: pdf_document
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 4, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+# Problem 1 
+
+\hstart
+
+Cross Validation is a better way to estimate the models error on unseen data as it splits hte data into multiple train-test splits to fit and test k models on different test sets. This helps reduce the bias of our test set evaluation. 
+
+
+\hstop
+
+# Problem 2
+
+\hstart
+
+- k-fold compared to validation set
+  + adv: More robust method of validation as we validate against many different training sets
+  + adv: Reduced bias
+  + disadv: Higher computational cost as we most fit k models
+  
+- k-fold compared to LOOCV
+  + adv: Lower computational cost as we need to fit 1 model for each row in LOOCV
+  + adv: Lower Variance
+  + disadv: Slightly more biased
+
+\hstop
+
+
+# Problem 3
+
+\hstart
+
+##a 
+these probabilities dont shift over time because we are sampling with replacement so it is just 1- p(it is the jth obs) = 1-(1/n) = (n-1)/n
+
+#b
+This is the same as above becuase the draws are done with replacement
+
+#c
+bootstrap sample consists of n independant draws so the probability that the jth observation is not in the sample is the probability that it is not in a single sample to the power of n. 
+
+#d
+this is the complement of jth observation not being in the sample so we can do 1-((n-1)/n)^n. thus:~.672
+
+#e
+~.634
+
+#f
+~.632
+
+#g
+
+```{r}
+library(ggplot2)
+
+n_vals <- 1:100000
+prob_in_bootstrap <- 1 - (1 - 1/n_vals)^n_vals
+
+plot_data <- data.frame(n = n_vals, prob = prob_in_bootstrap)
+
+ggplot(plot_data, aes(x = log(n), y = prob)) +
+  geom_line(color = "blue") +
+  labs(title = "Probability vs Log n",
+       x = "Log(n)",
+       y = "Probability") +
+  theme_minimal()
+
+```
+
+\hstop
+
+
+# Problem 4a
+
+```{r prob4a, echo = F, results="hide"}
+#Problem 4a
+
+train <- read.csv("heart_training.csv")
+test  <- read.csv("heart_test.csv")
+
+heart <- rbind(train, test)
+
+heart$sex <- factor(heart$sex)
+heart$cp <- factor(heart$cp)
+heart$exang <- factor(heart$exang)
+heart$restecg <- factor(heart$restecg)
+
+n <- nrow(heart)
+correct <- rep(NA, n) 
+
+for (i in 1:n) {
+  trainData <- heart[-i, ]
+  testData  <- heart[i, , drop = FALSE]
+  
+  model <- glm(target ~ age + sex + cp + trestbps + thalach +
+               exang + oldpeak + ca + thal, 
+               data = trainData, family = binomial)
+  
+    prob <- predict(model, newdata = testData, type = "response")
+  pred <- ifelse(prob > 0.5, 1, 0)
+  
+  correct[i] <- as.numeric(pred == testData$target)
+}
+
+loocv_accuracy <- mean(correct)
+
+
+```
+
+\hstart
+
+No output needed
+
+\hstop
+
+# Problem 4b and c
+
+```{r prob4b, echo = T}
+# Problem 4b
+loocv_accuracy
+
+```
+
+\hstart
+
+LOOCV accuracy: 0.8349835
+
+\hstop
+
+# Problem 4d
+
+```{r 4d}
+# Problem 4d
+library(boot)
+
+errorfun <- function(obs, phat = 0){ 
+  mean(round(phat) != obs) 
+}
+
+glmOut <- glm(target ~ age + sex + cp + trestbps + thalach + 
+              exang + oldpeak + ca + thal, data = heart, family = binomial)
+
+cvOut <- cv.glm(data = heart, glmOut, cost = errorfun, K = n)
+
+accur = 1 - cvOut$delta[1]
+accur
+```
+
+\hstart
+
+No output needed. Just verifying the LOOCV accuracy.
+
+\hstop
+
+# Problem 5a
+
+```{r prob5a}
+# Problem 5a
+set.seed(577)
+x <- rnorm(100)
+y <- x - 2*x^2 + rnorm(100)
+simdata <- data.frame(x = x, y = y)
+```
+
+\hstart
+
+No output needed. 
+
+\hstop
+
+# Problem 5b 
+
+```{r prob5b}
+#Problem 5b
+
+ggplot(simdata, aes(x = x, y = y)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Scatter Plot of Simulated Data", x = "x", y = "y")
+
+```
+
+\hstart
+
+* i see a curve that increases when x < 0 and then decreases  x > 0. this sort of parabolic relationship indicates that we are going to need some x^2 type terms to model it well
+
+\hstop
+
+# Problem 5c
+
+```{r prob5c}
+# Problem 5c
+library(caret)
+trainCtrlOpts <- trainControl(method = "cv", number = 10)
+
+model1 <- train(y ~ x, data = simdata, method = "lm", trControl = trainCtrlOpts)
+rmse1 <- model1$results$RMSE
+
+model2 <- train(y ~ x + I(x^2), data = simdata, method = "lm", trControl = trainCtrlOpts)
+rmse2 <- model2$results$RMSE
+
+model3 <- train(y ~ x + I(x^2) + I(x^3), data = simdata, method = "lm", trControl = trainCtrlOpts)
+rmse3 <- model3$results$RMSE
+
+model4 <- train(y ~ x + I(x^2) + I(x^3) + I(x^4), data = simdata, method = "lm", trControl = trainCtrlOpts)
+rmse4 <- model4$results$RMSE
+
+rmse_values <- data.frame(
+  Model = c("Linear", "Quadratic", "Cubic", "Quartic"),
+  RMSE = c(rmse1, rmse2, rmse3, rmse4)
+)
+rmse_values
+
+```
+
+
+\hstart
+
+* Model (a) RMSE: 2.33
+* Model (b) RMSE: 1.06
+* Model (c) RMSE: 1.035
+* Model (d) RMSE: 1.031
+
+\hstop
+
+# Problem 5d
+
+\hstart
+
+* The Quartic model has teh lowest MSE, but it is only marginally better than quadratic and cubic. This makes sense as it is simply a more flexible model. That said, the main performance gain actually came from moving linear to quadratic as this allwoed the model to actually fit the curve. With that in mind, i would just take the quadratic model for simplicity and explanability
+
+\hstop
+
+# Problem 5e
+
+```{r prob5e}
+# Problem 5e
+lm1 <- lm(y ~ x, data = simdata)
+summary(lm1)
+
+lm2 <- lm(y ~ x + I(x^2), data = simdata)
+summary(lm2)
+
+lm3 <- lm(y ~ x + I(x^2) + I(x^3), data = simdata)
+summary(lm3)
+
+lm4 <- lm(y ~ x + I(x^2) + I(x^3) + I(x^4), data = simdata)
+summary(lm4)
+
+```
+
+\hstart
+
+We once again see that only the first two terms are signifficant. there is marginal improvement from adding the cubic and quartic terms in terms of MSE, but the coefficients are not signifficant. This aligns with my previous answer
+
+\hstop
+
+# Problem 5f
+
+```{r prob5f}
+# Problem 5f
+set.seed(1500)
+x_new <- rnorm(100)
+y_new <- x_new - 2*x_new^2 + rnorm(100)
+simdata_new <- data.frame(x = x_new, y = y_new)
+
+model2_new <- train(y ~ x + I(x^2), data = simdata_new, method = "lm", trControl = trainCtrlOpts)
+rmse2_new <- model2_new$results$RMSE
+rmse2_new
+
+```
+
+\hstart
+
+The result is different because the random seed is different. If this new seed only affected the kfolds this large of a decrease in RMSE would be suppriseing but because the random seed is affecting both data generation and kfold, the new rmse value is reallly not comparable to the old one. 
+
+\hstop
+
+
+# Problem 5g
+
+```{r prob5g}
+
+```
+
+\hstart
+
+Confused here, I dont see a 5G in the homework
+
+\hstop
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+
