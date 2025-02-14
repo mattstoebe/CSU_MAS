@@ -1,0 +1,74 @@
+---
+title: "575_HW3"
+author: "Matthew Stoebe"
+date: "2025-02-14"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+set.seed(123)
+S <- 1000
+
+y_A <- c(12,9,12,14,13,13,15,8,15,6)
+sy_A <- sum(y_A); n_A <- length(y_A)
+
+y_B <- c(11,11,10,9,9,8,7,10,6,8,8,9,7)
+sy_B <- sum(y_B); n_B <- length(y_B)
+
+#Prior A
+a_A <- 120
+b_A <- 10
+
+#Prior B
+a_B <- 12
+b_B <- 1
+
+post_a_A <- a_A + sy_A
+post_b_A <- n_A + b_A
+
+post_a_B <- a_B + sy_B
+post_b_B <- n_B + b_B
+
+# Population A
+theta_A <- rgamma(S, post_a_A, post_b_A)
+yA_rep <- sapply(theta_A, function(lambda) rpois(n_A, lambda))
+t_rep_A <- apply(yA_rep, 2, function(y) mean(y)/sd(y))
+t_obs_A <- mean(y_A)/sd(y_A)
+
+hist(t_rep_A, main="Population A: Posterior Predictive t", breaks=30, xlab="t")
+abline(v=t_obs_A, col="red")
+p_value_A <- mean(t_rep_A >= t_obs_A)
+
+# Population B
+post_a_B <- 125; post_b_B <- 14
+theta_B <- rgamma(S, post_a_B, post_b_B)
+yB_rep <- sapply(theta_B, function(lambda) rpois(n_B, lambda))
+t_rep_B <- apply(yB_rep, 2, function(y) mean(y)/sd(y))
+t_obs_B <- mean(y_B)/sd(y_B)
+
+hist(t_rep_B, main="Population B: Posterior Predictive t", breaks=30, xlab="t")
+abline(v=t_obs_B, col="red")
+p_value_B <- mean(t_rep_B >= t_obs_B)
+
+cat("Bayesian p-value (A):", p_value_A, "\nBayesian p-value (B):", p_value_B)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
