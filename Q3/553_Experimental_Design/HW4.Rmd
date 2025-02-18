@@ -1,6 +1,6 @@
 ---
 title: "STAA 553: HW4"
-author: "YOUR NAME HERE"
+author: "Matthew Stoebe"
 output: pdf_document
 ---
 
