@@ -51,3 +51,94 @@ p_value_B <- mean(t_rep_B >= t_obs_B)
 
 cat("Bayesian p-value (A):", p_value_A, "\nBayesian p-value (B):", p_value_B)
 ```
+
+
+```{r}
+library(ggplot2)
+
+sample_posterior <- function(ybar, s, n, 
+                             mu0, k0, alpha0, beta0, 
+                             M = 10000) {
+  
+  kn     <- k0 + n
+  mun    <- (k0 * mu0 + n * ybar) / kn
+  SS     <- (n - 1) * s^2
+  
+  alpha_n <- alpha0 + n/2
+  beta_n  <- beta0 + 0.5 * (
+    SS + (k0 * n / kn) * (ybar - mu0)^2
+  )
+  
+  # Sample posterior for sigma^2
+  sigma2_draws <- 1 / rgamma(M, shape = alpha_n, rate = beta_n)
+  
+  # Sample posterior for theta 
+  theta_draws <- rnorm(M, mean = mun, sd = sqrt(sigma2_draws / kn))
+  
+  return(theta_draws)
+}
+
+nA     <- 16
+ybarA  <- 75.2
+sA     <- 7.3
+
+nB     <- 16
+ybarB  <- 77.5
+sB     <- 8.1
+
+
+mu0       <- 75
+sigma0_sq <- 100  
+
+kappa_vals <- c(1, 2, 4, 8, 16, 32, 64, 128, 256)
+
+
+M <- 100000  
+
+results <- data.frame(k0 = integer(), nu0 = integer(), prob = double())
+
+for (k0 in kappa_vals) {
+  
+  # nu0 = k0
+  nu0    <- k0
+  alpha0 <- nu0 / 2
+  beta0  <- (nu0 * sigma0_sq) / 2
+  
+  thetaA_draws <- sample_posterior(
+    ybar = ybarA, s = sA, n = nA,
+    mu0  = mu0,   k0 = k0,
+    alpha0 = alpha0, beta0 = beta0,
+    M = M
+  )
+  
+  # Posterior draws for group B
+  thetaB_draws <- sample_posterior(
+    ybar = ybarB, s = sB, n = nB,
+    mu0  = mu0,   k0 = k0,
+    alpha0 = alpha0, beta0 = beta0,
+    M = M
+  )
+  
+  probA_lt_B <- mean(thetaA_draws < thetaB_draws)
+  
+  results <- rbind(results, 
+                   data.frame(k0 = k0, 
+                              nu0 = nu0,
+                              prob = probA_lt_B))
+}
+
+
+
+ggplot(results, aes(x = k0, y = prob)) +
+  geom_point(size = 2) +
+  geom_line() +
+  labs(
+    x = expression(kappa[0] == nu[0]),
+    y = expression("Posterior Probability"~(theta[A]<theta[B]))
+  ) +
+  theme_bw() +
+  ylim(0,1)
+
+```
+
+The probability remains above .5 consistently and indicates robust evidence that thetaB is greater than thetaA. as our k0 grows the probability dips and asymptopes towards .5 which indicates sensitivitity in how strongly we shring the mean towards 75 ie how strong our prior knowledge is. 

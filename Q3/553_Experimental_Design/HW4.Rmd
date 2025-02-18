@@ -1,0 +1,320 @@
+---
+title: "STAA 553: HW4"
+author: "YOUR NAME HERE"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+See Canvas Calendar for due date.  
+44 points total, 2 points per problem unless otherwise noted.  
+Add or delete code chunks as needed.    
+Content for Q1-Q6 is from section 06.  
+Content for Q7-Q15 is from section 07.  
+
+# Tomatoes (Q1 - Q5)
+
+A study is being planned to compare a new vs standard fertilizer for tomatoes.  Investigators plan to test for a difference in the mean yield (lb/plant) comparing the two treatments.  For analysis, they will use a two-sample (and two-sided) t-test assuming equal variance with alpha = 0.05.  The experimental units will be individual tomato plants of the same variety and age (randomly assigned to either new or standard fertilizer).  Based on a previous study, they conjecture that the within group standard deviation is 1.2.  They want to be able to detect a meaningful difference (between means) of 1.5 (lb/plant).   
+
+## Q1
+
+Find the power with n = 8 per treatment (n = 16 total) for the scenario above.
+
+*****
+Power = 
+
+```{r}
+#Q1
+power_result <- power.t.test(n = 8, delta = 1.5, sd = 1.2, sig.level = 0.05, 
+                             type = "two.sample", alternative = "two.sided")
+power_result$power  
+
+```
+
+*****
+
+## Q2
+
+If the sample size was larger (more than 8), would the power be higher or lower than that calculated in Q1?  Just answer higher or lower; no need to justify.
+
+*****
+Response
+Higher
+
+*****
+
+## Q3
+
+If we use alpha = 0.01 (instead of 0.05), would the power be higher or lower than that calculated in Q1? Just answer higher or lower; no need to justify.
+
+*****
+Response
+Lower
+
+*****
+
+## Q4
+
+If the standard deviation was larger (more than 1.2), would the power be higher or lower than that calculated in in Q1?  Just answer higher or lower; no need to justify.
+
+*****
+Response
+Lower
+
+*****
+
+## Q5
+
+Return to the original scenario and find the sample size required (per treatment) to achieve 80\% power.  Remember to "round" up to an integer value. 
+
+*****
+n = 12 per treatment.   
+
+```{r}
+#Q5
+sample_size <- power.t.test(delta = 1.5, sd = 1.2, sig.level = 0.05, 
+                            power = 0.80, type = "two.sample", alternative = "two.sided")$n
+sample_size_rounded <- ceiling(sample_size)
+sample_size_rounded  
+
+```
+
+*****
+
+# Apples (Q6)
+
+A study is being planned to compare g = 4 different pesticides for apple trees.  The response variable is yield per tree (lb/tree).  For analysis, they will use a one-way ANOVA F-test with alpha = 0.05.    They conjecture that the within group standard deviation is 10 and $\mu_1$=50, $\mu_2$=50, $\mu_3$=40, $\mu_4$=35.  
+
+## Q6 (4 pts)
+
+Find the sample size required (number of trees per treatment) to achieve 90\% power.  Remember to “round” up to an integer value. Hint: Watch out for sd versus variance!
+
+*****
+n = 10 per treatment  
+
+```{r}
+#Q6
+means <- c(50, 50, 40, 35)
+mu_bar <- mean(means)
+var_means <- mean((means - mu_bar)^2)
+sigma_means <- sqrt(var_means)
+f_effect <- sigma_means / 10   
+f_effect  
+
+library(pwr)
+pwr_out <- pwr.anova.test(k = 4, f = f_effect, sig.level = 0.05, power = 0.90)
+n_per_treatment <- ceiling(pwr_out$n)
+n_per_treatment
+```
+*****
+
+# Peppers (Q7 - Q15)
+
+A researcher is interested in how water level (applied during growing season) might affect the “heat” level of jalapeno peppers (measured in SHU = Scoville Heat Units). It is well known that varieties differ in heat levels. They conduct a study using four common jalapeno Varieties (A, B, C, D) and two Water levels (low or high). There are n = 4 individual plants per treatment combination.  Hence there are a total of 4 x 2 x 4 = 32 observations. The response variable is SHU (in thousands). The data is available from Canvas as Peppers.csv.  
+
+**Note:** The variable Group is only used in Q15 below.  
+
+## Q7 (4 pts)
+
+Fit an appropriate model (including Variety and Water main effects plus interaction) and provide the Type 3 ANOVA table.  **Important note:** Be sure to use contr.sum to get meaningful type 3 tests.  
+
+*****
+```{r}
+#Q7
+library(car)
+library(emmeans)
+
+peppers <- read.csv("Peppers.csv")
+
+peppers$Variety <- factor(peppers$Variety)
+peppers$Water <- factor(peppers$Water)
+contrasts(peppers$Variety) <- contr.sum(4)
+contrasts(peppers$Water) <- contr.sum(2)
+
+Model1 <- lm(SHU ~ Variety * Water, data = peppers)
+
+Anova(Model1, type = 3)
+
+
+```
+
+*****
+
+## Q8
+
+Calculate MSResid for this model.
+
+*****
+```{r}
+#Q8
+msres <- sum(resid(Model1)^2) / df.residual(Model1)
+msres
+```
+*****
+
+## Q9
+
+Create a summary graph (of emmeans) using code similar to what is provided.
+
+```{r, fig.width = 4, fig.height = 3}
+#Q9
+library(emmeans)
+emmip(Model1, Water ~ Variety)
+```
+
+## Q10 (4 pts)
+
+Use residual diagnostic plots to discuss whether model assumptions are satisfied.  You do NOT need to include the plots in your assignment.  But for full credit it should be clear which plot is being used to check which assumption.  
+
+*****
+Response
+the residuals look ok. Looking at residual vs fitted there are no apparent issues of unequal variance, and looking at the QQ the data appears normal. 
+
+```{r, echo = FALSE}
+#Q10
+par(mfrow = c(2, 2))
+plot(Model1)
+```
+*****
+
+## Q11
+
+Using the ANOVA table from above and considering the "Factorial Principle", should we focus on interaction or main effects?  Reference a specific test (and p-value) from the ANOVA table.
+
+*****
+Response
+Because the p–value for the Variety:Water interaction is not significant (p > 0.05), by the Factorial Principle we focus on interpreting the main effects rather than the interaction.
+
+*****
+
+## Q12
+
+Use emmeans to estimate and test a comparison of high vs low Water, *averaging over Varieties*.  
+
+*****
+```{r}
+#Q12
+emm_water <- emmeans(Model1, ~ Water)
+
+contrast(emm_water, method = "pairwise")
+```
+*****
+
+## Q13
+
+Considering your answer to the previous question, do we find evidence of a difference in mean response for high vs low Water?  Be sure to discuss whether high or low water has the higher mean response. 
+
+*****
+Response
+Based on the emmeans contrast, there is evidence of a statistically significant difference between high and low water treatments at a .05 level. The estimated marginal means indicate that the high water treatment has a higher mean SHU (heat level) compared to the low water treatment.
+
+*****
+
+## Q14 Peppers No Interaction Model
+
+We now consider an alternate analysis.  A colleague considers your ANOVA table from Q7 and suggests that you drop the interaction from the model. 
+
+### Q14A
+
+Fit the model with Variety and Water main effects only (no interaction) and provide the Type 3 ANOVA table.  
+
+*****
+```{r}
+#Q14A
+Model2 <- lm(SHU ~ Variety + Water, data = peppers)
+Anova(Model2, type = 3)
+
+
+```
+
+*****
+
+### Q14B
+
+Calculate MSResid for this model.
+
+*****
+```{r}
+#Q14B
+msres2 <- sum(resid(Model2)^2) / df.residual(Model2)
+msres2
+
+```
+*****
+
+### Q14C
+
+Use emmeans to estimate and test a comparison of high vs low Water, averaging over Varieties.  
+
+*****
+```{r}
+#Q14C
+emm_water2 <- emmeans(Model2, ~ Water)
+contrast(emm_water2, method = "pairwise")
+
+```
+*****
+
+### Q14D
+
+By comparing the emmeans output (SE, t.ratio and p-value) for Q12 vs Q14C, we can see that power dropped (slightly) when the interaction term was dropped from the model.  Briefly explain why this happened.
+
+*****
+Response
+Without the interaction term, there is some variability which we are unable to model. This results in a higher p value
+
+*****
+
+## Q15 Peppers One-way Model
+
+We consider another alternate analysis. Fit a one-way model using Group as the predictor.
+
+### Q15A
+
+Provide the ANOVA table.  
+
+*****
+```{r}
+#Q15A
+Model3 <- lm(SHU ~ Group, data = peppers)
+anova(Model3)
+
+```
+
+*****
+
+### Q15B
+
+Use emmeans contrast() to estimate and test a comparison of high vs low Water, *averaging over Varieties*.  
+Notes: You will need to set up emmeans(Model3, ~ Group) before using contrast().  This question is "self-checking" in the sense that these results should exactly match the results from Q12 above.
+
+*****
+```{r}
+#Q15B
+emm_group <- emmeans(Model3, ~ Group)
+
+contrast(emm_group, method = list(Water = c(-0.25, -0.25, -0.25, -0.25, 
+                                             0.25,  0.25,  0.25,  0.25)))
+
+```
+*****
+
+### Q15C
+
+The models used in Q7 and this question are equivalent (in the sense that they are different parameterizations of the same model).  State at least one piece of output that confirms the models are equivalent.  Note: This can be taken from summary() output or ANOVA table.
+
+*****
+Response
+Model 1 and 3 both have resiudals of 7.784 with 24 degrees of freedom showing that they both explain the same amount of variance from the origional dataset.
+
+*****
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
