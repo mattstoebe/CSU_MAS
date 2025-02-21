@@ -1,0 +1,215 @@
+---
+title: "STAA 577: HW5"
+author: "Your Name"
+output: pdf_document
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+library(patchwork)
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 4, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+
+\normalsize
+
+# Problem 1 
+
+
+\hstart
+
+- **Model assessment**:
+
+- **Model selection**: 
+
+\hstop
+
+# Problem 2 
+
+\hstart
+
+- Direct estimates:
+  + Adv: 
+  + Disadv: 
+
+- Indirect estimates:
+  + Adv: 
+  + Disadv:
+
+\hstop
+
+# Problem 3a 
+
+```{r prob3a}
+# problem 3
+
+```
+
+# Problem 3b 
+
+```{r prob3b}
+# problem 3b 
+
+```
+
+\hstart
+
+- insert answer
+- insert answer
+
+\hstop
+
+# Problem 3c
+
+```{r prob3c}
+# problem 3c
+library(caret)
+library(glmnet)
+set.seed(577)
+
+```
+
+\hstart
+
+CV MSE: 
+
+\hstop
+
+# Problem 3d
+
+```{r prob3d}
+#problem 3d
+
+```
+
+# Problem 3e
+
+```{r prob7}
+# problem 3e
+set.seed(577)
+
+```
+
+\hstart
+
+Optimal $\lambda =$
+
+\hstop
+
+# Problem 3f
+
+```{r prob3f}
+# Problem 3f
+
+```
+
+\hstart
+
+CV MSE: 
+
+\hstop
+
+# Problem 3g
+
+```{r prob3g}
+# problem 3g
+
+```
+
+# Problem 3h
+
+\hstart
+
+- insert answer
+- insert answer
+
+\hstop
+
+# Problem 3i
+
+```{r prob3i}
+set.seed(577)
+# problem 3i
+
+```
+
+\hstart
+
+- $\lambda =$ 
+- CV MSE = 
+
+\hstop
+
+# Problem 3j
+
+```{r prob3j}
+# problem 3j
+
+```
+
+\hstart
+
+- insert answer
+- insert answer
+
+\hstop
+
+# Problem 4a
+
+```{r prob4a}
+# problem 4a
+
+```
+
+\hstart
+
+- insert answer
+- insert answer
+
+\hstop
+
+# Problem 4b
+
+```{r prob4b}
+# problem 4b
+
+```
+
+\hstart
+
+- insert answer
+- insert answer
+
+\hstop
+
+# Problem 4c
+
+\hstart
+
+- insert answer
+
+\hstop
+
+
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+
