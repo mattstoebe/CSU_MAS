@@ -34,8 +34,10 @@ start here, insert homework below -->
 \hstart
 
 - **Model assessment**:
+- Process of evaluating a model on unseen data to determine how well the model generalizes
 
 - **Model selection**: 
+- Process of choosing the best model and model parameters from a set of candidate models based on comparative performance
 
 \hstop
 
@@ -44,12 +46,12 @@ start here, insert homework below -->
 \hstart
 
 - Direct estimates:
-  + Adv: 
-  + Disadv: 
+  + Adv: unbiased estimates of the true test and easy to explain
+  + Disadv: Computationally intensive, require more data, and can have higher variance
 
 - Indirect estimates:
-  + Adv: 
-  + Disadv:
+  + Adv: Computationally simpler, as they do not require splitting or retraining
+  + Disadv:biased towards training data, and  adjustments do not account for all sources of error
 
 \hstop
 
@@ -57,20 +59,25 @@ start here, insert homework below -->
 
 ```{r prob3a}
 # problem 3
+prostate <- read.csv("prostate.csv")
+prostate <- prostate[, -ncol(prostate)] 
+prostate[, 1:8] <- scale(prostate[, 1:8])
 
 ```
 
 # Problem 3b 
 
 ```{r prob3b}
-# problem 3b 
+# problem 3b
+
+lmOut <- lm(lpsa ~ ., data = prostate)
+summary(lmOut)
 
 ```
 
 \hstart
 
-- insert answer
-- insert answer
+- It looks like lcavol lweight and svi are the most important variables. We have an ok rsquared at .66, and a signifficant P Value
 
 \hstop
 
@@ -81,12 +88,16 @@ start here, insert homework below -->
 library(caret)
 library(glmnet)
 set.seed(577)
+train_control <- trainControl(method = "cv", number = 10)
+cv_model <- train(lpsa ~ ., data = prostate, method = "lm", trControl = train_control)
 
+rmse <- cv_model$results$RMSE^2
+print(rmse)
 ```
 
 \hstart
 
-CV MSE: 
+CV MSE:0.5044407 
 
 \hstop
 
@@ -94,6 +105,10 @@ CV MSE:
 
 ```{r prob3d}
 #problem 3d
+lpsa <- prostate$lpsa
+xmat <- data.matrix(prostate[, -which(names(prostate)=="lpsa")])
+ridgeOut <- glmnet(x = xmat, y = lpsa, family = "gaussian", alpha = 0, nlambda = 200)
+plot(ridgeOut, xvar = "lambda", label = TRUE)
 
 ```
 
@@ -102,12 +117,14 @@ CV MSE:
 ```{r prob7}
 # problem 3e
 set.seed(577)
+cv_ridge <- cv.glmnet(x = xmat, y = lpsa, family = "gaussian", alpha = 0, nlambda = 200)
+plot(cv_ridge)
 
 ```
 
 \hstart
 
-Optimal $\lambda =$
+Optimal $\lambda =$ 0.08434274
 
 \hstop
 
@@ -115,12 +132,15 @@ Optimal $\lambda =$
 
 ```{r prob3f}
 # Problem 3f
-
+optimal_lambda_ridge <- cv_ridge$lambda.min
+cv_mse_ridge <- min(cv_ridge$cvm)
+optimal_lambda_ridge
+cv_mse_ridge
 ```
 
 \hstart
 
-CV MSE: 
+CV MSE: .5276459
 
 \hstop
 
@@ -128,6 +148,8 @@ CV MSE:
 
 ```{r prob3g}
 # problem 3g
+lassoOut <- glmnet(x = xmat, y = lpsa, family = "gaussian", alpha = 1, nlambda = 200)
+plot(lassoOut, xvar = "lambda", label = TRUE)
 
 ```
 
@@ -135,8 +157,8 @@ CV MSE:
 
 \hstart
 
-- insert answer
-- insert answer
+– Both plots show how the magnitude of the estimated coefficients changes as labmda increases.
+– In ridge regression, coefficients shrink continuously toward zero but none become exactly zero whereas in lasso, some coefficients are driven exactly to zero
 
 \hstop
 
@@ -144,14 +166,19 @@ CV MSE:
 
 ```{r prob3i}
 set.seed(577)
-# problem 3i
+cv_lasso <- cv.glmnet(x = xmat, y = lpsa, family = "gaussian", alpha = 1, nlambda = 200)
+plot(cv_lasso)
+optimal_lambda_lasso <- cv_lasso$lambda.min
+cv_mse_lasso <- min(cv_lasso$cvm)
+optimal_lambda_lasso
+cv_mse_lasso
 
 ```
 
 \hstart
 
-- $\lambda =$ 
-- CV MSE = 
+- $\lambda =$ 0.002153193
+- CV MSE = 0.530523
 
 \hstop
 
@@ -159,41 +186,52 @@ set.seed(577)
 
 ```{r prob3j}
 # problem 3j
+lasso_fixed <- glmnet(x = xmat, y = lpsa, family = "gaussian", alpha = 1, lambda = 0.1)
+coef_lasso <- coef(lasso_fixed)
+coef_mlr <- coef(lmOut)
+comparison <- cbind(as.matrix(coef_lasso), coef_mlr)
+print(comparison)
 
 ```
 
 \hstart
 
-- insert answer
-- insert answer
+- Lasso selects all but age, lcp, and gleason features. it also pulls many of the coefficents for the features closer to zero like lbph and gleason. 
 
 \hstop
 
-# Problem 4a
+# Problem 4a & 4B
 
 ```{r prob4a}
 # problem 4a
+library(MASS)
+data("Boston")
+
+lm_model <- lm(crim ~ ., data = Boston)
+lm_cv <- train(crim ~ ., data = Boston,
+               method = "lm",
+               trControl = trainControl(method = "cv", number = 5))
+mse <- mean(lm_cv$residuals^2)
+print(paste("Minimum CV MSE for Ridge:", mean(cv_ridge$cvm)))
+
+x <- model.matrix(crim ~ ., Boston)[, -1]  # remove intercept column
+y <- Boston$crim
+
+cv_ridge <- cv.glmnet(x, y, alpha = 0, nlambda = 100)
+optimal_lambda_ridge <- cv_ridge$lambda.min
+print(paste("AVG CV MSE for Ridge:", mean(cv_ridge$cvm)))
+
+
+cv_lasso <- cv.glmnet(x, y, alpha = 1, nlambda = 100)
+optimal_lambda_lasso <- cv_lasso$lambda.min
+print(paste("AVG CV MSE for LASSO:", mean(cv_lasso$cvm)))
 
 ```
 
 \hstart
 
-- insert answer
-- insert answer
-
-\hstop
-
-# Problem 4b
-
-```{r prob4b}
-# problem 4b
-
-```
-
-\hstart
-
-- insert answer
-- insert answer
+- We can use the lasso, ridge, and traditional models in a cv=5 loop to predict the crime in boston
+- Lasso Model has the best avg MSE accross folds of cross validation so I think we should go with that. It also provides a simpler model as it pulls some features to zero. 
 
 \hstop
 
@@ -201,7 +239,7 @@ set.seed(577)
 
 \hstart
 
-- insert answer
+- No. because I have chosen Lasso Regularization, the coefficients of some of our features are exactly zero. 
 
 \hstop
 
