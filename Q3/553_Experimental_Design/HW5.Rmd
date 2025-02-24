@@ -1,6 +1,6 @@
 ---
 title: "STAA 553: HW5"
-author: "YOUR NAME HERE"
+author: "Matthew Stoebe"
 output: pdf_document
 ---
 
@@ -35,6 +35,19 @@ Fit the three-way model with all interactions and show the Type 3 ANOVA table.  
 *****
 ```{r, message = FALSE}
 #Q1
+library(car)
+
+options(contrasts = c("contr.sum", "contr.poly"))
+biomass <- read.csv("Biomass.csv")
+str(biomass)
+
+biomass$Herb  <- as.factor(biomass$Herb)
+biomass$Water <- as.factor(biomass$Water)
+biomass$Type  <- as.factor(biomass$Type)
+
+BM_3way <- lm(Biomass ~ Herb * Water * Type, data = biomass)
+
+Anova(BM_3way, type = 3)
 
 ```
 
@@ -45,11 +58,12 @@ Fit the three-way model with all interactions and show the Type 3 ANOVA table.  
 Use residual diagnostic plots to discuss whether model assumptions are satisfied.  You do NOT need to include the plots in your assignment.  But for full credit it should be clear which plot is being used to check which assumption.  
 
 *****
-Response
+Response By analyzing the "residuals vs fitted" graph I can determine that there is an issue of variance inequality as we see that the variance on the right side is farg reater than that on the left. We also see that on the !! plot it falls off the grey line heavily on either tail. Both of these cases indicate that there are some issues in our assumptions which could potentially be addressed by a log transform.
 
 ```{r, echo = FALSE}
 #Q2
-
+par(mfrow = c(2,2))
+plot(BM_3way)
 ```
 
 *****
@@ -61,7 +75,7 @@ Create a summary graph (of emmeans) using code similar to what is provided.
 ```{r, fig.width = 5, fig.height = 3}
 #Q3
 library(emmeans)
-#emmip(BM_3way, Water ~ Herb | Type, CIs = TRUE)
+emmip(BM_3way, Water ~ Herb | Type, CIs = TRUE)
 ```
 
 ## Q4
@@ -71,8 +85,8 @@ Regardless of any concerns you may have about assumptions, use emmeans to calcul
 *****
 ```{r}
 #Q4
-#emout1 <- emmeans(BM_3way, ~ Water|Herb*Type)
-#pairs(emout1)
+emout1 <- emmeans(BM_3way, ~ Water|Herb*Type)
+pairs(emout1)
 ```
 
 *****
@@ -88,6 +102,9 @@ Show the Type 3 ANOVA table.
 *****
 ```{r}
 #Q5
+forb <- subset(biomass, Type == "Forb")
+BM_forb <- lm(Biomass ~ Herb * Water, data = forb)
+Anova(BM_forb, type = 3)
 
 ```
 *****
@@ -97,11 +114,12 @@ Show the Type 3 ANOVA table.
 Consider the diagnostics plots and (briefly) discuss whether model assumptions are (better) satisfied.
 
 *****
-Response
+Response These assumptions are better satisfied. residuals vs fitteded does not show the same cone paggern, and the QQ i closer to the line of normality
 
 ```{r, echo = FALSE}
 #Q6
-
+par(mfrow = c(2,2))
+plot(BM_forb)
 ```
 
 *****
@@ -113,7 +131,8 @@ Use emmeans to calculate pairwise comparisons of Water (High vs Low) *for each l
 *****
 ```{r}
 #Q7
-
+emout_forb <- emmeans(BM_forb, ~ Water | Herb)
+pairs(emout_forb)
 ```
 
 *****
@@ -125,7 +144,8 @@ Use emmeans to calculate the comparison of Water (High vs Low) *averaging over t
 *****
 ```{r}
 #Q8
-
+emout_forb_avg <- emmeans(BM_forb, ~ Water)
+pairs(emout_forb_avg)
 ```
 
 *****
@@ -136,7 +156,7 @@ Considering the SE for the comparisons from Q7 (interaction comparisons) and Q8 
 
 *****
 Response
-
+The main effect has higher comparison as indicated by p value, standard error, and estimate. it may make sense to focus on this effect as opposed to the interactive effects
 *****
 
 # Biomass: Grass Only (Q10 - Q13)
@@ -150,7 +170,9 @@ Show the Type 3 ANOVA table.
 *****
 ```{r}
 #Q10
-
+grass <- subset(biomass, Type == "Grass")
+BM_grass <- lm(Biomass ~ Herb * Water, data = grass)
+Anova(BM_grass, type = 3)
 ```
 
 *****
@@ -161,10 +183,12 @@ Consider the diagnostics plots and (briefly) discuss whether model assumptions a
 
 *****
 
+These plots indicate that the assumptions are reasonably satisfied, Errors do not have a clear pattern, and the QQ residuals adhere relatively closely to the line of normality
 
 ```{r, echo = FALSE}
 #Q11
-
+par(mfrow = c(2,2))
+plot(BM_grass)
 ```
 *****
 
@@ -175,7 +199,8 @@ Use emmeans to calculate pairwise comparisons of Water (High vs Low) *for each l
 *****
 ```{r}
 #Q12
-
+emout_grass <- emmeans(BM_grass, ~ Water | Herb)
+pairs(emout_grass)
 ```
 
 ******
@@ -186,7 +211,7 @@ Would it be appropriate to calculate the comparison of Water (High vs Low) *aver
 
 *****
 Response
-
+This may not be wise as we saw that there is a signifficant interarctionb etween grass herb and water earlier in the assignment
 *****
 
 # Biomass: Compare Models (Q14 - Q15)
@@ -199,7 +224,7 @@ Give (at least) *one benefit* of splitting the analysis by Type (running separat
 
 *****
 Response
-
+One benefit of running separate two‐way ANOVAs is that each model is tailored to the specific variability of that plant type. For example, if the Forb model shows a particularly strong Herb × Water interaction that is diluted in the full three-way analysis, analyzing Forb separately can reveal these differences more clearly. Additionanlly, it allows us to seperate the fact that while forb has strong signal, Grass does not. Seperating the dataset makes this easier to see and to proceed with.
 *****
 
 ## Q15
@@ -208,7 +233,7 @@ Give (at least) *one weakness* of splitting the analysis by Type as compared to 
 
 *****
 Response
-
+We loose tha ability to test differences between plant types, and are not able to analyze the 3-way interaction that we saw was signifficant
 *****
 
 # Breakfast (Q16 - Q20)
@@ -221,7 +246,18 @@ Construct a scatterplot of TC (Y) vs BMI (X) for all BKFST groups on the same pl
 
 ```{r, fig.width = 4, fig.height = 3}
 #Q16
+library(ggplot2)
+breakfast <- read.csv("Breakfast.csv")
+str(breakfast)
 
+breakfast$BKFST <- as.factor(breakfast$BKFST)
+
+ggplot(breakfast, aes(x = BMI, y = TC, color = BKFST)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Scatterplot of TC vs BMI by Breakfast Type",
+       x = "BMI",
+       y = "Total Cholesterol (TC)")
 ```
 
 
@@ -232,7 +268,11 @@ Calculate a table of summary statistics including sample size, mean, sd by BKFST
 *****
 ```{r}
 #Q17
-
+library(dplyr)
+breakfast_summary <- breakfast %>%
+  group_by(BKFST) %>%
+  summarize(n = n(), mean_TC = mean(TC, na.rm = TRUE), sd_TC = sd(TC, na.rm = TRUE))
+breakfast_summary
 ```
 
 ****
@@ -248,7 +288,8 @@ Show the ANOVA table. (0 pts, because we already did this for HW3).
 *****
 ```{r}
 #Q18A
-
+lm_oneway <- lm(TC ~ BKFST, data = breakfast)
+Anova(lm_oneway, type = 3)
 ```
 
 *****
@@ -260,7 +301,9 @@ Calculate Tukey adjusted pairwise comparisons for BKFST.
 *****
 ```{r}
 #Q18B
-
+library(emmeans)
+emmeans_oneway <- emmeans(lm_oneway, ~ BKFST)
+pairs(emmeans_oneway, adjust = "tukey")
 ```
 
 *****
@@ -276,7 +319,8 @@ Show the Type 3 ANOVA table.
 *****
 ```{r}
 #Q19A
-
+lm_ancova <- lm(TC ~ BKFST + BMI, data = breakfast)
+Anova(lm_ancova, type = 3)
 ```
 *****
 
@@ -287,7 +331,8 @@ Show the emmeans for BKFST.
 *****
 ```{r}
 #Q19B
-
+emmeans_ancova <- emmeans(lm_ancova, ~ BKFST)
+emmeans_ancova
 ```
 *****
 
@@ -298,6 +343,7 @@ Calculate Tukey adjusted pairwise comparisons for BKFST.
 *****
 ```{r}
 #Q19C
+pairs(emmeans_ancova, adjust = "tukey")
 
 ```
 
@@ -309,7 +355,7 @@ Briefly summarize your findings from the previous question (using alpha = 0.05).
 
 *****
 Response
-
+all relationships besides Cereal F - Cereal 0 and Cereal 0 - skip and Other_BR-Skip are significant
 *****
 
 ## Q20
@@ -318,7 +364,7 @@ Compare the results from the one-way model (Q18) vs the ANCOVA model (Q19).  Bri
 
 *****
 Response
-
+In the one way model, we do not account for variablility explained by BMI which goes into the residuals. This results in a lower power test, higher variability, and the inability to isolate the affect of the cereal eaten. we confirm this in the second analysis where after controlling for BMI, the relationship between Breakfasts becomes apparent and signifficant.
 *****
 
 
