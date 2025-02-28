@@ -1,0 +1,354 @@
+---
+title: "STAA 577: HW6"
+author: "Your Name"
+output: pdf_document
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+library(splines)
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 5.5, fig.height = 4, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+
+# Problem 1
+
+
+\hstart
+
+Regularization refers to adding a penalty term to the loss function that shrinks the estimated coefficients toward zero. This is used to prevent overfitting by discouraging overly complex models as such improves the model’s generalization.
+
+\hstop
+
+# Problem 2
+
+```{r prob2, fig.width = 5}
+# problem 2
+
+library(ggplot2)
+library(splines)
+
+prostate <- read.csv("prostate.csv")
+
+model_poly <- lm(lpsa ~ poly(pgg45, 3), data = prostate)
+
+model_ns1 <- lm(lpsa ~ ns(pgg45, knots = c(15, 45)), data = prostate)
+
+model_ns2 <- lm(lpsa ~ ns(pgg45, knots = c(25, 50, 75)), data = prostate)
+
+grid <- data.frame(pgg45 = seq(min(prostate$pgg45), max(prostate$pgg45), length.out = 200))
+grid$pred_poly <- predict(model_poly, newdata = grid)
+grid$pred_ns1  <- predict(model_ns1, newdata = grid)
+grid$pred_ns2  <- predict(model_ns2, newdata = grid)
+
+ggplot(prostate, aes(x = pgg45, y = lpsa)) +
+  geom_point() +
+  geom_line(data = grid, aes(y = pred_poly, color = "Cubic Polynomial"), size = 1) +
+  geom_line(data = grid, aes(y = pred_ns1, color = "Natural Spline 1"), size = 1) +
+  geom_line(data = grid, aes(y = pred_ns2, color = "Natural Spline 2"), size = 1) +
+  labs(title = "Prostate Data: lpsa vs. pgg45",
+       x = "Percentage of Gleason Scores 4 or 5 (pgg45)",
+       y = "Log Prostate Specific Antigen (lpsa)",
+       color = "Model") +
+  theme_minimal()
+
+
+```
+
+# Problem 3
+
+```{r prob3,  fig.width = 5}
+# Problem 3
+library(ggplot2)
+library(splines)
+library(tidyr)
+
+# Read the training and test data (ensure these files are in your working directory)
+heart_train <- read.csv("heart_training.csv")
+heart_test  <- read.csv("heart_test.csv")
+
+# Combine the training and test sets
+heart <- rbind(heart_train, heart_test)
+
+# Convert specified variables to factors
+heart$sex     <- as.factor(heart$sex)
+heart$cp      <- as.factor(heart$cp)
+heart$exang   <- as.factor(heart$exang)
+heart$fbs   <- as.factor(heart$fbs)
+heart$restecg <- as.factor(heart$restecg)
+
+# Fit the logistic regression models:
+model_logit <- glm(target ~ thalach, data = heart, family = binomial)
+model_ns2 <- glm(target ~ ns(thalach, df = 2), data = heart, family = binomial)
+model_ns6 <- glm(target ~ ns(thalach, df = 6), data = heart, family = binomial)
+
+thalach_grid <- data.frame(thalach = seq(min(heart$thalach), max(heart$thalach), length.out = 200))
+thalach_grid$pred_logit <- predict(model_logit, newdata = thalach_grid, type = "response")
+thalach_grid$pred_ns2   <- predict(model_ns2, newdata = thalach_grid, type = "response")
+thalach_grid$pred_ns6   <- predict(model_ns6, newdata = thalach_grid, type = "response")
+
+pred_data <- pivot_longer(thalach_grid, cols = starts_with("pred_"),
+                          names_to = "model", values_to = "pred")
+pred_data$model <- factor(pred_data$model, levels = c("pred_logit", "pred_ns2", "pred_ns6"),
+                          labels = c("Linear Logistic", "Natural Spline 2", "Natural Spline 7"))
+
+# Plot the observed data and overlay the model fits
+ggplot(heart, aes(x = thalach, y = target)) +
+  geom_point(alpha = 0.5, position = position_jitter(height = 0.01)) +
+  geom_line(data = pred_data, aes(x = thalach, y = pred, color = model), size = 1) +
+  labs(title = "Estimated Probability of Heart Disease vs. thalach",
+       x = "thalach",
+       y = "Predicted Probability",
+       color = "Model") +
+  theme_minimal()
+
+```
+
+# Problem 4 
+
+```{r prob4, echo = T, eval = T}
+library(mgcv)
+library(splines)
+
+# Define a function to calculate LOOCV accuracy for a given model formula
+loocv_accuracy <- function(formula, data) {
+  n <- nrow(data)
+  pred_cat <- rep(NA, n)
+  for(i in 1:n){
+    fit <- gam(formula, data = data[-i, ], family = binomial)
+    phat <- predict(fit, newdata = data[i, ], type = "response")
+    pred_cat[i] <- ifelse(phat > 0.5, 1, 0)
+  }
+  return(mean(pred_cat == data$target))
+}
+
+formula1 <- target ~ s(age) + sex + cp + s(trestbps) + s(chol) +
+            fbs + restecg + s(thalach) + exang + s(oldpeak) +
+            slope + ca + thal
+acc1 <- loocv_accuracy(formula1, heart)
+
+formula2 <- target ~ ns(age, df = 4) + sex + cp + ns(trestbps, df = 4) + ns(chol, df = 4) +
+            fbs + restecg + ns(thalach, df = 4) + exang + ns(oldpeak, df = 4) +
+            slope + ca + thal
+acc2 <- loocv_accuracy(formula2, heart)
+
+formula3 <- target ~ s(age) + sex + cp + s(trestbps) + s(chol) + s(thalach) + exang + s(oldpeak)
+acc3 <- loocv_accuracy(formula3, heart)
+
+# Print LOOCV accuracies for comparison
+cat("LOOCV accuracy for Model 1 (all predictors with s()):", acc1, "\n")
+cat("LOOCV accuracy for Model 2 (all predictors with ns()):", acc2, "\n")
+cat("LOOCV accuracy for Model 3 (reduced model):", acc3, "\n")
+
+
+```
+
+
+# Problem 5 
+
+```{r prob5}
+#Problem 5i-iv
+set.seed(577)
+n <- 150
+X1 <- rnorm(n)
+X2 <- rnorm(n)
+X3 <- 0.5 * X1 + 0.5 * X2  # Note: X3 is generated using X1 and X2
+epsilon <- rnorm(n, mean = 0, sd = 0.5)
+Y <- 1 + 2 * X1 - 5 * X3 + epsilon
+
+# Fit the full multiple linear regression for comparison:
+lm_fit <- lm(Y ~ X1 + X3)
+coef_true <- coef(lm_fit)
+```
+
+## Problem 5(v.)
+```{r prob5v, fig.width = 5}
+# Problem 5v
+n_iter <- 100
+beta0_est <- numeric(n_iter)
+beta1_est <- numeric(n_iter)
+beta2_est <- numeric(n_iter)
+
+# Initialize beta1 to 10
+beta1 <- 10
+
+for (i in 1:n_iter) {
+  # Update β₂: regress (Y - β₁*X1) on X3
+  fit_beta2 <- lm(I(Y - beta1 * X1) ~ X3)
+  beta0 <- coef(fit_beta2)[1]
+  beta2 <- coef(fit_beta2)[2]
+  
+  # Update β₁: regress (Y - β₂*X3) on X1
+  fit_beta1 <- lm(I(Y - beta2 * X3) ~ X1)
+  beta0_new <- coef(fit_beta1)[1]
+  beta1_new <- coef(fit_beta1)[2]
+  
+  # Store the estimates for this iteration
+  beta0_est[i] <- beta0_new
+  beta1_est[i] <- beta1_new
+  beta2_est[i] <- beta2
+  
+  # Update beta1 for the next iteration
+  beta1 <- beta1_new
+}
+
+library(ggplot2)
+library(tidyr)
+iter <- 1:n_iter
+backfit_df <- data.frame(iter = iter, beta0 = beta0_est, beta1 = beta1_est, beta2 = beta2_est)
+backfit_long <- pivot_longer(backfit_df, cols = c("beta0", "beta1", "beta2"),
+                             names_to = "coefficient", values_to = "estimate")
+
+p <- ggplot(backfit_long, aes(x = iter, y = estimate, color = coefficient)) +
+  geom_line() +
+  labs(title = "Backfitting Iterations (Initial β₁ = 10)",
+       x = "Iteration", y = "Coefficient Estimate") +
+  theme_minimal() +
+  # Overlay horizontal dashed lines for the lm coefficients
+  geom_hline(aes(yintercept = coef_true["(Intercept)"], color = "beta0"), linetype = "dashed") +
+  geom_hline(aes(yintercept = coef_true["X1"], color = "beta1"), linetype = "dashed") +
+  geom_hline(aes(yintercept = coef_true["X3"], color = "beta2"), linetype = "dashed")
+print(p)
+```
+
+## Problem 5(vi.)
+
+```{r prob5vi, fig.width = 5}
+# Problem 5vi
+
+```
+
+## Problem 5(vii.)
+```{r prob5vii}
+# Problem 5vii
+beta0_est2 <- numeric(n_iter)
+beta1_est2 <- numeric(n_iter)
+beta2_est2 <- numeric(n_iter)
+
+# Initialize beta1 to 0 now
+beta1 <- 0
+
+for (i in 1:n_iter) {
+  fit_beta2 <- lm(I(Y - beta1 * X1) ~ X3)
+  beta0 <- coef(fit_beta2)[1]
+  beta2 <- coef(fit_beta2)[2]
+  
+  fit_beta1 <- lm(I(Y - beta2 * X3) ~ X1)
+  beta0_new <- coef(fit_beta1)[1]
+  beta1_new <- coef(fit_beta1)[2]
+  
+  beta0_est2[i] <- beta0_new
+  beta1_est2[i] <- beta1_new
+  beta2_est2[i] <- beta2
+  
+  beta1 <- beta1_new
+}
+
+backfit_df2 <- data.frame(iter = 1:n_iter, beta0 = beta0_est2, beta1 = beta1_est2, beta2 = beta2_est2)
+backfit_long2 <- pivot_longer(backfit_df2, cols = c("beta0", "beta1", "beta2"),
+                              names_to = "coefficient", values_to = "estimate")
+
+p2 <- ggplot(backfit_long2, aes(x = iter, y = estimate, color = coefficient)) +
+  geom_line() +
+  labs(title = "Backfitting Iterations (Initial β₁ = 0)",
+       x = "Iteration", y = "Coefficient Estimate") +
+  theme_minimal() +
+  geom_hline(aes(yintercept = coef_true["(Intercept)"], color = "beta0"), linetype = "dashed") +
+  geom_hline(aes(yintercept = coef_true["X1"], color = "beta1"), linetype = "dashed") +
+  geom_hline(aes(yintercept = coef_true["X3"], color = "beta2"), linetype = "dashed")
+print(p2)
+
+diffs2 <- abs(backfit_df2 - matrix(coef_true, nrow = n_iter, ncol = 3, byrow = TRUE))
+convergence_iter2 <- min(which(apply(diffs2, 1, max) < 0.001))
+convergence_iter2  # Convergence iteration for the alternative starting value
+
+
+```
+
+\hstart
+
+insert answer
+
+\hstop
+
+## Problem 5(viii.)
+
+\hstart
+
+insert answer
+
+\hstop
+
+# Problem 6 
+
+Type down (tex) answers for each part or upload the picture of the handwritten answers.
+
+## Problem 6(a.)
+
+\hstart
+
+insert answer
+
+\hstop
+
+## Problem 6(b.)
+
+\hstart
+
+insert answer
+
+\hstop
+
+## Problem 6(c.)
+
+\hstart
+
+insert answer
+
+\hstop
+
+## Problem 6(d.)
+
+\hstart
+
+insert answer
+
+\hstop
+
+## Problem 6(e.)
+
+\hstart
+
+insert answer
+
+\hstop
+
+# Problem 7 
+
+\hstart
+
+insert sketch
+
+\hstop
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+
