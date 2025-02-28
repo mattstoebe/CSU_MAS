@@ -16,6 +16,8 @@ library(knitr)
 #install.packages("tidyverse")
 library(tidyverse)
 library(splines)
+library(ggplot2)
+library(tidyr)
 #set chunk and figure default options
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 5.5, fig.height = 4, tidy = TRUE)
 ```
@@ -78,21 +80,17 @@ library(ggplot2)
 library(splines)
 library(tidyr)
 
-# Read the training and test data (ensure these files are in your working directory)
 heart_train <- read.csv("heart_training.csv")
 heart_test  <- read.csv("heart_test.csv")
 
-# Combine the training and test sets
 heart <- rbind(heart_train, heart_test)
 
-# Convert specified variables to factors
-heart$sex     <- as.factor(heart$sex)
-heart$cp      <- as.factor(heart$cp)
-heart$exang   <- as.factor(heart$exang)
-heart$fbs   <- as.factor(heart$fbs)
+heart$sex <- as.factor(heart$sex)
+heart$cp <- as.factor(heart$cp)
+heart$exang <- as.factor(heart$exang)
+heart$fbs <- as.factor(heart$fbs)
 heart$restecg <- as.factor(heart$restecg)
 
-# Fit the logistic regression models:
 model_logit <- glm(target ~ thalach, data = heart, family = binomial)
 model_ns2 <- glm(target ~ ns(thalach, df = 2), data = heart, family = binomial)
 model_ns6 <- glm(target ~ ns(thalach, df = 6), data = heart, family = binomial)
@@ -107,7 +105,6 @@ pred_data <- pivot_longer(thalach_grid, cols = starts_with("pred_"),
 pred_data$model <- factor(pred_data$model, levels = c("pred_logit", "pred_ns2", "pred_ns6"),
                           labels = c("Linear Logistic", "Natural Spline 2", "Natural Spline 7"))
 
-# Plot the observed data and overlay the model fits
 ggplot(heart, aes(x = thalach, y = target)) +
   geom_point(alpha = 0.5, position = position_jitter(height = 0.01)) +
   geom_line(data = pred_data, aes(x = thalach, y = pred, color = model), size = 1) +
@@ -125,7 +122,6 @@ ggplot(heart, aes(x = thalach, y = target)) +
 library(mgcv)
 library(splines)
 
-# Define a function to calculate LOOCV accuracy for a given model formula
 loocv_accuracy <- function(formula, data) {
   n <- nrow(data)
   pred_cat <- rep(NA, n)
@@ -150,7 +146,6 @@ acc2 <- loocv_accuracy(formula2, heart)
 formula3 <- target ~ s(age) + sex + cp + s(trestbps) + s(chol) + s(thalach) + exang + s(oldpeak)
 acc3 <- loocv_accuracy(formula3, heart)
 
-# Print LOOCV accuracies for comparison
 cat("LOOCV accuracy for Model 1 (all predictors with s()):", acc1, "\n")
 cat("LOOCV accuracy for Model 2 (all predictors with ns()):", acc2, "\n")
 cat("LOOCV accuracy for Model 3 (reduced model):", acc3, "\n")
@@ -167,83 +162,78 @@ set.seed(577)
 n <- 150
 X1 <- rnorm(n)
 X2 <- rnorm(n)
-X3 <- 0.5 * X1 + 0.5 * X2  # Note: X3 is generated using X1 and X2
+X3 <- 0.5 * X1 + 0.5 * X2  # X3 is generated from X1 and X2
 epsilon <- rnorm(n, mean = 0, sd = 0.5)
 Y <- 1 + 2 * X1 - 5 * X3 + epsilon
 
-# Fit the full multiple linear regression for comparison:
 lm_fit <- lm(Y ~ X1 + X3)
 coef_true <- coef(lm_fit)
+print(coef_true)
+
+tol <- 1e-6  
+max_iter <- 100  
+
 ```
 
 ## Problem 5(v.)
 ```{r prob5v, fig.width = 5}
-# Problem 5v
-n_iter <- 100
-beta0_est <- numeric(n_iter)
-beta1_est <- numeric(n_iter)
-beta2_est <- numeric(n_iter)
-
-# Initialize beta1 to 10
 beta1 <- 10
+beta0_est <- numeric(max_iter)
+beta1_est <- numeric(max_iter)
+beta2_est <- numeric(max_iter)
+conv_iter_10 <- NA 
 
-for (i in 1:n_iter) {
-  # Update β₂: regress (Y - β₁*X1) on X3
+for (i in 1:max_iter) {
   fit_beta2 <- lm(I(Y - beta1 * X1) ~ X3)
   beta0 <- coef(fit_beta2)[1]
   beta2 <- coef(fit_beta2)[2]
   
-  # Update β₁: regress (Y - β₂*X3) on X1
   fit_beta1 <- lm(I(Y - beta2 * X3) ~ X1)
   beta0_new <- coef(fit_beta1)[1]
   beta1_new <- coef(fit_beta1)[2]
   
-  # Store the estimates for this iteration
   beta0_est[i] <- beta0_new
   beta1_est[i] <- beta1_new
   beta2_est[i] <- beta2
   
-  # Update beta1 for the next iteration
+  if (i > 1 && abs(beta1_new - beta1) < tol) {
+    conv_iter_10 <- i
+    cat("Convergence reached at iteration", i, "for initial beta1 = 10\n")
+    break
+  }
   beta1 <- beta1_new
 }
+if (is.na(conv_iter_10)) conv_iter_10 <- max_iter
 
-library(ggplot2)
-library(tidyr)
-iter <- 1:n_iter
-backfit_df <- data.frame(iter = iter, beta0 = beta0_est, beta1 = beta1_est, beta2 = beta2_est)
+iter_vals <- 1:(ifelse(is.na(conv_iter_10), max_iter, conv_iter_10))
+backfit_df <- data.frame(iter = iter_vals,
+                         beta0 = beta0_est[iter_vals],
+                         beta1 = beta1_est[iter_vals],
+                         beta2 = beta2_est[iter_vals])
 backfit_long <- pivot_longer(backfit_df, cols = c("beta0", "beta1", "beta2"),
                              names_to = "coefficient", values_to = "estimate")
 
-p <- ggplot(backfit_long, aes(x = iter, y = estimate, color = coefficient)) +
+p1 <- ggplot(backfit_long, aes(x = iter, y = estimate, color = coefficient)) +
   geom_line() +
-  labs(title = "Backfitting Iterations (Initial β₁ = 10)",
+  labs(title = "Backfitting Iterations (Initial beta1 = 10)",
        x = "Iteration", y = "Coefficient Estimate") +
   theme_minimal() +
-  # Overlay horizontal dashed lines for the lm coefficients
   geom_hline(aes(yintercept = coef_true["(Intercept)"], color = "beta0"), linetype = "dashed") +
   geom_hline(aes(yintercept = coef_true["X1"], color = "beta1"), linetype = "dashed") +
   geom_hline(aes(yintercept = coef_true["X3"], color = "beta2"), linetype = "dashed")
-print(p)
+print(p1)
 ```
 
 ## Problem 5(vi.)
 
 ```{r prob5vi, fig.width = 5}
-# Problem 5vi
-
-```
-
-## Problem 5(vii.)
-```{r prob5vii}
-# Problem 5vii
-beta0_est2 <- numeric(n_iter)
-beta1_est2 <- numeric(n_iter)
-beta2_est2 <- numeric(n_iter)
-
-# Initialize beta1 to 0 now
 beta1 <- 0
+beta0_est2 <- numeric(max_iter)
+beta1_est2 <- numeric(max_iter)
+beta2_est2 <- numeric(max_iter)
+conv_iter_0 <- NA
 
-for (i in 1:n_iter) {
+for (i in 1:max_iter) {
   fit_beta2 <- lm(I(Y - beta1 * X1) ~ X3)
   beta0 <- coef(fit_beta2)[1]
   beta2 <- coef(fit_beta2)[2]
@@ -256,33 +246,46 @@ for (i in 1:n_iter) {
   beta1_est2[i] <- beta1_new
   beta2_est2[i] <- beta2
   
+  if (i > 1 && abs(beta1_new - beta1) < tol) {
+    conv_iter_0 <- i
+    cat("Convergence reached at iteration", i, "for initial beta1 = 0\n")
+    break
+  }
   beta1 <- beta1_new
 }
-
-backfit_df2 <- data.frame(iter = 1:n_iter, beta0 = beta0_est2, beta1 = beta1_est2, beta2 = beta2_est2)
+if (is.na(conv_iter_0)) conv_iter_0 <- max_iter
+iter_vals2 <- 1:(ifelse(is.na(conv_iter_0), max_iter, conv_iter_0))
+backfit_df2 <- data.frame(iter = iter_vals2,
+                          beta0 = beta0_est2[iter_vals2],
+                          beta1 = beta1_est2[iter_vals2],
+                          beta2 = beta2_est2[iter_vals2])
 backfit_long2 <- pivot_longer(backfit_df2, cols = c("beta0", "beta1", "beta2"),
                               names_to = "coefficient", values_to = "estimate")
 
 p2 <- ggplot(backfit_long2, aes(x = iter, y = estimate, color = coefficient)) +
   geom_line() +
-  labs(title = "Backfitting Iterations (Initial β₁ = 0)",
+  labs(title = "Backfitting Iterations (Initial beta1 = 0)",
        x = "Iteration", y = "Coefficient Estimate") +
   theme_minimal() +
   geom_hline(aes(yintercept = coef_true["(Intercept)"], color = "beta0"), linetype = "dashed") +
   geom_hline(aes(yintercept = coef_true["X1"], color = "beta1"), linetype = "dashed") +
   geom_hline(aes(yintercept = coef_true["X3"], color = "beta2"), linetype = "dashed")
 print(p2)
+```
 
-diffs2 <- abs(backfit_df2 - matrix(coef_true, nrow = n_iter, ncol = 3, byrow = TRUE))
-convergence_iter2 <- min(which(apply(diffs2, 1, max) < 0.001))
-convergence_iter2  # Convergence iteration for the alternative starting value
+## Problem 5(vii.)
+```{r prob5vii}
+
+cat("For initial beta1 = 10, convergence was reached at iteration:", conv_iter_10, "\n")
+cat("For initial beta1 = 0, convergence was reached at iteration:", conv_iter_0, "\n")
 
 
 ```
 
 \hstart
 
-insert answer
+For initial beta1 = 10, convergence was reached at iteration: 24 
+For initial beta1 = 0, convergence was reached at iteration: 22 
 
 \hstop
 
@@ -290,7 +293,7 @@ insert answer
 
 \hstart
 
-insert answer
+when beta1 was initialized at 0 instead of 10 the early part of the path varied signifficantly. 0 got there a bit quicker and 10 took a lot longer. That said final convergence did happen at a similar time its jsut that the early change was different
 
 \hstop
 
@@ -302,7 +305,14 @@ Type down (tex) answers for each part or upload the picture of the handwritten a
 
 \hstart
 
-insert answer
+Write
+\[
+f_1(x)=a_1+b_1x+c_1x^2+d_1x^3,
+\]
+where
+\[
+a_1=\beta_0,\quad b_1=\beta_1,\quad c_1=\beta_2,\quad d_1=\beta_3.
+\]
 
 \hstop
 
@@ -310,7 +320,26 @@ insert answer
 
 \hstart
 
-insert answer
+We expand \((x-\xi)^3\):
+\[
+(x-\xi)^3 = x^3 - 3\xi x^2 + 3\xi^2 x - \xi^3.
+\]
+Substituting this expansion into \( f(x) \) gives:
+\[
+\begin{aligned}
+f(x) &= \beta_0+\beta_1 x+\beta_2 x^2+\beta_3 x^3+\beta_4\left(x^3-3\xi x^2+3\xi^2 x-\xi^3\right)\\[1mm]
+&=\left(\beta_0-\beta_4\xi^3\right) + \left(\beta_1+3\beta_4\xi^2\right)x\\[1mm]
+&\quad {} + \left(\beta_2-3\beta_4\xi\right)x^2 + \left(\beta_3+\beta_4\right)x^3.
+\end{aligned}
+\]
+Thus,  define
+\[
+f_2(x)=a_2+b_2x+c_2x^2+d_2x^3,
+\]
+with
+\[
+a_2=\beta_0-\beta_4\xi^3,\quad b_2=\beta_1+3\beta_4\xi^2,\quad c_2=\beta_2-3\beta_4\xi,\quad d_2=\beta_3+\beta_4.
+\]
 
 \hstop
 
@@ -318,7 +347,18 @@ insert answer
 
 \hstart
 
-insert answer
+For \( x>\xi \):
+\[
+\begin{aligned}
+f_2(\xi) &= (\beta_0-\beta_4\xi^3)+(\beta_1+3\beta_4\xi^2)\xi\\[1mm]
+&\quad {}+(\beta_2-3\beta_4\xi)\xi^2+(\beta_3+\beta_4)\xi^3\\[1mm]
+&=\beta_0+\beta_1\xi+\beta_2\xi^2+\beta_3\xi^3,
+\end{aligned}
+\]
+since the \(\beta_4\)-terms cancel. Therefore,
+\[
+f_1(\xi)=f_2(\xi).
+\]
 
 \hstop
 
@@ -326,7 +366,30 @@ insert answer
 
 \hstart
 
-insert answer
+Differentiate \( f_1(x) \):
+\[
+f_1'(x)=\beta_1+2\beta_2x+3\beta_3x^2,
+\]
+so that
+\[
+f_1'(\xi)=\beta_1+2\beta_2\xi+3\beta_3\xi^2.
+\]
+Differentiate \( f_2(x) \):
+\[
+f_2'(x)=b_2+2c_2x+3d_2x^2,
+\]
+and thus,
+\[
+\begin{aligned}
+f_2'(\xi) &= (\beta_1+3\beta_4\xi^2)+2(\beta_2-3\beta_4\xi)\xi+3(\beta_3+\beta_4)\xi^2\\[1mm]
+&=\beta_1+3\beta_4\xi^2+2\beta_2\xi-6\beta_4\xi^2+3\beta_3\xi^2+3\beta_4\xi^2\\[1mm]
+&=\beta_1+2\beta_2\xi+3\beta_3\xi^2.
+\end{aligned}
+\]
+Thus, we have
+\[
+f_1'(\xi)=f_2'(\xi).
+\]
 
 \hstop
 
@@ -334,7 +397,25 @@ insert answer
 
 \hstart
 
-insert answer
+Differentiate \( f_1'(x) \):
+\[
+f_1''(x)=2\beta_2+6\beta_3x,\quad \text{so}\quad f_1''(\xi)=2\beta_2+6\beta_3\xi.
+\]
+Differentiate \( f_2'(x) \):
+\[
+f_2''(x)=2c_2+6d_2x,\quad \text{so}\quad f_2''(\xi)=2(\beta_2-3\beta_4\xi)+6(\beta_3+\beta_4)\xi.
+\]
+Simplifying,
+\[
+\begin{aligned}
+f_2''(\xi)&=2\beta_2-6\beta_4\xi+6\beta_3\xi+6\beta_4\xi\\[1mm]
+&=2\beta_2+6\beta_3\xi.
+\end{aligned}
+\]
+Hence,
+\[
+f_1''(\xi)=f_2''(\xi).
+\]
 
 \hstop
 
@@ -342,7 +423,28 @@ insert answer
 
 \hstart
 
-insert sketch
+
+```{r}
+
+x_seq <- seq(-2, 6, by = 0.1)
+
+b1 <- ifelse(x_seq >= 0 & x_seq <= 2, 1, 0) - ifelse(x_seq >= 1 & x_seq <= 2, (x_seq - 1), 0)
+b2 <- ifelse(x_seq >= 3 & x_seq <= 4, (x_seq - 3), 0) + ifelse(x_seq > 4 & x_seq <= 5, 1, 0)
+
+
+fhat <- 1 + 1 * b1 + 3 * b2
+
+df <- data.frame(x = x_seq, fhat = fhat)
+
+ggplot(df, aes(x = x, y = fhat)) +
+  geom_line(size = 1.2) +
+  labs(title = "Fitted Curve with Basis Functions",
+       x = "X", y = "Estimated f(X)") +
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(-2, 6, by = 1)) +
+  scale_y_continuous(breaks = seq(0, 5, by = 1))
+
+```
 
 \hstop
 
