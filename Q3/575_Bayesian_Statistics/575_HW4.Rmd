@@ -1,0 +1,161 @@
+---
+title: "575_HW4"
+author: "Matthew Stoebe"
+date: "2025-03-02"
+output: pdf_document
+---
+
+#Question 1
+```{r}
+
+library(coda)
+
+set.seed(123)
+
+n_iter <- 1500   #Number of iterations
+burn_in <- 500   # Burn-in period
+
+rho_values <- c(0.25, 0.65, 0.95)
+results <- list()
+
+for(rho in rho_values) {
+  
+  X <- numeric(n_iter)
+  Y <- numeric(n_iter)
+  
+  X[1] <- 2
+  Y[1] <- 4
+  
+  for(t in 2:n_iter) {
+    mean_X <- 2 + (rho / 2) * (Y[t - 1] - 4)
+    var_X <- 1 - rho^2
+    X[t] <- rnorm(1, mean = mean_X, sd = sqrt(var_X))
+    
+    mean_Y <- 4 + 2 * rho * (X[t] - 2)
+    var_Y <- 4 * (1 - rho^2)
+    Y[t] <- rnorm(1, mean = mean_Y, sd = sqrt(var_Y))
+  }
+  
+  X_samples <- X[(burn_in + 1):n_iter]
+  Y_samples <- Y[(burn_in + 1):n_iter]
+  
+  E_X <- mean(X_samples)
+  E_Y <- mean(Y_samples)
+  Var_X <- var(X_samples)
+  Var_Y <- var(Y_samples)
+  
+  acf_X <- acf(X_samples, plot = FALSE)$acf[2]
+  acf_Y <- acf(Y_samples, plot = FALSE)$acf[2]
+  
+  ess_X <- effectiveSize(X_samples)
+  ess_Y <- effectiveSize(Y_samples)
+  
+  results[[paste0("rho_", rho)]] <- list(
+    rho = rho,
+    E_X = E_X,
+    E_Y = E_Y,
+    Var_X = Var_X,
+    Var_Y = Var_Y,
+    acf_X = acf_X,
+    acf_Y = acf_Y,
+    ess_X = ess_X,
+    ess_Y = ess_Y
+  )
+  
+  par(mfrow = c(2, 1))
+  plot(X_samples, type = "l", main = paste("Trace Plot for X (rho =", rho, ")"),
+       xlab = "Iteration", ylab = "X")
+  plot(Y_samples, type = "l", main = paste("Trace Plot for Y (rho =", rho, ")"),
+       xlab = "Iteration", ylab = "Y")
+  par(mfrow = c(1, 1))
+}
+
+stat_names <- c("E[X]", "Var[X]", "E[Y]", "Var[Y]", "ACF_X", "ACF_Y", "ESS_X", "ESS_Y")
+rho_labels <- c("0.25", "0.65", "0.95")
+
+summary_table <- matrix(NA, nrow = length(stat_names), ncol = length(rho_labels))
+rownames(summary_table) <- stat_names
+colnames(summary_table) <- rho_labels
+
+for (rho in rho_labels) {
+  res <- results[[paste0("rho_", rho)]]
+  summary_table["E[X]", rho] <- res$E_X
+  summary_table["Var[X]", rho] <- res$Var_X
+  summary_table["E[Y]", rho] <- res$E_Y
+  summary_table["Var[Y]", rho] <- res$Var_Y
+  summary_table["ACF_X", rho] <- res$acf_X
+  summary_table["ACF_Y", rho] <- res$acf_Y
+  summary_table["ESS_X", rho] <- res$ess_X
+  summary_table["ESS_Y", rho] <- res$ess_Y
+}
+
+print(summary_table)
+
+```
+
+#Question 2
+```{r}
+
+
+n_iter <- 1000
+
+theta <- numeric(n_iter)
+gamma <- numeric(n_iter)
+
+yA <- c(12, 9, 12, 14, 13, 13, 15, 8, 15, 6)
+yB <- c(11, 11, 10, 9, 9, 8, 7, 10, 6, 8, 8, 9, 7)
+nA <- length(yA)
+nB <- length(yB) 
+sumA <- sum(yA)
+sumB <- sum(yB)
+
+a_theta <- 120
+b_theta <- 10
+a_gamma <- 1
+b_gamma <- 1
+
+theta[1] <- 1
+gamma[1] <- 1
+
+for (t in 2:n_iter) {
+  shape_theta <- a_theta + sumA + sumB 
+  rate_theta <- b_theta + nA + nB * gamma[t - 1]  
+  theta[t] <- rgamma(1, shape = shape_theta, rate = rate_theta)
+  
+  shape_gamma <- a_gamma + sumB 
+  rate_gamma <- b_gamma + nB * theta[t]  
+  gamma[t] <- rgamma(1, shape = shape_gamma, rate = rate_gamma)
+}
+
+
+burn_in <- 500
+theta_samples <- theta[(burn_in + 1):n_iter]
+gamma_samples <- gamma[(burn_in + 1):n_iter]
+
+par(mfrow = c(1, 2))
+hist(theta_samples, breaks = 30, probability = TRUE,
+     main = "Posterior Distribution of theta", xlab = expression(theta),
+     col = "grey")
+lines(density(theta_samples), col = "black", lwd = 2)
+
+hist(gamma_samples, breaks = 30, probability = TRUE,
+     main = "Posterior Distribution of gamma", xlab = expression(gamma),
+     col = "grey")
+lines(density(gamma_samples), col = "black", lwd = 2)
+par(mfrow = c(1, 1))
+
+
+E_theta <- mean(theta_samples)
+Var_theta <- var(theta_samples)
+E_gamma <- mean(gamma_samples)
+Var_gamma <- var(gamma_samples)
+
+cat("Posterior mean of theta:", E_theta, "\n")
+cat("Posterior variance of theta:", Var_theta, "\n")
+cat("Posterior mean of gamma:", E_gamma, "\n")
+cat("Posterior variance of gamma:", Var_gamma, "\n")
+
+
+#I couldnt get RJAGS to install for some reason si i cant do the final part here
+```
+
