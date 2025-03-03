@@ -1,0 +1,153 @@
+---
+title: "CUPED test"
+author: "Matthew Stoebe"
+date: "2025-03-03"
+output: pdf_document
+---
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Sample size per group
+n <- 500
+
+# Simulate a pre-experiment covariate (X) for both groups (e.g., pre-experiment performance)
+X_control <- rnorm(n, mean = 100, sd = 10)
+X_treatment <- rnorm(n, mean = 100, sd = 10)
+
+# Define parameters for the experiment metric (Y)
+baseline <- 50       # baseline value for Y
+slope <- 0.8         # relationship between X and Y
+effect <- 2          # treatment effect (small effect size)
+noise_sd <- 5        # standard deviation of noise
+
+# Simulate the outcome metric Y for each group
+Y_control <- baseline + slope * X_control + rnorm(n, mean = 0, sd = noise_sd)
+Y_treatment <- baseline + effect + slope * X_treatment + rnorm(n, mean = 0, sd = noise_sd)
+
+# Combine into a data frame
+df <- data.frame(
+  group = rep(c("control", "treatment"), each = n),
+  X = c(X_control, X_treatment),
+  Y = c(Y_control, Y_treatment)
+)
+
+# --- Two-sample t-test on the original metric ---
+t_test_Y <- t.test(Y ~ group, data = df)
+print("T-test on Original Metric (Y):")
+print(t_test_Y)
+
+# --- CUPED Adjustment ---
+
+# Estimate theta using the pooled data:
+theta <- cov(df$Y, df$X) / var(df$X)
+mean_X <- mean(df$X)
+
+# Compute the CUPED-adjusted metric:
+df$Y_adj <- df$Y - theta * (df$X - mean_X)
+
+# --- Two-sample t-test on the CUPED-adjusted metric ---
+t_test_Y_adj <- t.test(Y_adj ~ group, data = df)
+print("T-test on CUPED Adjusted Metric (Y_adj):")
+print(t_test_Y_adj)
+
+# --- Compare variances in each group before and after CUPED ---
+var_control_Y <- var(df$Y[df$group == "control"])
+var_treatment_Y <- var(df$Y[df$group == "treatment"])
+var_control_Y_adj <- var(df$Y_adj[df$group == "control"])
+var_treatment_Y_adj <- var(df$Y_adj[df$group == "treatment"])
+
+cat("\nVariance Comparison:\n")
+cat("Control group - Original Y:", round(var_control_Y, 2), "\n")
+cat("Treatment group - Original Y:", round(var_treatment_Y, 2), "\n")
+cat("Control group - Adjusted Y_adj:", round(var_control_Y_adj, 2), "\n")
+cat("Treatment group - Adjusted Y_adj:", round(var_treatment_Y_adj, 2), "\n")
+
+```
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Sample size per group
+n <- 500
+
+# Simulate a pre-experiment covariate (X) for both groups
+X_control <- rnorm(n, mean = 100, sd = 10)
+X_treatment <- rnorm(n, mean = 100, sd = 10)
+
+# Define parameters for the experiment metric (Y)
+baseline <- 50       # baseline value for Y
+slope <- 0.8         # relationship between X and Y
+effect <- 20        # larger treatment effect to create a bigger shift
+noise_sd <- 5        # standard deviation of noise
+
+Y_control <- baseline + slope * X_control + rnorm(n, mean = 0, sd = noise_sd)
+Y_treatment <- baseline + effect + slope * X_treatment + rnorm(n, mean = 0, sd = noise_sd)
+
+df <- data.frame(
+  group = rep(c("control", "treatment"), each = n),
+  X = c(X_control, X_treatment),
+  Y = c(Y_control, Y_treatment)
+)
+
+# Calculate the optimal scaling factor theta using pooled data
+theta <- cov(df$Y, df$X) / var(df$X)
+mean_X <- mean(df$X)
+
+# Compute the CUPED-adjusted metric
+df$Y_adj <- df$Y - theta * (df$X - mean_X)
+
+# Compute a fixed x-axis range based on both Y and Y_adj
+x_range <- range(c(df$Y, df$Y_adj))
+
+# Plot density of the original metric Y by group with fixed x-axis
+p1 <- ggplot(df, aes(x = Y, fill = group)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Original Y Distribution", x = "Y", y = "Density") +
+  scale_x_continuous(limits = x_range) +
+  theme_minimal() + theme(aspect.ratio = 1)
+
+# Plot density of the CUPED-adjusted metric Y_adj by group with fixed x-axis
+p2 <- ggplot(df, aes(x = Y_adj, fill = group)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "CUPED-Adjusted Y Distribution", x = "Y_adj", y = "Density") +
+  scale_x_continuous(limits = x_range) +
+  theme_minimal() +   theme(aspect.ratio = 1)
+
+grid.arrange(p1, p2, ncol = 2)
+
+# Calculate means by group for the original metric Y
+mean_control_Y <- mean(df$Y[df$group == "control"])
+mean_treatment_Y <- mean(df$Y[df$group == "treatment"])
+effect_Y <- mean_treatment_Y - mean_control_Y
+
+# Calculate means by group for the CUPED-adjusted metric Y_adj
+mean_control_Yadj <- mean(df$Y_adj[df$group == "control"])
+mean_treatment_Yadj <- mean(df$Y_adj[df$group == "treatment"])
+effect_Yadj <- mean_treatment_Yadj - mean_control_Yadj
+
+# Run two-sample t-tests for both metrics
+t_test_Y <- t.test(Y ~ group, data = df)
+t_test_Y_adj <- t.test(Y_adj ~ group, data = df)
+
+# Extract p-values
+p_val_Y <- t_test_Y$p.value
+p_val_Y_adj <- t_test_Y_adj$p.value
+
+# Print the results
+cat("Original Metric (Y):\n")
+cat("  Effect (Difference in Means):", effect_Y, "\n")
+cat("  p-value:", p_val_Y, "\n\n")
+
+cat("CUPED-Adjusted Metric (Y_adj):\n")
+cat("  Effect (Difference in Means):", effect_Yadj, "\n")
+cat("  p-value:", p_val_Y_adj, "\n")
+
+
+```
+
