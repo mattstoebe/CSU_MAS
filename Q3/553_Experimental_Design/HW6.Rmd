@@ -1,0 +1,236 @@
+---
+title: "STAA 553: HW6"
+author: "YOUR NAME HERE"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Retain this code chunk!!!
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+ 
+See Canvas Calendar for due date.  
+40 points total, 2 points per problem unless otherwise noted.  
+Content for all questions is from section 10 or earlier.  
+
+**Important Notes**:  
+- Remember to check `str()` and then define things `as.factor` where needed.  
+- A key feature of the balanced designs considered in this assignment are that the SE's are the same for all means and pairwise comparisons.
+
+# Cell Line Study (Q1 - Q11)
+
+DAEWR gives data (originally from Lew (2007)) from an experiment to determine whether cultured cells respond to two drugs. The study was conducted as a series of six experimental "runs" using a stable cell line plated onto Petri dishes.  Each experimental run included three Petri dishes: one treated with drug 1, one treated with drug 2, and one untreated serving as a control.  Hence, experiment (Exp) serves as a blocking variable.  The data is available from Canvas as “CellData.csv”.  
+**See important notes above!**
+
+## Q1
+
+Provide a visual summary of the data using code similar to what is provided.
+
+```{r, out.width = "70%"}
+library(tidyverse)
+#Q1
+#ggplot(aes(x = Drug, y = Response, group = Exp, color = Exp), data = CellData) + 
+#  geom_point() +
+#  geom_line()
+```
+
+# Cell Line RCB1 (Q2 - Q5)
+
+Analyze the data as an RCB design with **fixed blocks** using `lm()`.
+
+## Q2
+
+Show the Type 3 ANOVA table.
+
+*****
+```{r}
+#Q2
+
+```
+
+*****
+
+## Q3
+
+Using the ANOVA table from the previous question, briefly discuss the effectiveness of the blocking for this study.   
+
+*****
+Response
+
+*****
+
+## Q4
+
+Run Tukey adjusted pairwise comparisons for Drug and show the results.
+
+*****
+```{r}
+#Q4
+
+```
+
+*****
+
+## Q5
+
+Show the residual diagnostic plots (Resids vs Fitted and QQplot of Resids).
+
+```{r, out.width = "70%"}
+#Q5
+
+```
+
+# Cell Line RCB2 (Q6 - Q9)
+
+Analyze the data as an RCB design with **random blocks** using `lme4::lmer()`.
+
+## Q6 (4 pts)
+
+Provide estimates of the block variance and the residual variance. 
+
+*****
+$\sigma^2_{Block} = \sigma^2_{Exp} = XXXX$  
+$\sigma^2_{\epsilon} = \sigma^2_{Resid} = XXXX$  
+
+```{r}
+#Q6
+
+```
+
+*****
+
+## Q7
+
+Show the Type 3 ANOVA table.  Notes: (1) In the mixed model framework, we can use `anova()` to do this after loading the lmerTest and pbkrtest packages. (2) The F-test for Drug should exactly match your result from Q2.
+
+*****
+```{r}
+#Q7
+
+```
+
+*****
+
+## Q8
+
+Run Tukey adjusted pairwise comparisons for Drug and show the results. Note: These results should exactly match the pairwise comparisons from Q4.
+
+*****
+```{r}
+#Q8
+
+```
+
+*****
+
+## Q9
+
+Show the residual diagnostic plot (Resids vs Fitted).
+
+```{r, out.width = "70%"}
+#Q9
+
+```
+
+# Cell Line CRD (Q10-Q11)
+
+Just for illustration, analyze the data using a one-way model **ignoring blocks**.
+
+## Q10
+
+Show the ANOVA table.
+
+*****
+```{r}
+#Q10
+
+```
+*****
+
+## Q11
+
+Compare the ANOVA tables from the RCB model (Q2 or Q7) vs the one-way/CRD model (Q10).  Briefly explain why we were able to detect differences between Drugs using the RCB model, when we did not detect differences using the one-way/CRD model. Your answer should be based on *specific output*.  Hint: You may want to calculate MSResid.
+
+*****
+Response
+
+*****
+
+# Sleep Study (Q12 - Q16)
+
+DAEWR gives data (originally from le Riche and Csima (1964) from an experiment to evaluate 5 drug treatments (A, B, C, D, E) and their effect on sleep quality in elderly patients.  Higher values indicate better sleep quality. A latin square design was used to account for patient-to-patient and week-to-week differences.   The data is available from Canvas as "SleepData.csv".  A visual summary of the design (and results) is also available from Canvas.  
+**See important notes above!**
+
+## Q12 (4 pts)
+
+Fit an appropriate fixed effects model using `lm()`. Show the Type 3 ANOVA table. 
+
+*****
+```{r}
+#Q12
+
+```
+
+*****
+
+## Q13
+
+Using the ANOVA table from the previous question, briefly discuss the effectiveness of the latin square design for this study.  
+
+*****
+Response
+
+*****
+
+## Q14
+
+Run Tukey adjusted pairwise comparisons for Trt and show the results.
+
+*****
+```{r}
+#Q14
+
+```
+
+***** 
+
+### Q15
+
+Considering your results from the previous question, briefly summarize your findings.  
+
+## Q15A
+
+Discuss comparisons of active treatments (B, C, D, E) vs placebo (A) in context. 
+
+*****
+Response
+
+*****
+
+### Q15B
+
+Discuss comparisons between the active treatments (B, C, D, E) in context. 
+
+*****
+Response
+
+*****
+
+## Q16 (4 pts)
+
+Now re-analyze the data as a mixed model using `lme4::lmer()`. Use a model similar to Q12, but decide which terms should be included as fixed and random effects. Show the Type 3 ANOVA table.  Note: Due to balance, the F-test for Trt should exactly match your result from Q12.
+
+*****
+```{r}
+#Q16
+
+```
+*****
+
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
