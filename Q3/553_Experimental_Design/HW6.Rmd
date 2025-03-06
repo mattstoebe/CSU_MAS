@@ -32,9 +32,18 @@ Provide a visual summary of the data using code similar to what is provided.
 ```{r, out.width = "70%"}
 library(tidyverse)
 #Q1
-#ggplot(aes(x = Drug, y = Response, group = Exp, color = Exp), data = CellData) + 
-#  geom_point() +
-#  geom_line()
+
+CellData <- read.csv("CellData.csv", stringsAsFactors = FALSE)
+
+str(CellData)
+
+CellData$Exp <- as.factor(CellData$Exp)
+CellData$Drug <- as.factor(CellData$Drug)
+
+
+ggplot(aes(x = Drug, y = Response, group = Exp, color = Exp), data = CellData) + 
+  geom_point() +
+  geom_line()
 ```
 
 # Cell Line RCB1 (Q2 - Q5)
@@ -48,6 +57,11 @@ Show the Type 3 ANOVA table.
 *****
 ```{r}
 #Q2
+library(car)
+
+lm_fixed <- lm(Response ~ Drug + Exp, data = CellData)
+
+Anova(lm_fixed, type = 3)
 
 ```
 
@@ -59,6 +73,7 @@ Using the ANOVA table from the previous question, briefly discuss the effectiven
 
 *****
 Response
+There is significance at a .1 to the Experiment variable which indicates some significant changes between experiments. This can be controlled for as above but may not be entirely necessary as the significance level is only .1
 
 *****
 
@@ -69,7 +84,10 @@ Run Tukey adjusted pairwise comparisons for Drug and show the results.
 *****
 ```{r}
 #Q4
+library(emmeans)
 
+emmeans_fixed <- emmeans(lm_fixed, pairwise ~ Drug, adjust = "tukey")
+emmeans_fixed$contrasts
 ```
 
 *****
@@ -80,7 +98,17 @@ Show the residual diagnostic plots (Resids vs Fitted and QQplot of Resids).
 
 ```{r, out.width = "70%"}
 #Q5
+par(mfrow = c(1, 2))
 
+plot(lm_fixed$fitted.values, lm_fixed$residuals,
+     xlab = "Fitted Values", ylab = "Residuals",
+     main = "Residuals vs. Fitted (Fixed-Effects)",
+     pch = 19, col = "grey")
+abline(h = 0, lty = 2)
+
+qqnorm(lm_fixed$residuals, main = "Normal Q-Q Plot",
+       pch = 19, col = "grey")
+qqline(lm_fixed$residuals, col = "red")
 ```
 
 # Cell Line RCB2 (Q6 - Q9)
@@ -92,11 +120,22 @@ Analyze the data as an RCB design with **random blocks** using `lme4::lmer()`.
 Provide estimates of the block variance and the residual variance. 
 
 *****
-$\sigma^2_{Block} = \sigma^2_{Exp} = XXXX$  
-$\sigma^2_{\epsilon} = \sigma^2_{Resid} = XXXX$  
+$\sigma^2_{Block} = \sigma^2_{Exp} = 5811.846$  
+$\sigma^2_{\epsilon} = \sigma^2_{Resid} = 9402.388$  
 
 ```{r}
 #Q6
+library(lme4)
+lm_random <- lmer(Response ~ Drug + (1 | Exp), data = CellData)
+
+summary(lm_random)
+
+var_comp <- as.data.frame(VarCorr(lm_random))
+var_block <- var_comp[var_comp$grp == "Exp", "vcov"]
+var_resid <- attr(VarCorr(lm_random), "sc")^2
+
+cat("Estimated variance for blocks (Exp):", var_block, "\n")
+cat("Estimated residual variance:", var_resid, "\n")
 
 ```
 
@@ -109,6 +148,8 @@ Show the Type 3 ANOVA table.  Notes: (1) In the mixed model framework, we can us
 *****
 ```{r}
 #Q7
+library(lmerTest)
+anova(lm_random, type = 3)
 
 ```
 
@@ -121,7 +162,8 @@ Run Tukey adjusted pairwise comparisons for Drug and show the results. Note: The
 *****
 ```{r}
 #Q8
-
+emmeans_random <- emmeans(lm_random, pairwise ~ Drug, adjust = "tukey")
+emmeans_random$contrasts
 ```
 
 *****
@@ -132,7 +174,11 @@ Show the residual diagnostic plot (Resids vs Fitted).
 
 ```{r, out.width = "70%"}
 #Q9
-
+plot(fitted(lm_random), residuals(lm_random),
+     xlab = "Fitted Values", ylab = "Residuals",
+     main = "Residuals vs. Fitted",
+     pch = 19, col = "grey")
+abline(h = 0, lty = 2)
 ```
 
 # Cell Line CRD (Q10-Q11)
@@ -146,7 +192,8 @@ Show the ANOVA table.
 *****
 ```{r}
 #Q10
-
+lm_crd <- lm(Response ~ Drug, data = CellData)
+Anova(lm_crd, type = 3)
 ```
 *****
 
@@ -156,6 +203,7 @@ Compare the ANOVA tables from the RCB model (Q2 or Q7) vs the one-way/CRD model 
 
 *****
 Response
+the RCB model detects a greater effect with a higher F value and lower residuals than the one-way CRD model. this is largely because the block to block variability which is controleld in questions 2 and 7 is pooled into the error term of question 10
 
 *****
 
@@ -171,6 +219,16 @@ Fit an appropriate fixed effects model using `lm()`. Show the Type 3 ANOVA table
 *****
 ```{r}
 #Q12
+SleepData <- read.csv("SleepData.csv", stringsAsFactors = FALSE)
+
+str(SleepData)
+SleepData$Patient <- as.factor(SleepData$Patient)
+SleepData$Week <- as.factor(SleepData$Week)
+SleepData$Trt <- as.factor(SleepData$Trt)
+
+lm_sleep_fixed <- lm(Sleep ~ Trt + Patient + Week, data = SleepData)
+
+Anova(lm_sleep_fixed, type = 3)
 
 ```
 
@@ -182,6 +240,7 @@ Using the ANOVA table from the previous question, briefly discuss the effectiven
 
 *****
 Response
+This design appears effective as we see great signifficance on the treatement variable. There is some significance on Patient and little on the week. We may consider removing week, but the results of the analysis are positive enough that I think we can move forward with this latin square design.
 
 *****
 
@@ -192,7 +251,8 @@ Run Tukey adjusted pairwise comparisons for Trt and show the results.
 *****
 ```{r}
 #Q14
-
+emmeans_sleep <- emmeans(lm_sleep_fixed, pairwise ~ Trt, adjust = "tukey")
+emmeans_sleep$contrasts
 ```
 
 ***** 
@@ -207,6 +267,7 @@ Discuss comparisons of active treatments (B, C, D, E) vs placebo (A) in context.
 
 *****
 Response
+It appears that  all of the treatments are signifficantly different than placebo, but do not differ as much amongst themselves.
 
 *****
 
@@ -216,6 +277,7 @@ Discuss comparisons between the active treatments (B, C, D, E) in context.
 
 *****
 Response
+There is no evidence that the treatments are different from eachother. Only that they are different from placebo.
 
 *****
 
@@ -226,7 +288,9 @@ Now re-analyze the data as a mixed model using `lme4::lmer()`. Use a model simil
 *****
 ```{r}
 #Q16
+lm_sleep_mixed <- lmer(Sleep ~ Trt + (1 | Patient) + (1 | Week), data = SleepData)
 
+anova(lm_sleep_mixed, type = 3)
 ```
 *****
 
