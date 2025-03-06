@@ -59,6 +59,9 @@ no output needed
     
 ```{r prob1b, include = T}
 #prob 1b
+library(tree)
+oj_tree <- tree(Purchase ~ ., data = OJtrain)
+summary(oj_tree)
 
 ```
 
@@ -72,6 +75,8 @@ insert answer
 
 ```{r prob1c, fig.height = 5}
 #problem 1c
+plot(oj_tree)
+text(oj_tree, pretty = 0)
 
 ```
 
@@ -85,25 +90,41 @@ insert answer
    
 ```{r prob1d}
 #problem 1d
+oj_pred <- predict(oj_tree, newdata = OJtest, type = "class")
+conf_mat <- table(OJtest$Purchase, oj_pred)
+
+test_error_rate_unpruned <- (conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+
+conf_mat
+test_error_rate_unpruned
 
 ```
 
 \hstart
 
-Test error is (insert answer)
+Test error is .2
 
 \hstop
 
 # Problem 1e 
 
 ```{r prob1e}
-# problem 1e
+
+set.seed(577)
+cv_oj <- cv.tree(oj_tree, FUN = prune.misclass)
+plot(cv_oj$size, cv_oj$dev, type = "b", 
+     xlab = "Tree Size (Number of Terminal Nodes)", 
+     ylab = "CV Error Rate", 
+     main = "CV Error Rate vs. Tree Size")
+optimal_size <- cv_oj$size[which.min(cv_oj$dev)]
+optimal_size
+
 
 ```
 
 \hstart
 
-insert answer
+tree size 2 has the lowest error rate
 
 \hstop
 
@@ -111,11 +132,11 @@ insert answer
     
 ```{r probf}
 #problem f
+pruned_oj <- prune.misclass(oj_tree, best = optimal_size)
 
 ```
 
 \hstart
-
 no output is needed
 
 \hstop
@@ -125,13 +146,21 @@ no output is needed
 
 ```{r prob1g}
 # prob1g
+train_pred_unpruned <- predict(oj_tree, newdata = OJtrain, type = "class")
+conf_mat_train_unpruned <- table(OJtrain$Purchase, train_pred_unpruned)
+train_error_unpruned <- (conf_mat_train_unpruned[1,2] + conf_mat_train_unpruned[2,1]) / sum(conf_mat_train_unpruned)
+cat("Training Error Rate (Unpruned Tree):", round(train_error_unpruned, 4), "\n")
 
+train_pred_pruned <- predict(pruned_oj, newdata = OJtrain, type = "class")
+conf_mat_train_pruned <- table(OJtrain$Purchase, train_pred_pruned)
+train_error_pruned <- (conf_mat_train_pruned[1,2] + conf_mat_train_pruned[2,1]) / sum(conf_mat_train_pruned)
+cat("Training Error Rate (Pruned Tree):", round(train_error_pruned, 4), "\n")
 ```
 
 \hstart
 
-- Training error for full tree: (insert answer)
-- Training error for pruned tree: (insert answer)
+- Training error for full tree: .1638
+- Training error for pruned tree: .1762
 
 \hstop
  
@@ -140,13 +169,19 @@ no output is needed
 
 ```{r prob1h}
 #prob1h
+test_pred_pruned <- predict(pruned_oj, newdata = OJtest, type = "class")
+conf_mat_test_pruned <- table(OJtest$Purchase, test_pred_pruned)
+test_error_pruned <- (conf_mat_test_pruned[1,2] + conf_mat_test_pruned[2,1]) / sum(conf_mat_test_pruned)
+round(test_error_pruned, 4)
+
+test_error_rate_unpruned
 
 ```
     
 \hstart
 
-- Test error for full tree: (insert answer)
-- Test error for pruned tree: (insert answer)
+- Test error for full tree: .2
+- Test error for pruned tree: .2333
 
 \hstop
 
@@ -154,6 +189,9 @@ no output is needed
     
 ```{r prob2a}
 #prob 2a
+Hitters <- Hitters[complete.cases(Hitters), ]
+Hitters$lsalary <- log(Hitters$Salary)
+Hitters <- Hitters[ , !(names(Hitters) %in% "Salary")]
 
 ```
 
@@ -183,26 +221,58 @@ no output to report
     
 ```{r prob2c}
 #prob 2c
-lambda_seq <- seq(.005, 0.10, length.out = 20)
+lambda_seq <- seq(0.005, 0.10, length.out = 20)
+train_mse <- numeric(length(lambda_seq))
+test_mse <- numeric(length(lambda_seq))
+
+for (i in 1:length(lambda_seq)) {
+  boost_mod <- gbm(lsalary ~ ., data = Htrain, distribution = "gaussian",
+                   n.trees = 1000, shrinkage = lambda_seq[i], verbose = FALSE)
+  train_pred <- predict(boost_mod, newdata = Htrain, n.trees = 1000)
+  test_pred <- predict(boost_mod, newdata = Htest, n.trees = 1000)
+  train_mse[i] <- mean((Htrain$lsalary - train_pred)^2)
+  test_mse[i] <- mean((Htest$lsalary - test_pred)^2)
+}
+
+# Plot training MSE vs. lambda
+df_train <- data.frame(lambda = lambda_seq, MSE = train_mse)
+
+ggplot(df_train, aes(x = lambda, y = MSE)) +
+  geom_line() +
+  labs(title = "Training MSE vs. Shrinkage",
+       x = "Shrinkage",
+       y = "Training MSE")
+
 ```
 
 # Problem 2d 
 
 ```{r prob2d}
 #prob 2d
+df_test <- data.frame(lambda = lambda_seq, MSE = test_mse)
+ggplot(df_test, aes(x = lambda, y = MSE)) +
+  geom_line() +
+  labs(title = "Test MSE vs. Shrinkage",
+       x = "Shrinkage",
+       y = "Test MSE")
 
+# Identify and print the lambda value that minimizes the test MSE
+optimal_lambda <- lambda_seq[which.min(test_mse)]
+cat("\nOptimal lambda:", optimal_lambda, "\n")
 ```
 
 # Problem 2e 
     
 ```{r prob2e}
 #problem 2e
-
+boost_mod_final <- gbm(lsalary ~ ., data = Htrain, distribution = "gaussian",
+                       n.trees = 1000, shrinkage = optimal_lambda, verbose = FALSE)
+print(summary(boost_mod_final))
 ```
     
 \hstart
 
-insert answer
+C At Bat, hits and Walks seem to be the top 3. Generally anything related to getting on base is important to salary which makes sense. 
 
 \hstop
 
@@ -212,12 +282,16 @@ insert answer
 ```{r prob2f, cache = TRUE}
 #prob 2f
 set.seed(577)
-
+bag_mod <- randomForest(lsalary ~ ., data = Htrain, 
+                        mtry = ncol(Htrain) - 1, ntree = 500)
+bag_pred <- predict(bag_mod, newdata = Htest)
+bag_test_mse <- mean((Htest$lsalary - bag_pred)^2)
+cat("Test MSE for Bagging:", round(bag_test_mse, 4), "\n")
 ```
 
 \hstart
 
-- test MSE is (insert answer)
+- test MSE is .1879
 
 \hstop
 
@@ -226,12 +300,15 @@ set.seed(577)
 ```{r prob2g, cache = TRUE}
 # problem 2g
 set.seed(577)
-
+rf_mod <- randomForest(lsalary ~ ., data = Htrain, ntree = 500)
+rf_pred <- predict(rf_mod, newdata = Htest)
+rf_test_mse <- mean((Htest$lsalary - rf_pred)^2)
+cat("Test MSE for Random Forest:", round(rf_test_mse, 4), "\n")
 ```
 
 \hstart
 
-- test MSE is (insert answer)
+- test MSE is .1953
 
 \hstop
 
@@ -240,10 +317,45 @@ set.seed(577)
 ```{r prop3, cache = TRUE}
 # problem 3
 
+set.seed(577)
+library(MASS)
+
+n_boston <- nrow(Boston)
+train_index <- sample(seq_len(n_boston), size = round(0.7 * n_boston), replace = FALSE)
+BostonTrain <- Boston[train_index, ]
+BostonTest  <- Boston[-train_index, ]
+
+#Linear
+lm_mod <- lm(medv ~ ., data = BostonTrain)
+lm_pred <- predict(lm_mod, newdata = BostonTest)
+lm_test_mse <- mean((BostonTest$medv - lm_pred)^2)
+cat("\nTest MSE for Linear Regression:", round(lm_test_mse, 4), "\n")
+
+# Boosting
+boost_boston <- gbm(medv ~ ., data = BostonTrain, distribution = "gaussian",
+                    n.trees = 1000, shrinkage = 0.01, verbose = FALSE)
+boost_pred <- predict(boost_boston, newdata = BostonTest, n.trees = 1000)
+boost_test_mse <- mean((BostonTest$medv - boost_pred)^2)
+cat("Test MSE for Boosting:", round(boost_test_mse, 4), "\n")
+
+#Baggin
+bag_boston <- randomForest(medv ~ ., data = BostonTrain, 
+                           mtry = ncol(BostonTrain) - 1, ntree = 500)
+bag_pred_boston <- predict(bag_boston, newdata = BostonTest)
+bag_test_mse_boston <- mean((BostonTest$medv - bag_pred_boston)^2)
+cat("Test MSE for Bagging:", round(bag_test_mse_boston, 4), "\n")
+
+# Random Forrest
+rf_boston <- randomForest(medv ~ ., data = BostonTrain, ntree = 500)
+rf_pred_boston <- predict(rf_boston, newdata = BostonTest)
+rf_test_mse_boston <- mean((BostonTest$medv - rf_pred_boston)^2)
+cat("Test MSE for Random Forest:", round(rf_test_mse_boston, 4), "\n")
+
+
 ```
 \hstart
 
-insert answer
+Bagging is the most effective in this case with a MSE of 9.6815
 
 \hstop
 
@@ -259,12 +371,23 @@ insert answer
     
 ```{r prob5, cache = TRUE}
 # problem 5
-vekt <- c(0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, 0.75)
+p <- c(0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, 0.75)
+
+num_red <- sum(p > 0.5)
+majority_vote <- ifelse(num_red > length(p) / 2, "Red", "Green")
+
+cat("Majority vote classification =", majority_vote, "\n")
+
+p_avg <- mean(p)
+avg_prob_class <- ifelse(p_avg > 0.5, "Red", "Green")
+
+cat("Average probability classification =", avg_prob_class, "\n")
+
 ```
 
 \hstart
 
-- Comment on the results (one sentence is enough).
+if we use majroity voting its red but average probability is green. 
 
 \hstop
 
