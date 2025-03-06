@@ -1,0 +1,277 @@
+---
+title: "STAA 577: HW7"
+author: "Your Name"
+output: pdf_document
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4, fig.height = 4, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+
+```{r load_packages}
+library(tidyverse) # data manip
+library(ISLR) # data
+library(GGally) # pairs plots
+library(gam) # gam models
+library(leaps) # regression subsets
+library(tree) # trees
+library(randomForest) # random forest
+library(gbm) # boosting
+library(glmnet) # lasso
+library(ISLR)
+```
+
+# Problem 1
+
+```{r OJ_train_test, echo = T}
+data(OJ)
+set.seed(577)
+n <- nrow(OJ)
+tr_index <- sample(seq_len(n), size = 800, replace = F)
+OJtrain <- OJ[tr_index, ]
+OJtest <- OJ[-tr_index, ]
+```
+
+\hstart
+
+no output needed
+
+\hstop
+
+# Problem 1b
+    
+```{r prob1b, include = T}
+#prob 1b
+
+```
+
+\hstart
+
+insert answer
+
+\hstop
+  
+# Problem 1c
+
+```{r prob1c, fig.height = 5}
+#problem 1c
+
+```
+
+\hstart
+    
+insert answer
+
+\hstop
+    
+# Problem 1d
+   
+```{r prob1d}
+#problem 1d
+
+```
+
+\hstart
+
+Test error is (insert answer)
+
+\hstop
+
+# Problem 1e 
+
+```{r prob1e}
+# problem 1e
+
+```
+
+\hstart
+
+insert answer
+
+\hstop
+
+# Problem 1f 
+    
+```{r probf}
+#problem f
+
+```
+
+\hstart
+
+no output is needed
+
+\hstop
+    
+    
+## Problem 1g 
+
+```{r prob1g}
+# prob1g
+
+```
+
+\hstart
+
+- Training error for full tree: (insert answer)
+- Training error for pruned tree: (insert answer)
+
+\hstop
+ 
+## Problem 1h 
+
+
+```{r prob1h}
+#prob1h
+
+```
+    
+\hstart
+
+- Test error for full tree: (insert answer)
+- Test error for pruned tree: (insert answer)
+
+\hstop
+
+# Problem 2a 
+    
+```{r prob2a}
+#prob 2a
+
+```
+
+\hstart
+
+Nothing to report
+
+\hstop
+
+# Problem 2b 
+    
+```{r prob2b}
+set.seed(577)
+n <- nrow(Hitters)
+tr_index <- sample(seq_len(n), size = 200, replace = F)
+Htrain <- Hitters[tr_index, ]
+Htest <- Hitters[-tr_index, ]
+```
+
+\hstart
+
+no output to report
+
+\hstop
+
+# Problem 2c
+    
+```{r prob2c}
+#prob 2c
+lambda_seq <- seq(.005, 0.10, length.out = 20)
+```
+
+# Problem 2d 
+
+```{r prob2d}
+#prob 2d
+
+```
+
+# Problem 2e 
+    
+```{r prob2e}
+#problem 2e
+
+```
+    
+\hstart
+
+insert answer
+
+\hstop
+
+# Problem 2f 
+
+    
+```{r prob2f, cache = TRUE}
+#prob 2f
+set.seed(577)
+
+```
+
+\hstart
+
+- test MSE is (insert answer)
+
+\hstop
+
+# Problem 2g
+    
+```{r prob2g, cache = TRUE}
+# problem 2g
+set.seed(577)
+
+```
+
+\hstart
+
+- test MSE is (insert answer)
+
+\hstop
+
+# Problem 3
+
+```{r prop3, cache = TRUE}
+# problem 3
+
+```
+\hstart
+
+insert answer
+
+\hstop
+
+# Problem 4
+
+\hstart
+
+- Include both sketches. You can draw it with R (not easy) or just draw the sketch by hand.
+
+\hstop
+
+# Problem 5
+    
+```{r prob5, cache = TRUE}
+# problem 5
+vekt <- c(0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, 0.75)
+```
+
+\hstart
+
+- Comment on the results (one sentence is enough).
+
+\hstop
+
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+
