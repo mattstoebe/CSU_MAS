@@ -1,0 +1,8 @@
+
+model {
+  for(i in 1:N){
+    y[i] ~ dnorm(mu, 1)
+  }
+  mu ~ dnorm(mu0, tau0_prec)
+}
+

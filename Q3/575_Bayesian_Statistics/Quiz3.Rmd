@@ -1,0 +1,135 @@
+---
+title: "Quiz3"
+author: "Matthew Stoebe"
+date: "2025-03-07"
+output: pdf_document
+---
+
+```{r}
+
+
+y <- c(1.64,1.70,1.72,1.74,1.82,1.82,1.82,1.90,2.08)
+n <- length(y)
+
+mu0   <- 1.9
+tau0  <- 0.95
+
+precision0 <- 1 / (tau0^2)
+precision  <- precision0 + n  # because sigma^2=1 => n / sigma^2 = n
+tau_n2     <- 1 / precision
+tau_n      <- sqrt(tau_n2)
+mu_n       <- (mu0*precision0 + sum(y)) / precision
+
+set.seed(123)
+S <- 1000
+mu_samples <- rnorm(S, mean=mu_n, sd=tau_n)
+
+plot(mu_samples, type="l", main="Trace Plot of Posterior Samples", xlab="Index", ylab=expression(mu))
+
+library(coda)
+ess <- effectiveSize(mu_samples)
+
+
+hist(mu_samples, breaks=20, probability=TRUE,
+     main="Histogram of Posterior Samples", xlab=expression(mu))
+
+mean_est  <- mean(mu_samples)
+ci_95     <- quantile(mu_samples, probs=c(0.025, 0.975))
+
+cat("\n Ess:", ess)
+cat("\n mean:",mean_est)
+cat("\n CI:", ci_95)
+
+```
+
+
+```{r}
+
+library(rjags)
+
+# 1) JAGS model with Normal prior
+model_string <- "
+model {
+  for(i in 1:N){
+    y[i] ~ dnorm(mu, 1)
+  }
+  mu ~ dnorm(mu0, tau0_prec)
+}
+"
+
+writeLines(model_string, con="model1.txt")
+
+dataList  <- list(y = y, N = n,
+                  mu0 = mu0,
+                  tau0_prec = 1/(tau0^2))   # JAGS uses 'precision' = 1/variance
+
+initsList <- list(mu = 1.7)
+
+jagsModel <- jags.model("model1.txt", data=dataList, inits=initsList, n.chains=1)
+update(jagsModel, 500) 
+
+postSamples <- coda.samples(jagsModel, variable.names="mu", n.iter=1000)
+mu_jags <- as.numeric(postSamples[[1]])
+
+plot(mu_jags, type="l", main="Trace Plot (RJAGS)", ylab="mu")
+ess_jags <- effectiveSize(mu_jags)
+hist(mu_jags, breaks=20, probability=TRUE, main="Histogram of Posterior (RJAGS)")
+
+mean_jags <- mean(mu_jags)
+ci95_jags <- quantile(mu_jags, c(0.025, 0.975))
+
+cat("\n Ess:", ess_jags)
+cat("\n mean:",mean_jags)
+cat("\n CI:", ci95_jags)
+
+```
+
+#Question 2
+
+
+
+```{r}
+
+
+library(rjags)
+
+model_string2 <- "
+model {
+  for(i in 1:N){
+    y[i] ~ dnorm(mu, 1)  # precision=1 => variance=1
+  }
+  mu ~ dunif(1.6, 2.2)
+}
+"
+
+writeLines(model_string2, con="model2.txt")
+
+y <- c(1.64,1.70,1.72,1.74,1.82,1.82,1.82,1.90,2.08)
+dataList2 <- list(y = y, N = length(y))
+
+initsList2 <- list(mu = 1.8)
+
+jagsModel2 <- jags.model("model2.txt", data=dataList2, inits=initsList2, n.chains=1)
+update(jagsModel2, 500)
+
+S <- 1000
+postSamples2 <- coda.samples(jagsModel2, variable.names="mu", n.iter=S)
+mu_jags2 <- as.numeric(postSamples2[[1]])
+
+plot(mu_jags2, type="l", main="Trace Plot (Uniform Prior)", ylab="mu")
+
+ess2 <- effectiveSize(mu_jags2)
+cat("\n Ess:", ess2)
+
+hist(mu_jags2, breaks=20, probability=TRUE,
+     main="Histogram: Posterior p(mu|y), Uniform Prior",
+     xlab="mu")
+
+mean_jags2 <- mean(mu_jags2)
+cat("\n mean",mean_jags2)
+
+ci95_jags2 <- quantile(mu_jags2, c(0.025, 0.975))
+cat("\nCI:", ci95_jags2)
+
+```
+

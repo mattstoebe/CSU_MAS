@@ -1,0 +1,8 @@
+
+model {
+  for(i in 1:N){
+    y[i] ~ dnorm(mu, 1)  # precision=1 => variance=1
+  }
+  mu ~ dunif(1.6, 2.2)
+}
+
