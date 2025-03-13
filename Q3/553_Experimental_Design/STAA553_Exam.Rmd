@@ -44,6 +44,7 @@ Discuss how **replication** would be incorporated into the design. In other word
 
 *****
 Response 
+Replication is incorporated by measuring yield on multiple units for each treatment group. Multiple replicates helps us have higher confidence in the finidngs of our study, and allows us to get a better estimation of variability
 
 *****
 
@@ -53,6 +54,7 @@ Discuss how **randomization** would be incorporated into the design.
 
 *****
 Response
+Randomization will be handled in how the treatemnts are assigned to the bushes. In this case we would want each randomization unit (probably going to be bushes) to have an equal probability of being assigned each treatment. 
 
 *****
 
@@ -63,6 +65,7 @@ Blocking is one approach that can be used to **reduce noise**.  Provide a brief 
 
 *****
 Response
+In this case, I may consider blockign by field as growing conditions in each field are likely to be similar. We can randomly assign treatments to each bush in the block. this should help us reduce variability caused by cross -field differences.
 
 *****
 
@@ -72,6 +75,7 @@ Propose one other approach that can be used to **reduce noise**.  Since you alre
 
 *****
 Response  
+We can control for Covariates in our model instead of just relying on blocking. For example, the question talks about soil nitrogen levels. This could be included as a predictor in our model and will account for some variability cause by it. This does not have to be in exclusion of blockign but could be done together with it. 
 
 *****
 
@@ -81,10 +85,16 @@ Response
 Regardless of your answers to previous question, suppose the investigators plan to use a completely randomized design. They conjecture that $\mu_1$ = 32, $\mu_2$ = 34, $\mu_3$ = 40 and $\sigma$ = 8. Find the sample size required (number of blueberry bushes per treatment) to achieve 80\% power. Remember to state your answer as an integer value.
 
 *****
-n = 
+n = 19
 
 ```{r}
 #Q4
+library(pwr)
+grandMean <- (32+34+40)/3
+ssBetweenMeans <- (32 - grandMean)^2 + (34 - grandMean)^2 + (40 - grandMean)^2
+f <- sqrt( ( ssBetweenMeans / 3 ) / (8^2) )
+
+pwr.anova.test(k=3, f=f, sig.level=0.05, power=0.80)
 
 ```
 *****
@@ -99,18 +109,14 @@ Identify the values for t (# treatments), r (# replicates per treatment), b (# b
 
 *****
 
-t =    
+t = 6 treatments
 
-r =     
+b = 18 blocks
 
-b =    
+k = 4 defects
 
-k =    
-
-```{r}
-#Q5
-
-```
+4*18 = 72 total treatment blocks. divided by 6 treatments = 12 replicates for each treatment
+r = 12:
 
 *****
 
@@ -120,17 +126,25 @@ k =
 Note: Even if there are mistakes in your responses to Q5, I am very open to giving partial credit as long as you show your work here.  
 
 *****
-Condition1:      
+Condition1: each treatment should appear 12 times in total
 
-Condition2: 
+Condition2: each block has 4 distinct trreatments
 
-Condition3:   
+Condition3: each pair of distinct treatments occur together the right number of blocks: 7.2
 
 Is a BIBD possible?    
+7.2 is not an integer so it is not entirely possible. 
 
 ```{r}
 #Q6
+t <- 6
+b <- 18
+k <- 4
+r <-12
 
+cond3 <- r*(k-1)/(t-1)
+
+cond3
 ```
 
 *****
@@ -145,6 +159,7 @@ If the design is imbalanced, how does this affect the **analysis**? In other wor
 
 *****
 Response
+Yes we would have to adjust our analysis probalby using some mixed-modeling or a glm that can handle unbalanced data. The form should be similar, but not as straight forward as if the design were balanced.
 
 *****
 
@@ -154,7 +169,7 @@ If the design is imbalanced, how does this affect the results? In other words, w
 
 *****
 Response
-
+The main difference if BIBD is lost is that the variances between treatments are not equal. This means we have varying confidence in our analysis for each parameter.
 *****
 
 ### Q8 
@@ -167,6 +182,7 @@ Discuss the primary **benefit** of using Tukey's method (as compared to unadjust
 
 *****
 Response
+The tukey method controlls overall error rate instead of individual measurement error rate. This is important because as you do more experiments, it is likely that the .05 level of confidencw ends up failing eventualy. 
 
 *****
 
@@ -176,6 +192,7 @@ Discuss the primary **limitation** of using Tukey's method (as compared to unadj
 
 *****
 Response
+Tukey is super conservative and as such makes it harder ti find small incremental improvements without larger sample sizes (effectively reducing power)
 
 *****
 
@@ -202,6 +219,7 @@ Identify the ("blocking") design.  Just provide the name of the design, no need 
 
 *****
 Response   
+This seems like a fun time to use a latin-square design
 
 *****
 
@@ -211,6 +229,9 @@ Considering your answer to the previous question, provide R code to fit an appro
 
 *****
 Response
+
+lm(PostBP ~ Subject + Period + Formulation, data=drugData)
+
 
 *****
 
@@ -224,15 +245,19 @@ Suggest one way to incorporate this information into the analysis.
 
 *****
 Response 
+This could be included as a covariate and be used to adjust for each individuals baseline
 
 *****
 
-### Q11A (2 pts)
+### Q11B (2 pts)
 
 Modify your code from Q10 to incorporate your suggestion.
 
 *****
 Response  
+
+lm(PostBP ~ Subject + Period + Formulation + PreBP, data=drugData)
+
 
 *****
 
@@ -253,9 +278,9 @@ Briefly identify the blocking and treatment design for this study. Include ident
 
 *****
 
-Blocking Design:  
+Blocking Design: We can use each tree as a block and then use multiple branches as the replicates for each tree 
 
-Treatment Design:  
+Treatment Design: Randomly assign treatment to each of two branches on each tree
 
 *****
 
@@ -265,6 +290,7 @@ The Type 3 ANOVA table is shown above. Would the Type 1 ANOVA SS and F-tests hav
 
 *****
 Response
+different
 
 *****
 
@@ -274,6 +300,7 @@ The analyst made a mistake when setting up the model. Identify the mistake. Note
 
 *****
 Response
+df equals 1 for tree but we know there are 5 trees so it should equal 4.
 
 *****
 
@@ -283,6 +310,7 @@ After addressing the mistake from Q14, a colleague expresses concern that the as
 
 *****
 Response  
+this is true. the views are non independant. this is addressed however with the blocking effect of tree. If there are further concerns about correlated errors we could consdier some sort of mixed modeling
 
 *****
 
@@ -292,6 +320,7 @@ After addressing the mistake from Q14, could an interaction (Tree:Trt) have been
 
 *****
 Response
+Sure, but we would only want to do this if we really belive the treatment beahves differently for each tree. We should not just include interactions willy nilly to see what they do. 
 
 *****
 
@@ -304,9 +333,9 @@ A study was done to investigate a new vitamin supplement for cattle.  A successf
 Briefly identify the blocking and treatment design for this study. Include identifying details about the blocks (if applicable) and treatments.  
 
 *****
-Blocking Design:   
+Blocking Design: there is no explicit blocking as treatments are assigned at the penn level. 
 
-Treatment Design:    
+Treatment Design: treatments are randomly assigned at the penn level. with 8 treatments and 24 pens each treatment will get 3 replciates.
 
 *****
 
@@ -317,7 +346,9 @@ Fit an appropriate model and show an appropriate ANOVA table in your exam.
 *****
 ```{r}
 #Q18
-
+feedData <- read.csv("FeedTrial.csv")
+FeedModel <- lm(ADG ~ Suppl * Feed, data=feedData)
+anova(FeedModel)
 ```
 
 *****
@@ -329,7 +360,11 @@ Create an appropriate summary plot of the data.
 *****
 ```{r, out.width = "70%"}
 #Q19
+library(ggplot2)
 
+ggplot(feedData, aes(x=Feed, y=ADG, group=Suppl, shape=Suppl)) +
+  stat_summary(fun=mean, geom="point") +
+  stat_summary(fun=mean, geom="line")
 ```
 
 *****
@@ -341,8 +376,10 @@ Provide two (common) diagnostic plots. Briefly discuss each plot and whether ass
 *****
 Response
 
+For Plot 1. Residuals vs fitted i dont see any concerns of inequal or growing variance. For plot 2, Q-Q residulas, the data stays very close t line of normality. In both cases, requirements appear to be met.
 ```{r}
 #Q20
+plot(FeedModel)
 
 ```
 
@@ -356,9 +393,14 @@ Considering the primary research question and your ANOVA table, provide appropri
 
 ```{r}
 #Q21
+library(emmeans)
+
+
+emm <- emmeans(FeedModel, ~ Suppl)
+pairs(emm, adjust="tukey")
 
 ```
-
+#We could also look at by level by feed
 *****
 
 ## Q22
@@ -367,6 +409,7 @@ Briefly summarize your conclusions from the previous question, being sure to add
 
 *****
 Response 
+Cattle receiving the supplement had, on average, higher ADG compared to those not receiving the supplement. The exact change had some variance across feed types, but was generally positive for subjects who recieved the supplement.
 
 *****
 
@@ -374,18 +417,24 @@ Response
 
 Just for this question, consider the output from code like the following:
 
-```{r, include = FALSE}
+```{r}
 #Q23
-#emmeans(FeedModel, pairwise ~ Suppl)
-#emmeans(FeedModel, pairwise ~ Feed)
+a <- emmeans(FeedModel, pairwise ~ Suppl)
+
+b<- emmeans(FeedModel, pairwise ~ Feed)
+
+a
+
+b
+
 ```
 
 Specifically, consider the contrasts “no – yes” vs “B – C”. Surprisingly, the magnitude of the estimated difference is larger for “B-C” but the p-value is also larger for “B-C”. This indicates lower power despite the larger magnitude difference. Give **two different** reasons why this happened. Note: You do not need show the output, just discuss the result
 
 *****
-Reason 1:  
+Reason 1: This could be because of different variability between groups
 
-Reason 2:    
+Reason 2: It could also be because of something we didnt consider like a correlation structure between the treatments.
 
 *****
 
