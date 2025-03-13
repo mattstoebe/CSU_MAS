@@ -12,7 +12,7 @@ knitr::opts_chunk$set(message = FALSE)
 ```
 
 **Honor Pledge:** I have worked independently on this exam. I have read the exam instructions. I have not given, received, or used any unauthorized assistance on this exam.   
-**YOUR NAME HERE**
+**Matthew Stoebe**
 
 **Instructions:** 
 
