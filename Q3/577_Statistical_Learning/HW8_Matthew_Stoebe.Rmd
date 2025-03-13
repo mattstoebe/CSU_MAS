@@ -1,6 +1,6 @@
 ---
 title: "STAA 577: HW8"
-author: "Your Name"
+author: "Matthew Stoebe"
 output: pdf_document
 header-includes:
   - \usepackage{xcolor}
