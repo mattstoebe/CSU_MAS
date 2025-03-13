@@ -1,0 +1,338 @@
+---
+title: "STAA 577: HW8"
+author: "Your Name"
+output: pdf_document
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{framed}
+---
+
+<!-- STUDENTS: change the "title" and "author" listed above
+DO NOT EDIT THE SECTION BELOW -->
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+#install the tidyverse library (do this once)
+#install.packages("tidyverse")
+library(tidyverse)
+#set chunk and figure default options
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 4.5, fig.height = 3, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{orange!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+<!-- STUDENTS: DO NOT EDIT THE SECTION ABOVE 
+start here, insert homework below -->
+
+```{r}
+library(tidyverse) # data manip
+library(ISLR) # data
+library(GGally) # pairs plots
+library(e1071) #svm
+```
+
+# Problem 1a
+
+```{r prob1a}
+set.seed(577)
+n <- 500
+
+# simulate x's
+x1 <- runif(n) - 0.5
+x2 <- runif(n) - 0.5
+
+# simulate deterministic y
+y <- as.numeric(x1^2 - x2^2 > 0)
+
+# add some randomness so that y is not deterministic
+x1 <- x1 + runif(n, min = 0, max = 0.2)
+
+# put results into a data frame
+mydf <- data.frame(x1, x2, y)
+```
+
+# Problem 1b 
+
+```{r prob1b}
+# Problem 1b
+library(ggplot2)
+ggplot(mydf, aes(x = x1, y = x2, color = as.factor(y))) +
+  geom_point() +
+  labs(color = "Observed Y")
+
+```
+
+# Problem 1c 
+
+```{r prob1c}
+#Problem 1c
+glmOut <- glm(y ~ x1 + x2, family = "binomial", data = mydf)
+
+```
+
+# Problem 1d
+
+```{r prob1d, eval=F}
+#Problem 1d
+xgrid <- expand.grid(x1 = seq(-0.7, 0.7, length.out = 300),
+                     x2 = seq(-0.7, 0.7, length.out = 300))
+
+yhat_grid <- predict(glmOut, newdata = xgrid, type = "response")
+yhat_grid <- (yhat_grid > 0.5)*1
+
+xgrid$yhat <- yhat_grid
+
+gfig <- ggplot() + 
+  geom_tile(aes(x = x1, y = x2, fill = as.factor(yhat)),
+            data = xgrid, alpha = .5) + 
+  geom_point(aes(x = x1, y = x2, col = as.factor(y)), data = mydf) + 
+  labs(fill = "Predicted Y") + 
+  labs(col = "Observed Y")
+
+gfig
+```
+The decision boundary is like the two mountains kissing.
+
+# Problem 1e 
+
+```{r prob1e}
+#Problem 1e
+glmOut <- glm(y ~ poly(x1, 2) + poly(x2, 2), family = "binomial", data = mydf)
+```
+
+# Problem 1f 
+
+```{r prob1f}
+#Problem 1f
+
+xgrid <- expand.grid(x1 = seq(-0.7, 0.7, length.out = 300),
+                     x2 = seq(-0.7, 0.7, length.out = 300))
+
+yhat_grid <- predict(glmOut, newdata = xgrid, type = "response")
+xgrid$yhat <- as.numeric(yhat_grid > 0.5)
+
+ggplot() +
+  geom_tile(aes(x = x1, y = x2, fill = as.factor(yhat)),
+            data = xgrid, alpha = 0.5) +
+  geom_point(aes(x = x1, y = x2, color = as.factor(y)),
+             data = mydf) +
+  labs(fill = "Predicted Y", color = "Observed Y")
+
+```
+
+# Problem 1g
+
+```{r prob1g}
+library(ggplot2)
+svmOut <- svm(y ~ x1 + x2, data = mydf, kernel = "polynomial", degree = 2)
+
+yhat_grid <- predict(svmOut, newdata = xgrid)
+
+xgrid$yhat <- as.numeric(yhat_grid > 0.5)
+
+p <- ggplot() +
+  geom_tile(aes(x = x1, y = x2, fill = factor(yhat)),
+            data = xgrid, alpha = 0.5) +
+  geom_point(aes(x = x1, y = x2, color = factor(y)),
+             data = mydf) +
+  labs(fill = "Predicted Y", color = "Observed Y") +
+  ggtitle("SVM Decision Regions")
+
+print(p)
+
+
+
+```
+
+
+# Problem 1h
+
+```{r prob1h}
+#Problem 1h
+svmOut_radial <- svm(y ~ x1 + x2, data = mydf, kernel = "radial")
+
+yhat_svm_radial <- predict(svmOut_radial, newdata = xgrid)
+xgrid$yhat_svm_radial <- as.numeric(yhat_svm_radial >.5)
+
+gfig_svm_radial <- ggplot() +
+  geom_tile(data = xgrid, aes(x = x1, y = x2, fill = as.factor(yhat_svm_radial)), alpha = 0.5) +
+  geom_point(data = mydf, aes(x = x1, y = x2, color = as.factor(y))) +
+  labs(fill = "Predicted Y", color = "Observed Y") +
+  ggtitle("SVM with Radial Kernel")
+
+gfig_svm_radial
+
+```
+
+# Problem 1i
+
+\hstart
+
+Both SVMs and the polynomial logistic regression seem to provide reasonable fit to the data. That said, the radial kernal svm model appears to do the best job as it uncovers the difference in shape betwen the left and right side of the graph.\
+
+\hstop
+
+# Problem 2a 
+
+```{r prob2a,eval=F}
+#Problem 2a
+library(ISLR)
+data(OJ)
+
+OJ$StoreID <- as.factor(OJ$StoreID)
+
+OJ <- dplyr::select(OJ, -STORE)
+
+set.seed(577)
+
+tune_out <- tune(svm, kernel = "radial", scale = T, Purchase ~., data = OJ,
+                ranges = list(cost = seq(0.001, 3, length = 8), 
+                              gamma = seq(0.001, 0.5, length = 8)))
+
+
+```
+
+# Problem 2b 
+
+```{r prob2b}
+#Problem 2b
+#This is throwing an error on knit but works when im not knitting
+
+#tune_out$best.parameters
+```
+
+\hstart
+
+- optimal $C =$1.715
+- optimal $\gamma =$.001
+
+\hstop
+
+
+# Problem 2c 
+
+```{r prob2c}
+#Problem 2c
+
+#This is throwing an error at knit but not when i am not knitting.
+#tune_out$best.performance
+```
+
+\hstart
+
+estimated error of 0.1682243
+
+\hstop
+
+# Problem 3a
+```{r prob3a}
+#Problem 3a
+median_mpg <- median(Auto$mpg)
+Auto$mpg01 <- ifelse(Auto$mpg > median_mpg, 1, 0)
+```
+
+# Problem 3b
+```{r prob3b}
+#Problem 3b
+set.seed(577)
+
+svmTune <- tune(svm, mpg01 ~ . - mpg, data = Auto, kernel = "linear",
+                ranges = list(cost = c(0.01, 0.1, 1, 10, 100)))
+summary(svmTune)
+
+```
+
+\hstart
+
+It looks like a cost of 1 performs the best. We tested at orders of magnitude so we can now zoom our search in on this part of the parameters space
+
+\hstop
+
+# Problem 3c
+```{r prob3c}
+#Problem 3c
+# Radial kernel tuning
+svmTuneRadial <- tune(svm, mpg01 ~ . - mpg, data = Auto, kernel = "radial",
+                      ranges = list(cost = c(0.01, 0.1, 1, 10, 100),
+                                    gamma = c(0.001, 0.01, 0.1, 1)))
+summary(svmTuneRadial)
+
+# Polynomial kernel tuning (e.g., degree 2)
+svmTunePoly <- tune(svm, mpg01 ~ . - mpg, data = Auto, kernel = "polynomial",
+                    ranges = list(cost = c(0.01, 0.1, 1, 10, 100),
+                                  degree = c(2, 3)))
+summary(svmTunePoly)
+
+```
+
+\hstart
+
+See output above
+
+\hstop
+
+# Problem 4
+
+```{r prop4, cache = TRUE}
+library(MASS)
+
+data(Boston)
+
+median_medv <- median(Boston$medv)
+Boston$medv01 <- as.factor(ifelse(Boston$medv > median(Boston$medv), 1, 0))
+
+# Remove the original continuous variable (to avoid leakage)
+boston_data <- Boston %>% dplyr::select(-medv)
+
+set.seed(577)
+train_idx <- sample(1:nrow(boston_data), size = floor(0.7 * nrow(boston_data)))
+train_data <- boston_data[train_idx, ]
+test_data  <- boston_data[-train_idx, ]
+
+# SVM with Linear Kernel
+svm_linear <- svm(medv01 ~ ., data = train_data, kernel = "linear")
+pred_linear <- predict(svm_linear, newdata = test_data)
+acc_linear <- mean(pred_linear == test_data$medv01)
+print(paste("SVM Linear Kernel Accuracy:", round(acc_linear, 3)))
+
+# SVM with Polynomial Kernel (degree 2)
+svm_poly <- svm(medv01 ~ ., data = train_data, kernel = "polynomial", degree = 2)
+pred_poly <- predict(svm_poly, newdata = test_data)
+acc_poly <- mean(pred_poly == test_data$medv01)
+print(paste("SVM Polynomial Kernel (Degree 2) Accuracy:", round(acc_poly, 3)))
+
+# SVM with Radial Kernel
+svm_radial <- svm(medv01 ~ ., data = train_data, kernel = "radial")
+pred_radial <- predict(svm_radial, newdata = test_data)
+acc_radial <- mean(pred_radial == test_data$medv01)
+print(paste("SVM Radial Kernel Accuracy:", round(acc_radial, 3)))
+
+# Logistic Regression
+glm_boston <- glm(medv01 ~ ., data = train_data, family = "binomial")
+pred_glm_prob <- predict(glm_boston, newdata = test_data, type = "response")
+pred_glm <- ifelse(pred_glm_prob > 0.5, 1, 0)
+acc_glm <- mean(pred_glm == test_data$medv01)
+print(paste("Logistic Regression Accuracy:", round(acc_glm, 3)))
+
+```
+\hstart
+
+Using the boston data set it appears that the polynomial kernal SVM performs the best.This is actually not that far from the logisict regression accuracy which is surprising. 
+
+\hstop
+
+# Problem 5
+
+\hstart
+
+You can include the answer as a picture or generate it using R. 
+
+\hstop
+
+
+## Appendix
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+
+```
+
