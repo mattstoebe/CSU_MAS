@@ -1,0 +1,31 @@
+---
+title: "575_HW3"
+author: "Matthew Stoebe"
+date: "2025-03-14"
+output: pdf_document
+---
+
+```{r}
+library(coda)
+library(ggplot2)
+```
+
+
+a.
+```{r}
+nSchools <- 8
+school_data <- vector("list", nSchools)
+
+for (i in 1:nSchools) {
+  fileName <- paste0("school", i, ".dat")
+  print(fileName)
+  school_data[[i]] <- read.table(fileName)
+}
+
+# Compute sample sizes and sample means for each school
+n_i <- sapply(school_data, length)
+ybar <- sapply(school_data, mean)
+all_data <- unlist(school_data)
+N <- length(all_data)
+```
+
