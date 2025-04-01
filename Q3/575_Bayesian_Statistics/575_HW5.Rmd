@@ -13,9 +13,8 @@ library(ggplot2)
 
 a.
 ```{r}
-# Load required packages
-library(coda)     # For MCMC diagnostics (effectiveSize, mcmc, etc.)
-library(ggplot2)  # For plotting (optional)
+library(coda)  
+library(ggplot2)
 set.seed(69)
 
 
@@ -33,25 +32,23 @@ all_data <- unlist(school_data)
 N <- length(all_data)
 
 
-mu0      <- 7     # Prior mean for mu
-sigma2_mu0 <- 5   # Prior variance for mu
-nu0      <- 2     # Degrees of freedom for sigma2 prior
-sigma20  <- 15    # Scale parameter for sigma2 prior
-eta0     <- 2     # Degrees of freedom for tau2 prior
-tau20    <- 10    # Scale parameter for tau2 prior
+mu0      <- 7   
+sigma2_mu0 <- 5  
+nu0      <- 2     
+sigma20  <- 15   
+eta0     <- 2    
+tau20    <- 10
 
 
 n_iter  <- 10000
 burn_in <- 1000 
 
-# Pre-allocate storage for MCMC samples
 theta_samples <- matrix(NA, nrow = n_iter, ncol = nSchools)
 mu_samples    <- numeric(n_iter)
 sigma2_samples <- numeric(n_iter)
 tau2_samples  <- numeric(n_iter)
-R_samples     <- numeric(n_iter)  # R = 1 + sigma2/tau2
+R_samples     <- numeric(n_iter)
 
-# Initialize parameters
 mu_current     <- mu0
 sigma2_current <- sigma20
 tau2_current   <- tau20
@@ -121,9 +118,9 @@ posterior_summary <- function(samples) {
   list(mean = mean_val, CI = ci)
 }
 
-mu_summary     <- posterior_summary(mu_samples)
+mu_summary <- posterior_summary(mu_samples)
 sigma2_summary <- posterior_summary(sigma2_samples)
-tau2_summary   <- posterior_summary(tau2_samples)
+tau2_summary<- posterior_summary(tau2_samples)
 
 cat("Posterior summary for mu:\n")
 print(mu_summary)
@@ -131,36 +128,29 @@ cat("Posterior summary for sigma2:\n")
 print(sigma2_summary)
 cat("Posterior summary for tau2:\n")
 print(tau2_summary)
-
-
 ```
 
 
 ```{r}
-par(mfrow = c(3, 1))
 curve(dnorm(x, mean = mu0, sd = sqrt(sigma2_mu0)), 
       from = 0, to = 14, col = "red", lwd = 2, ylab = "Density", 
       main = "mu: Prior (red) vs Posterior")
 lines(density(mu_samples), col = "blue", lwd = 2)
-legend("topright", legend = c("Prior", "Posterior"), col = c("red", "blue"), lwd = 2)
 
 n_prior <- 10000
 sigma2_prior <- nu0 * sigma20 / rchisq(n_prior, df = nu0)
 plot(density(sigma2_prior), col = "red", lwd = 2, 
      main = "sigma2: Prior (red) vs Posterior", ylab = "Density")
 lines(density(sigma2_samples), col = "blue", lwd = 2)
-legend("topright", legend = c("Prior", "Posterior"), col = c("red", "blue"), lwd = 2)
 
  
 tau2_prior <- eta0 * tau20 / rchisq(n_prior, df = eta0)
 plot(density(tau2_prior), col = "red", lwd = 2, 
      main = "tau2: Prior (red) vs Posterior", ylab = "Density")
 lines(density(tau2_samples), col = "blue", lwd = 2)
-legend("topright", legend = c("Prior", "Posterior"), col = c("red", "blue"), lwd = 2)
 par(mfrow = c(1, 1))
 
 
-# Compute prior for R via simulation
 sigma2_prior_sim <- nu0 * sigma20 / rchisq(n_prior, df = nu0)
 tau2_prior_sim   <- eta0 * tau20 / rchisq(n_prior, df = eta0)
 R_prior <- 1 + sigma2_prior_sim / tau2_prior_sim
@@ -168,8 +158,8 @@ R_prior <- 1 + sigma2_prior_sim / tau2_prior_sim
 plot(density(R_prior), col = "red", lwd = 2, 
      main = "R = 1 + sigma2/tau2: Prior (red) vs Posterior", ylab = "Density")
 lines(density(R_samples), col = "blue", lwd = 2)
-legend("topright", legend = c("Prior", "Posterior"), col = c("red", "blue"), lwd = 2)
 ```
+Im clearly doing something wrong here^^ but not sure what it is...
 
 ```{r}
 theta6_samples <- theta_samples[, 6]

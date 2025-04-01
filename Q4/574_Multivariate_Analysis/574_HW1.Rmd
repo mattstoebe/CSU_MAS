@@ -1,0 +1,65 @@
+---
+title: "574_HW1"
+author: "Matthew Stoebe"
+date: "2025-04-01"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+e.
+```{r cars}
+workforce <- read.table("Data/workforce.txt", header=TRUE)
+
+sectorData <- workforce[, c("AGR", "MIN", "MAN", "PS", "CON", "SER", "SPS", "TC")]
+
+pairs(sectorData, main="Scatterplot Matrix of Workforce Sectors")
+
+```
+
+There are signifficant differences between each metric. Some like Min may need to be log transformed due to high outliers. Others like Con - Ser have a strong positive correlation. Some non linear patterns also emerge 
+
+b.
+```{r}
+boxplot(AGR ~ Group, data=workforce,
+        main="Agriculture Percentage by Political Entity",
+        xlab="Political Entity", ylab="Agriculture %")
+
+
+
+```
+We see that EU and EFTA have relatively low rate of agriculture. Eastern countries are high on averaeg and then the "other" group has a wide variance but a low median aggriculture rate.
+
+c.
+```{r}
+summaryStats <- data.frame(
+  Mean = apply(sectorData, 2, mean),
+  Variance = apply(sectorData, 2, var),
+  StdDev = apply(sectorData, 2, sd)
+)
+
+# Correlation matrix:
+corMatrix <- cor(sectorData)
+print(corMatrix)
+print(summaryStats)
+```
+
+Most correlations are negative because an increase in one sector drives a decrease in others. Generally, Most correlations are negative and relatively weak. 
+
+d.
+```{r}
+library(dplyr)
+
+groupStats <- workforce %>%
+  group_by(Group) %>%
+  summarise(across(c(AGR, MIN, MAN, PS, CON, SER, SPS, TC),
+                   list(mean = mean, variance = var, sd = sd),
+                   .names = "{.col}_{.fn}"))
+print(groupStats)
+```
+There are too many findings to summarize, but it seems that EU and EFTA have lower agriculture than the eastern, and lower mining than eastern on average. There is also higher variance in the eastern and other categories. This is all plausible.
+
+e. It is not easy to sumarize findings especially without a specific research question. There are so many things to look at and test for that it quickly becomes overwhelming. To effectivley analyze this dataset I wouuld be curious about a specific research question and would generate plots towards that goal. 
