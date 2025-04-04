@@ -63,3 +63,29 @@ print(groupStats)
 There are too many findings to summarize, but it seems that EU and EFTA have lower agriculture than the eastern, and lower mining than eastern on average. There is also higher variance in the eastern and other categories. This is all plausible.
 
 e. It is not easy to sumarize findings especially without a specific research question. There are so many things to look at and test for that it quickly becomes overwhelming. To effectivley analyze this dataset I wouuld be curious about a specific research question and would generate plots towards that goal. 
+
+```{r}
+
+x1 <- c(1, 0)
+x2 <- c(0, 1)
+
+Q <- matrix(c(1/2, sqrt(3)/2, -sqrt(3)/2, 1/2), nrow=2, byrow=TRUE)
+
+y1 <- Q %*% x1
+y2 <- Q %*% x2
+
+plot(c(0,1), c(0,0), type="n", xlim=c(-2,2), ylim=c(-1,1))
+arrows(0, 0, x1[1], x1[2], col="blue", lwd=2)
+arrows(0, 0, x2[1], x2[2], col="blue", lwd=2)
+text(x1[1], x1[2], "x1", pos=3)
+text(x2[1], x2[2], "x2", pos=3)
+
+arrows(0, 0, y1[1], y1[2], col="red", lwd=2)
+arrows(0, 0, y2[1], y2[2], col="red", lwd=2)
+text(y1[1], y1[2], "y1", pos=3)
+text(y2[1], y2[2], "y2", pos=3)
+legend("topright", legend=c("Original", "Transformed"), col=c("blue", "red"), lwd=2)
+
+
+
+```

@@ -1,0 +1,88 @@
+---
+title: "565_HW2"
+author: "Matthew Stoebe"
+date: "2025-04-04"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Question1
+
+a. The response variable is the student's reading scores. 
+The predictor of interest is the amount of weekly average screen time. 
+The hypothesis is that students who spend too much time on screens struggle to read. 
+
+```{r}
+tvread <- read.table("Data/tvread.txt", header=TRUE)
+model1 <- lm(score ~ hours, data = tvread)
+summary(model1)
+```
+
+b. There is a significant relationship between hours spent on screens and the student's reading scores. We see a  coefficient of 1.667 which means that for each hour of screen time, th reading score increasees by 1.66. This is suprising
+
+c. 
+
+```{r}
+model2 <- lm(score ~ hours + grade, data = tvread)
+summary(model2)
+```
+
+c. When we include grade of child, we see that the relationship between reading score and hours of screen time flipps. More specifically, for each hour spent on a screen, holding the student's grade constant, the students test score decreases by .8229 points. This aligns with the expected hypothesis. and makes sense as students in higher grades may have both better reading scores, and more screentime leading to confounding.
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+
+p1 <- ggplot(tvread, aes(x = hours, y = score)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Simple Regression",
+       x = "Screen Time (hrs/week)",
+       y = "Reading Score")
+
+p1
+
+p2 <- ggplot(tvread, aes(x = hours, y = score)) +
+  geom_point(aes(color = factor(grade))) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  facet_wrap(~ grade) +
+  labs(title = "Regression within Each Grade",
+       x = "Screen Time (hrs/week)",
+       y = "Reading Score",
+       color = "Grade")
+
+p2
+```
+
+d. While it appears that at an aggregate level that more screen time leads to higher levels, this does not account for the fact that students in higher grade levels both spend more time on their devices and are better readers than students at lower grade levels. This confounds ouroutput. However, after controlling for the student's grade level, we see that increased screen time does actually lead to worse test scores.
+
+
+```{r}
+
+studdybuddy <- read.table("Data/studdybuddy.txt", header=TRUE)
+
+t.test(sat ~ sb, data = studdybuddy)
+
+
+```
+a. There is a signifficant difference. 
+
+```{r}
+model_sat <- lm(sat ~ sb + gpa, data = studdybuddy)
+summary(model_sat)
+```
+
+
+b. There is no signifficant effect of study-budy use on sat score after controlling for student GPA. 
+
+```{r}
+ggplot(studdybuddy, aes(x=gpa, y=sat, color=factor(sb))) +
+  geom_point() +
+  geom_smooth(method="lm", formula = y ~ x, se=FALSE) +
+  labs(color = "StuddyBuddy Use", x="High School GPA", y="SAT Score") 
+```
+
+c. The first model does not account for existing GPA. Students with higher GPAs are more likely to use study buddy and also have higher SAT scores. As such, this is a confouder and creates the illusion that study buddy use increases sat scores. When we control for study buddy usage, we see that the regression lines are almost parallel implying that study-buddy users do not perform better than non study-buddy users. 
