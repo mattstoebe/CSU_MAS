@@ -1,0 +1,17 @@
+---
+title: "574_HW2"
+author: "Matthew Stoebe"
+date: "2025-04-06"
+output: pdf_document
+---
+
+```{r}
+load("Data/microwave.RData")  # Suppose it loads a data frame 'micro'
+# Let micro$closed be the 'door closed' column, micro$open be 'door open'.
+
+plot(micro$closed, micro$open,
+     xlab = "Radiation (Door Closed)",
+     ylab = "Radiation (Door Open)",
+     main = "Bivariate Scatter: Microwave Radiation")
+```
+
