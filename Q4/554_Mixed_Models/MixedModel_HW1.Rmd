@@ -1,0 +1,228 @@
+---
+title: 'STAA 554 Homework 1'
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+    includes:
+      in_header: preamble.tex
+header-includes:
+- \usepackage[default]{sourcesanspro}
+- \usepackage[T1]{fontenc}
+mainfont: SourceSansPro
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, eval = TRUE)
+
+
+library(nlme)    
+library(lme4)
+library(MuMIn)
+library(table1)
+```
+
+
+# Concept Questions
+
+
+## 1.  **5pts** Nurse Stress Study. 
+
+Four wards were randomly selected at each of 25 hospitals and randomly assigned to offer a stress reduction program for nurses on the ward or to serve as a control. At the conclusion of the study period, a random sample of 10 nurses from each ward completed a test to measure job-related stress. Factors assumed to be related include nurse experience, age, hospital size and type of ward.
+
+:::: {.taskbox data-latex=""}
+### a.)  Identify the level 1 observational units (most specific)
+
+### b.) Identify the grouping units (could be multiple levels of grouping)
+
+### c.) State the response(s) measured and variable type (normal, binary, Poisson, etc.)
+
+### d.)  Write a sentence describing the within-group correlation.
+
+### e.)  Identify all fixed and random effects in the model. 
+::::
+
+a:The Individual nurse who is completing the test
+
+
+b:  The grouping units are the ward level and the hospital level
+
+c: THe response is the stress level measured by a test. this is a continuous variable and should be normally distributed
+
+d: nurses within the same ward tend to have more similar stress scores than nurses from different wards (and hospitals) as such there is within group correlation in stress levels
+
+
+e: Fixed:
+Treatment, Nurse level excoriates, hospital level covariates
+
+e:  Random: 
+random intercepts for ward
+random intercept for hospital 
+
+
+## 2.  **5pts** Radon. 
+
+Radon is a carcinogen - a naturally occurring radioactive gas whose decay products are also radioactive – known to cause lung cancer in high concentrations. The EPA sampled more than 80,000 homes across the US. Each house came from a randomly selected county and measurements were made on each level of each home. Uranium measurements at the county level were included to improve the radon estimates
+
+:::: {.taskbox data-latex=""}
+### a.)  Identify the level 1 observational units (most specific)
+
+### b.) Identify the grouping units (could be multiple levels of grouping)
+
+### c.) State the response(s) measured and variable type (normal, binary, Poisson, etc.)
+
+### d.)  Write a sentence describing the within-group correlation.
+
+### e.)  Identify all fixed and random effects in the model. 
+::::
+
+
+a: Measurement of radon taken on a floor of a home.
+
+b: the house level and the county level are both grouping units
+
+c:The response is the radon measurement which is continuous and non negative. It is also probably skewed so we may look at this as a normal or logNormal variable. 
+
+d: Measurements taken from different levels within the same home are likely to be more similar to each other than to measurements from different homes, because of building characteristics.
+
+
+e: Fixed:County level uranium measurement, Floor level covariates like what floor of the house 
+
+
+e:  Random: random intercept for home, random intercept for counties
+
+# Analysis: School Achievement Data
+
+A researcher was interested in determining the extent to which vocabulary scores (`gevocab`) can be used to predict general reading achievement (`geread`). Students were nested within schools, (`school`) so that standard linear regression models would not be appropriate. In this case, school is a random effect, while vocabulary scores are fixed.
+
+## 3. EDA
+
+:::: {.taskbox data-latex=""}
+### A)  1 pts. Table: student level
+Use the `table1` command to create a summary table of the  geread, gevocab, age and gender information (all measured at the student level).   
+*Gender is coded as 1: Female, 2: Male*   
+*Age is in months*
+::::
+
+```{r}
+data <- read.csv("Achieve.csv")
+
+data$gender <- factor(data$gender, levels = c(1, 2), labels = c("Female", "Male"))
+
+table1(~ geread + gevocab + age + gender, data = data)
+```
+
+
+
+:::: {.taskbox data-latex=""}
+### B)  1 pts. Table: school level
+Use the `table1` command to create a summary table of ses (socio-economic level), and senroll (school enrollment)  information (all measured at the school level).  Hint: use the `gsummary()` function from the `nlme` package.
+::::
+
+```{r}
+school_data <- unique(data[, c("school", "ses", "senroll")])
+table1(~ ses + senroll, data = school_data)
+#gsummary(school_data[, c("ses", "senroll")])
+
+#Not sure why we need gsummary here? we can just get the distinct data at the school level and analyze that. I guess we could use the output of gsummary and pass it into table1, but that should be the same as getting unique data. 
+```
+
+
+## 4. Analysis
+
+:::: {.taskbox data-latex=""}
+### A)  2 pts.
+Using `lmer()` fit the null model in which there is not an independent variable, but only the intercept and random effect. This model is useful for obtaining estimates of the residual and intercept variance when only the clustering by school is considered.  Print a summary of your model below.
+We can obtain output from this model by typing `summary(Model)`.
+::::
+```{r}
+model_null <- lmer(geread ~ 1 + (1 | school), data = data)
+summary(model_null)
+```
+
+
+:::: {.taskbox data-latex=""}
+### B) 2 pts.
+Although this is a null model in which there is not an independent variable, it does provide some useful information that will help us understand the structure of the data. In particular, the null model provides estimates of the variance among the individuals $\sigma^2$, and among the clusters $\tau^2$. In turn, these values can be used to estimate the ICC.  Calculate the ICC here.
+
+::::
+
+```{r}
+var_components <- as.data.frame(VarCorr(model_null))
+var_school <- var_components[var_components$grp == "school", "vcov"]
+var_resid <- attr(VarCorr(model_null), "sc")^2
+ICC <- var_school / (var_school + var_resid)
+print(ICC)
+```
+
+
+
+:::: {.taskbox data-latex=""}
+### C) 2 pts.
+Interpret your ICC value calculated above.
+7.2% of the total variance is a result of the school level differences. the rest is due to individual level variability
+::::
+
+:::: {.taskbox data-latex=""}
+### D) 2 pts.
+Fit a model with vocabulary test score as the independent variable and school as a random effect using `lmer()`. Provide a summary of the model below.
+::::
+```{r}
+model_vocab <- lmer(geread ~ gevocab + (1 | school), data = data)
+summary(model_vocab)
+```
+
+
+:::: {.taskbox data-latex=""}
+### E) 2 pts.
+Interpret the coefficient associated with `gevocab`.  
+For each point in vocabulary score, the reading score increases by about .51 points after accounting for inter school differences.
+
+::::
+
+:::: {.taskbox data-latex=""}
+### F) 4pts.
+Assess the assumptions of normality and linearity with appropriate figures below.  For each figure state your assessment of the assumption briefly.
+
+::::
+
+```{r}
+qqnorm(resid(model_vocab))
+qqline(resid(model_vocab))
+plot(fitted(model_vocab), resid(model_vocab))
+abline(h = 0, col = "red", lty = 2)
+```
+The data does not pass normality which we see with the first residuals qq plot, and there is a clear issue if inequal variance as well assume clear stratification as seen in the fitted vs residual plot. 
+
+:::: {.taskbox data-latex=""}
+### G) 4 pts.
+Calculate and interpret the $R^2$ values for the level 1 model and the level 2 model (use the Snijders and Bosker definition).
+
+::::
+
+```{r}
+null_var <- as.data.frame(VarCorr(model_null))
+tau2_null <- null_var[null_var$grp == "school", "vcov"]
+sigma2_null <- attr(VarCorr(model_null), "sc")^2
+
+vocab_var <- as.data.frame(VarCorr(model_vocab))
+tau2_model <- vocab_var[vocab_var$grp == "school", "vcov"]
+sigma2_model <- attr(VarCorr(model_vocab), "sc")^2
+
+R2_within <- (sigma2_null - sigma2_model) / sigma2_null
+R2_between <- (tau2_null - tau2_model) / tau2_null
+
+print(R2_within)
+print(R2_between)
+```
+
+
+
+## References
+
+:::: {.acknowledgement data-latex=""}
+Glasnapp, Douglas R., and John P. Poggio. Essentials of statistical analysis for the behavioral sciences. CE Merrill Pub. Co., 1985.
+
+**These notes are not to be posted or distributed anywhere without explicit consent of Dr. Eilertson.**
+::::
