@@ -6,12 +6,50 @@ output: pdf_document
 ---
 
 ```{r}
-load("Data/microwave.RData")  # Suppose it loads a data frame 'micro'
-# Let micro$closed be the 'door closed' column, micro$open be 'door open'.
+  library(Hotelling)
+  library(car)
 
-plot(micro$closed, micro$open,
-     xlab = "Radiation (Door Closed)",
-     ylab = "Radiation (Door Open)",
-     main = "Bivariate Scatter: Microwave Radiation")
+load("Data/microwave.RData")
+
+plot(microwave,
+     main = "Original Microwave Radiation Data",
+     xlab = "Door Closed Radiation",
+     ylab = "Door Open Radiation",
+     pch = 19, col = "blue")
+
+log_microwave <- as.matrix(log(microwave))
+
+plot(log_microwave,
+     main = "Log-Transformed Microwave Radiation Data",
+     xlab = "Log(Door Closed Radiation)",
+     ylab = "Log(Door Open Radiation)",
+     pch = 19, col = "darkgreen")
+
+
+mu0_original <- c(0.07, 0.10)
+# Transform the null mean to the log scale:
+mu0_log <- log(mu0_original)
+
+y <- matrix(mu0_log,
+            nrow = nrow(log_microwave),
+            ncol = ncol(log_microwave),
+            byrow = TRUE)
+
+
+htest_result <- hotelling.test(x = log_microwave, y = y)
+print(htest_result)
+
+mean_log <- colMeans(log_microwave)
+
+dataEllipse(log_microwave[, 1], log_microwave[, 2],
+            levels = 0.95,
+            center.pch = 19, center.cex = 1.2,
+            xlab = "Log(Door Closed Radiation)",
+            ylab = "Log(Door Open Radiation)",
+            main = "95% Confidence Ellipse for Mean (Log Scale)")
+points(mean_log[1], mean_log[2], pch = 19, col = "red")
+
+
+
 ```
 
