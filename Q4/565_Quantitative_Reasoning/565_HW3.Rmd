@@ -5,7 +5,138 @@ date: "2025-04-09"
 output: pdf_document
 ---
 
+#Question 1
+
+a)
+
 ```{r}
+years <- 2011:2020
+acid_rain <- c(188, 183, 187, 188, 190, 187, 191, 197, 199, 199)
+bluebirds <- c(389, 371, 385, 343, 354, 350, 330, 314, 305, 291)
+
+# Plot the data
+plot(acid_rain, bluebirds,
+     xlab = "Acid Rain (mmt)",
+     ylab = "Bluebird Population (birds/sq. mile)",
+     main = "Bluebird Population vs Acid Rain",
+     pch = 16)
+
+# Fit the linear model
+fit <- lm(bluebirds ~ acid_rain)
+abline(fit, col = "blue", lwd = 2)
+
+# Print the summary of the fitted model
+summary(fit)
+```
+
+
+b)
+Slope: For every 1mt increase in acid rain, the bluebird population density is expected to decrease by 5.24
+Intercept: when no acid rain is present, the expected bluebird population density is 1344. however, this is outside the range of our observed data and may not be as valuable as other points.
+
+c)
+```{r}
+coef_summary <- summary(fit)$coefficients
+
+t_value <- coef_summary["acid_rain", "t value"]
+p_value_two_sided <- coef_summary["acid_rain", "Pr(>|t|)"]
+
+p_value_one_sided <- p_value_two_sided / 2
+cat("t-value =", t_value, "\nOne-sided p-value =", p_value_one_sided, "\n")
+
+```
+
+Since the one sided P value is below .05, we can reject our null hypothesis and state that there is a statistically signifficant evidence that an increase in acid rain is associated with a decrease iin bluebird population
+
+d)
+This is an observational analysis and as such cannot be used for causal conclusions. We can only identify the association but without randomization, case controll, or more advanced causal methods, we cannot draw the conclusion that a "reduction in acid rain will resultin increased bluebird population
+
+#Question 2
+
+a)
+```{r}
+set.seed(123)  # For reproducibility
+
+true_ferritin <- scan("Data/ferritin.txt", sep = " ")
+
+measured_1 <- true_ferritin + rnorm(1000, mean = 0, sd = 20)
+
+# Count the number of patients with measured ferritin < 40
+num_below_40 <- sum(measured_1 < 40)
+cat("Number of patients with measured ferritin < 40:", num_below_40, "\n")
+
+```
+
+b)
+```{r}
+recruited_indices <- which(measured_1 < 40)
+print(recruited_indices)
+measured_2 <- true_ferritin[recruited_indices] + rnorm(length(recruited_indices), mean = 0, sd = 20)
+num_higher <- sum(measured_2 > measured_1[recruited_indices])
+cat("Number of recruited patients with higher ferritin after 4 months:", num_higher, "\n")
+
+```
+
+
+```{r}
+t_test_result <- t.test(measured_2, measured_1[recruited_indices],
+                        paired = TRUE, alternative = "greater")
+cat("Paired t-test p-value:", t_test_result$p.value, "\n")
+```
+
+d)
+While this appears significant, it actually may represent regression to the mean. Patients selected for low ferritin values tend to have a second measurement closer to their true level leading to a positive impact. 
+
+#Question  3
+
+a)
+
+```{r}
+accident_counts <- 0:5
+probs <- c(0.22, 0.33, 0.22, 0.13, 0.08, 0.02)
+expected_value <- sum(accident_counts * probs)
+cat("Expected number of accidents per intersection:", expected_value, "\n")
+```
+
+b)
+
+```{r}
+set.seed(123)
+
+first_year <- sample(accident_counts, size = 250, replace = TRUE, prob = probs)
+indices_worst <- order(first_year, decreasing = TRUE)[1:25]
+
+second_year <- sample(accident_counts, size = 250, replace = TRUE, prob = probs)
+fewer_count <- sum(second_year[indices_worst] < first_year[indices_worst])
+prop_fewer <- fewer_count / 25
+cat("Proportion of worst intersections with fewer accidents in second year:", prop_fewer, "\n")
+
+```
+
+
+# Question 4
+
+```{r}
+set.seed(123)
+N <- 48
+group <- factor(rep(1:6, each = 8))
+y <- rnorm(N, mean = 50, sd = 10)
+data <- data.frame(group, y)
+
+anova_res <- anova(lm(y ~ group, data = data))
+p_anova <- anova_res$`Pr(>F)`[1]
+cat("One-way ANOVA p-value:", p_anova, "\n")
+
+group_means <- tapply(y, group, mean)
+
+min_group <- as.numeric(names(group_means)[which.min(group_means)])
+max_group <- as.numeric(names(group_means)[which.max(group_means)])
+
+group_min_data <- data$y[data$group == min_group]
+group_max_data <- data$y[data$group == max_group]
+
+t_res <- t.test(group_min_data, group_max_data, var.equal = TRUE)
+cat("Extreme-groups t-test p-value:", t_res$p.value, "\n")
 
 ```
 
