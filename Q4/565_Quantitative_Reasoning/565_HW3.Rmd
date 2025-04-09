@@ -14,18 +14,15 @@ years <- 2011:2020
 acid_rain <- c(188, 183, 187, 188, 190, 187, 191, 197, 199, 199)
 bluebirds <- c(389, 371, 385, 343, 354, 350, 330, 314, 305, 291)
 
-# Plot the data
 plot(acid_rain, bluebirds,
      xlab = "Acid Rain (mmt)",
      ylab = "Bluebird Population (birds/sq. mile)",
      main = "Bluebird Population vs Acid Rain",
      pch = 16)
 
-# Fit the linear model
 fit <- lm(bluebirds ~ acid_rain)
 abline(fit, col = "blue", lwd = 2)
 
-# Print the summary of the fitted model
 summary(fit)
 ```
 
@@ -55,13 +52,12 @@ This is an observational analysis and as such cannot be used for causal conclusi
 
 a)
 ```{r}
-set.seed(123)  # For reproducibility
+set.seed(123) 
 
 true_ferritin <- scan("Data/ferritin.txt", sep = " ")
 
 measured_1 <- true_ferritin + rnorm(1000, mean = 0, sd = 20)
 
-# Count the number of patients with measured ferritin < 40
 num_below_40 <- sum(measured_1 < 40)
 cat("Number of patients with measured ferritin < 40:", num_below_40, "\n")
 
@@ -101,7 +97,6 @@ cat("Expected number of accidents per intersection:", expected_value, "\n")
 b)
 
 ```{r}
-set.seed(123)
 
 first_year <- sample(accident_counts, size = 250, replace = TRUE, prob = probs)
 indices_worst <- order(first_year, decreasing = TRUE)[1:25]
@@ -117,7 +112,6 @@ cat("Proportion of worst intersections with fewer accidents in second year:", pr
 # Question 4
 
 ```{r}
-set.seed(123)
 N <- 48
 group <- factor(rep(1:6, each = 8))
 y <- rnorm(N, mean = 50, sd = 10)
@@ -137,6 +131,35 @@ group_max_data <- data$y[data$group == max_group]
 
 t_res <- t.test(group_min_data, group_max_data, var.equal = TRUE)
 cat("Extreme-groups t-test p-value:", t_res$p.value, "\n")
+
+```
+
+```{r}
+set.seed(123)
+num_iterations <- 1000
+p_values <- numeric(num_iterations)
+
+for (i in 1:num_iterations) {
+  y <- rnorm(48, mean = 50, sd = 10)
+  group <- factor(rep(1:6, each = 8))
+  data <- data.frame(group, y)
+  
+  anova_res <- anova(lm(y ~ group, data = data))
+  p_anova <- anova_res$`Pr(>F)`[1]
+  
+  group_means <- tapply(y, group, mean)
+  min_group <- as.numeric(names(group_means)[which.min(group_means)])
+  max_group <- as.numeric(names(group_means)[which.max(group_means)])
+  
+  group_min_data <- data$y[data$group == min_group]
+  group_max_data <- data$y[data$group == max_group]
+  
+  t_res <- t.test(group_min_data, group_max_data, var.equal = TRUE)
+  p_values[i] <- t_res$p.value
+}
+
+num_significant <- sum(p_values < 0.05)
+cat("Number of times p-value < 0.05 out of", num_iterations, "simulations:", num_significant, "\n")
 
 ```
 
