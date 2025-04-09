@@ -1,0 +1,11 @@
+---
+title: "565_HW3"
+author: "Matthew Stoebe"
+date: "2025-04-09"
+output: pdf_document
+---
+
+```{r}
+
+```
+
