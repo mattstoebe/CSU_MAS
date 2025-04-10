@@ -1,0 +1,166 @@
+---
+title: 'STAA 554 Homework 2'
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+    includes:
+      in_header: preamble.tex
+header-includes:
+- \usepackage[default]{sourcesanspro}
+- \usepackage[T1]{fontenc}
+mainfont: SourceSansPro
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Analysis of split plot design
+
+Consider the data: irrigation.csv. 
+
+In an agricultural trial the goal was to study the effect of crop variety and crop irrigation technique on yield.  Because type of irrigation is challenging to vary on a small scale, an entire irrigation technique is randomized at the field level.  Within each field, each variety is randomized to a subplot. 
+
+
+:::: {.taskbox data-latex=""}
+## 1.)	2pts Table
+Create a useful descriptive table below describing yield as a function of irrigation technique and variety.  Paste your R code as well as the table below. Make sure the table is polished enough that there are no cell alignment or spacing issues. (many acceptable answers).
+::::
+
+
+:::: {.taskbox data-latex=""}
+## 2.)	2 pts Figure
+Create a useful figure that summarize yield as a function of irrigation and variety.  (many acceptable answers)
+::::
+
+
+:::: {.taskbox data-latex=""}
+## 3.)	2 pts Model
+Fit a model in R that analyzes irrigation type and variety as fixed effects, and field as a random effect.  Print a summary of that model below.
+::::
+
+
+
+:::: {.taskbox data-latex=""}
+## 4.)	2 pts Design
+Suppose you are concerned that effect of variety on yield may depend on field.  How would this design need to be modified to model a field and variety interaction effect?  In other words, what is preventing you from estimating that effect from this design?  (Applies to fixed effect model as well.)
+:::: 
+
+
+:::: {.taskbox data-latex=""}
+## 5a.) 1pt Test
+Based on the mixed model from part "3", use anova() to perform an F test for the statistical significance of irrigationXvariety interaction.  State your conclusion.
+::::
+
+
+:::: {.taskbox data-latex=""}
+## 5b.) 1pt Test
+Using anova() perform an F test for the statistical significance of variety.
+::::
+
+
+:::: {.taskbox data-latex=""} 
+## 6)	2 pts Inference
+How does each irrigation technique compare to the others for a particular variety? Use the emmeans() command to address this question.  Paste your output below, be sure to comment.  
+::::
+
+:::: {.taskbox data-latex=""}
+## 7)	2 pts Figure
+Provide a figure summarizing the findings in part 6. 
+::::
+
+\newpage
+# Analysis of Observational Data
+
+This dataset is a slightly modified version of the dataset used for a special issue of Leadership Quarterly (Vol. 12, 2002), edited by Paul Bliese, Ronald Halverson, and Chet Schriesheim. It contains the items for three psychological scales: Hostility (HOSTILE), Task Significance (TSIG), and Leadership Climate (LEAD). There are 2,042 observations clustered within 49 groups, which represent Army companies. The scales were measured at the individual level and then aggregated at the company level. Data are public domain and are used with the kind permission of Paul Bliese (Walter Reid Army Institute of Research).  We focus on a subset of the variables in the data:
+
+```{r, echo = TRUE, eval = FALSE}
+COMPID  numeric  Army Company Identifying Variable
+ 
+SUB  numeric  Subject Number
+
+LEAD  numeric  Leadership Climate Scale Score
+
+TSIG  numeric  Task Significance Scale Score
+
+HOSTILE  numeric  Hostility Scale Score
+
+GLEAD  numeric  Leadership Climate Score Aggregated By Company
+
+GTSIG  numeric  Task Significance Score Aggregated By Company
+
+GHOSTILE  numeric  Hostility Score Aggregated By Company
+```
+
+
+
+
+**Research Questions:**
+
+* What is the individual-level (TSIG) and company-level (GTSIG) perception of task significance on the mean individual-level feelings of hostility (HOSTILE)? (adjusting for the clustering of hostility scale scores by army company)
+
+* What is the effect of soldier-level perceived leadership climate (LEAD) on HOSTILE, after controlling for other effects in the model. 
+
+
+:::: {.taskbox data-latex=""}
+## 8. 2pts Data Summaries
+Provide tables for the level 1 and level 2 variables included in the description above. 
+You should perform your own exploratory data analysis as well, but we will not focus on that for grading here.
+:::: 
+
+
+:::: {.taskbox data-latex=""}
+## 9.  2pts ICC
+Calculate the raw ICC.  What does this tell you? 
+::::
+
+
+:::: {.taskbox data-latex=""}
+## 10.   2pts Model Specification
+Based on the R-code for the model give below, right out the Level 1 and Level 2 models.  (Define what your subscripts index, e.g. i: individual, j: company)  
+
+`lmer(HOSTILE ~ TSIG + GTSIG + (1|COMPID), data = df)`
+::::
+
+:::: {.taskbox data-latex=""}
+## 11.  2pt Variance Components
+Fit the model below with and without GTSIG.  How does removing this term affect the variance components?  Explain why this makes sense. 
+
+`mod1 = lmer(HOSTILE ~ TSIG + GTSIG + (1|COMPID), data = df)`
+::::
+
+
+:::: {.taskbox data-latex=""}
+## 12.  2pt Information Criteria
+While REML is the recommended (and default) method for fitting models.  If we use ML we can then use information Criteria such as AIC, BIC, and DIC.  Fit the below models and choose one based on an information criteria.  Justify why you chose this model. 
+
+`mod1 = lmer(HOSTILE ~ TSIG + GTSIG + (1|COMPID), data = df, REML = FALSE)`  
+`mod2 = lmer(HOSTILE ~ TSIG + GTSIG + LEAD +(1|COMPID), data = df, REML= FALSE)`
+::::
+
+
+
+
+:::: {.taskbox data-latex=""}
+## 13. 2pt Inference
+Use the models fit above to answer the research question:  
+
+* What is the individual-level (TSIG) and company-level (GTSIG) perception of task significance on the mean individual-level feelings of hostility (HOSTILE)? (adjusting for the clustering of hostility scale scores by army company)
+
+Justify your conclusion by citing the relevant test statistic.  
+*Hint: you may want to load the lmerTest package. * 
+::::
+
+:::: {.taskbox data-latex=""}
+## 14. 2pt Inference
+Use the models fit above to answer the research question:  
+
+* What is the effect of soldier-level perceived leadership climate (LEAD) on HOSTILE, after controlling for other effects in the model.  
+
+Justify your conclusion by citing the relevant test statistic.  
+
+::::
+
+
