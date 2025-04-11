@@ -29,11 +29,39 @@ In an agricultural trial the goal was to study the effect of crop variety and cr
 Create a useful descriptive table below describing yield as a function of irrigation technique and variety.  Paste your R code as well as the table below. Make sure the table is polished enough that there are no cell alignment or spacing issues. (many acceptable answers).
 ::::
 
+```{r}
+library(dplyr)
+library(knitr)
+
+irrigation <- read.csv("Data/irrigation.csv")
+
+desc_table <- irrigation %>%
+  group_by(irrigation, variety) %>%
+  summarise(Mean_Yield = round(mean(yield, na.rm = TRUE), 2),
+            SD_Yield   = round(sd(yield, na.rm = TRUE), 2),
+            N          = n()) %>%
+  arrange(irrigation, variety)
+
+kable(desc_table, caption = "Table 1. Yield summarized by Irrigation and Variety")
+
+```
+Standard Deviation doesnt really make sense in this case, but there is so little data to analyze that you almost dont even need a summary table
 
 :::: {.taskbox data-latex=""}
 ## 2.)	2 pts Figure
 Create a useful figure that summarize yield as a function of irrigation and variety.  (many acceptable answers)
 ::::
+```{r}
+library(ggplot2)
+
+ggplot(irrigation, aes(x = variety, y = yield, color = irrigation, group = irrigation)) +
+  stat_summary(fun = mean, geom = "point", size = 3) +
+  stat_summary(fun = mean, geom = "line", linewidth = 1) +
+  labs(title = "Mean Yield by Irrigation Technique and Crop Variety",
+       x = "Crop Variety",
+       y = "Yield") +
+  theme_minimal()
+```
 
 
 :::: {.taskbox data-latex=""}
@@ -41,35 +69,66 @@ Create a useful figure that summarize yield as a function of irrigation and vari
 Fit a model in R that analyzes irrigation type and variety as fixed effects, and field as a random effect.  Print a summary of that model below.
 ::::
 
+```{r}
+library(lme4)
+library(lmerTest) 
+
+model <- lmer(yield ~ irrigation * variety + (1 | field), data = irrigation)
+summary(model)
+```
 
 
 :::: {.taskbox data-latex=""}
 ## 4.)	2 pts Design
 Suppose you are concerned that effect of variety on yield may depend on field.  How would this design need to be modified to model a field and variety interaction effect?  In other words, what is preventing you from estimating that effect from this design?  (Applies to fixed effect model as well.)
 :::: 
-
+In the current design each field has one observation per variety. As such, the effect is confounded with the field - level error term. This means that we cant estimate the true field by variety interaction as there are no replicates.
 
 :::: {.taskbox data-latex=""}
 ## 5a.) 1pt Test
 Based on the mixed model from part "3", use anova() to perform an F test for the statistical significance of irrigationXvariety interaction.  State your conclusion.
 ::::
 
+```{r}
+anova(model)
+
+```
+
+There is no statistically signifficant interaction between irrigation and variety as the P value is .8
 
 :::: {.taskbox data-latex=""}
 ## 5b.) 1pt Test
 Using anova() perform an F test for the statistical significance of variety.
 ::::
 
+With a P value of .35, there is no signifficant affect of variety on yield. 
 
 :::: {.taskbox data-latex=""} 
 ## 6)	2 pts Inference
 How does each irrigation technique compare to the others for a particular variety? Use the emmeans() command to address this question.  Paste your output below, be sure to comment.  
 ::::
 
+```{r}
+library(emmeans)
+emm <- emmeans(model, ~ irrigation | variety)
+summary(emm)
+
+pairs(emm)
+```
+Emmeans also finds no signifficant relaionships between any of the irrigation techniques
+
 :::: {.taskbox data-latex=""}
 ## 7)	2 pts Figure
 Provide a figure summarizing the findings in part 6. 
 ::::
+
+```{r}
+emmip(model, variety ~ irrigation, CIs = TRUE) +
+  labs(title = "Estimated Marginal Means of Yield by Irrigation and Variety",
+       x = "Irrigation type",
+       y = "Yield (EMM)") +
+  theme_minimal()
+```
 
 \newpage
 # Analysis of Observational Data
@@ -109,13 +168,33 @@ GHOSTILE  numeric  Hostility Score Aggregated By Company
 Provide tables for the level 1 and level 2 variables included in the description above. 
 You should perform your own exploratory data analysis as well, but we will not focus on that for grading here.
 :::: 
+```{r}
+IQ <- read.csv("Data/lq2002.csv")
+
+level1_vars <- IQ[, c("SUB", "LEAD", "TSIG", "HOSTILE")]
+level2_vars <- IQ[, c("COMPID", "GLEAD", "GTSIG", "GHOSTILE")]
+
+kable(summary(level1_vars), caption = "Summary of Level 1 Variables")
+kable(summary(level2_vars), caption = "Summary of Level 2 Variables")
+```
 
 
 :::: {.taskbox data-latex=""}
 ## 9.  2pts ICC
 Calculate the raw ICC.  What does this tell you? 
 ::::
+```{r}
+IQ_null <- lmer(HOSTILE ~ 1 + (1 | COMPID), data = IQ, REML = TRUE)
 
+var_COMPID <- as.numeric(VarCorr(IQ_null)$COMPID)
+var_residual <- sigma(IQ_null)^2
+
+icc <- var_COMPID / (var_COMPID + var_residual)
+print(icc)
+
+```
+
+This tells me that 5% of the variation in Hostility is explained by differences between companies 
 
 :::: {.taskbox data-latex=""}
 ## 10.   2pts Model Specification
@@ -124,13 +203,43 @@ Based on the R-code for the model give below, right out the Level 1 and Level 2 
 `lmer(HOSTILE ~ TSIG + GTSIG + (1|COMPID), data = df)`
 ::::
 
+\textbf{Level-1 Model (Within-Company):}
+\[
+\text{HOSTILE}_{ij} = \beta_{0j} + \beta_{1}\,\text{TSIG}_{ij} + r_{ij}, \quad r_{ij} \sim N(0,\sigma^2)
+\]
+
+\bigskip
+
+\textbf{Level-2 Model (Between-Company):}
+\[
+\beta_{0j} = \gamma_{00} + \gamma_{01}\,\text{GTSIG}_{j} + u_{0j}, \quad u_{0j} \sim N(0,\tau^2)
+\]
+
+\bigskip
+
+\begin{itemize}
+    \item $\beta_{0j}$ is the intercept for company $j$, which varies across companies,
+    \item $\beta_{1}$ is the fixed effect of the individual-level task significance (\(\text{TSIG}\)) on hostility,
+    \item $\gamma_{00}$ is the overall intercept across all companies,
+    \item $\gamma_{01}$ is the effect of the company-level task significance (\(\text{GTSIG}\)) on the company intercept,
+    \item \(r_{ij}\) represents the residual error at the individual level, and
+    \item \(u_{0j}\) is the random effect for company \(j\).
+\end{itemize}
+
 :::: {.taskbox data-latex=""}
 ## 11.  2pt Variance Components
 Fit the model below with and without GTSIG.  How does removing this term affect the variance components?  Explain why this makes sense. 
 
 `mod1 = lmer(HOSTILE ~ TSIG + GTSIG + (1|COMPID), data = df)`
 ::::
+```{r}
+mod1 <- lmer(HOSTILE ~ TSIG + GTSIG + (1 | COMPID), data = IQ, REML = TRUE)
+mod_noGTSIG <- lmer(HOSTILE ~ TSIG + (1 | COMPID), data = IQ, REML = TRUE)
+summary(mod1)
+summary(mod_noGTSIG)
+```
 
+Including GTSIG explains some of the hostile variability that is attribuatable to company differences. When we omit it, this variability is abosrbed by the random effect. This increases the variance of our random intercept
 
 :::: {.taskbox data-latex=""}
 ## 12.  2pt Information Criteria
@@ -140,8 +249,16 @@ While REML is the recommended (and default) method for fitting models.  If we us
 `mod2 = lmer(HOSTILE ~ TSIG + GTSIG + LEAD +(1|COMPID), data = df, REML= FALSE)`
 ::::
 
+```{r}
+mod1_ML <- lmer(HOSTILE ~ TSIG + GTSIG + (1 | COMPID), data = IQ, REML = FALSE)
+mod2_ML <- lmer(HOSTILE ~ TSIG + GTSIG + LEAD + (1 | COMPID), data = IQ, REML = FALSE)
+AIC(mod1_ML, mod2_ML)
+BIC(mod1_ML, mod2_ML)
 
+summary(mod2_ML)
+```
 
+Model 2 is preferred by both AIC and BIC measures. this implies that adding the LEAD value improves model fit despite the extra parameter.
 
 :::: {.taskbox data-latex=""}
 ## 13. 2pt Inference
@@ -153,6 +270,8 @@ Justify your conclusion by citing the relevant test statistic.
 *Hint: you may want to load the lmerTest package. * 
 ::::
 
+The model shows that both levels are significant predictors of hostility. a one unit increase in individual task significance is associated with a decrease of about .32 units and a one unit increase of task signifficance at the company level is associated with a decrease of around .25 units. This relationship is significant with p values of 2e-16 and .0126 respectively.
+
 :::: {.taskbox data-latex=""}
 ## 14. 2pt Inference
 Use the models fit above to answer the research question:  
@@ -163,4 +282,4 @@ Justify your conclusion by citing the relevant test statistic.
 
 ::::
 
-
+The coefficient for LEAD is –0.351 and is signifficant with p value of 2e-16. This shows that, after accounting for task significance at both levels, a one-unit increase in perceived leadership climate is associated with a 0.35 unit decrease in HOSTILE. This demonstrates that leadership climate significantly reduces individual hostility.
