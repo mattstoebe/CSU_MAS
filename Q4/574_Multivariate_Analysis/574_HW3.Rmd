@@ -9,49 +9,235 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-# Read in the data
-oil <- read.table("oil.dat", header=TRUE)
+# Question 1
 
-# Get dimensions and group indices
+
+## a&b)
+```{r}
+
+
+oil <- read.table("Data/oil.dat", header = FALSE)
+colnames(oil) <- c("X1", "X2", "X3", "X4", "X5", "zone")
+
+
 groups <- unique(oil$zone)
-g <- length(groups)      # number of groups (g = 3)
+g <- length(groups)
 n_total <- nrow(oil)
 
-# Overall mean vector of the responses:
 xbar <- colMeans(oil[, c("X1","X2","X3","X4","X5")])
 
-# Initialize matrices B and W
 p <- 5
-B <- matrix(0, nrow=p, ncol=p)
-W <- matrix(0, nrow=p, ncol=p)
+B <- matrix(0, nrow = p, ncol = p)
+W <- matrix(0, nrow = p, ncol = p)
+
 
 for (grp in groups) {
-  oil.grp <- subset(oil, zone==grp)
+
+  oil.grp <- subset(oil, zone == grp)
   n_grp <- nrow(oil.grp)
-  xbar_grp <- colMeans(oil.grp[, c("X1","X2","X3","X4","X5")])
   
-  # Update B: n_grp*(grp mean - overall mean)(grp mean - overall mean)^T
-  diff <- as.matrix(xbar_grp - xbar)
-  B <- B + n_grp * diff %*% t(diff)
+
+  xbar_grp <- colMeans(oil.grp[, c("X1", "X2", "X3", "X4", "X5")])
   
-  # Update W: sum over observations of (x - group mean)(x - group mean)^T
+  diff_grp <- as.numeric(xbar_grp - xbar)
+  B <- B + n_grp * (diff_grp %*% t(diff_grp))
+  
   for (i in 1:n_grp) {
-    diff_i <- as.matrix(oil.grp[i, c("X1","X2","X3","X4","X5")] - xbar_grp)
-    W <- W + diff_i %*% t(diff_i)
+    diff_i <- as.numeric(oil.grp[i, c("X1", "X2", "X3", "X4", "X5")] - xbar_grp)
+
+    W <- W + outer(diff_i, diff_i)
   }
 }
 
-# Compute A = solve(W) %*% B (assuming W is non-singular)
+
 A <- solve(W) %*% B
 
-# Eigen decomposition of A
-eigenA <- eigen(A)$values
-# Compute Wilks' lambda from the eigenvalues:
-Lambda <- prod(1/(1 + eigenA))
 
+eigenA <- eigen(A)$values
+print("Eigenvalues of A:")
 print(eigenA)
+
+
+
+Lambda <- Re(prod(1 / (1 + eigenA)))
+print("Wilks' Lambda:")
 print(Lambda)
+
+
+T_stat <- - (n_total - 1 - p + g/2) * log(Lambda)
+df <- p * (g - 1)
+p_value <- 1 - pchisq(T_stat, df = df)
+cat("Test Statistic T =", T_stat)
+
+
+```
+## c)
+```{r}
+fit <- manova(cbind(X1, X2, X3, X4, X5) ~ zone, data=oil)
+summary_fit <- summary(fit, test="Wilks")
+print(summary_fit)
+
+```
+## d)
+```{r}
+summary_aov <- summary.aov(fit)
+print(summary_aov)
+
+```
+
+## e)
+```{r}
+fit12 <- manova(cbind(X1, X2, X3, X4, X5) ~ I(zone %in% c("Wilhelm","Sub-Muhinina")), data=oil)
+summary(fit12, test="Wilks")
+
+```
+# Question 2
+
+
+
+```{r}
+stock <- read.table("Data/stock.dat", header = FALSE)
+
+n <- nrow(stock)
+p <- ncol(stock)
+
+
+pca_stock <- prcomp(stock, scale. = TRUE)
+summary(pca_stock)
+pca_stock$rotation
+head(pca_stock$x)
+```
+
+## a)
+```{r}
+variance_Y2 <- pca_stock$sdev[2]^2
+cat("Estimated variance of Y2 =", variance_Y2, "\n\n")
+```
+
+## b)
+```{r}
+xi <- c(0.58, -0.41, -0.32, -1.82, 0.04)
+
+loading1 <- pca_stock$rotation[, 1]
+Y1_value <- sum(xi * loading1)
+cat("The first principal component (Y1) for xi is", Y1_value, "\n\n")
+```
+
+## c)
+
+```{r}
+summary(pca_stock)
+
+# Create a scree plot:
+plot(pca_stock, type = "l", main = "Scree Plot of Stock Returns PCA")
+```
+
+## d)
+```{r}
+loadings <- pca_stock$rotation
+cat("Loadings for PC1:\n")
+print(loadings[, 1])
+cat("\nLoadings for PC2:\n")
+print(loadings[, 2])
+cat("\n")
+```
+## e)
+
+```{r}
+pc_scores <- pca_stock$x
+
+plot(pc_scores[, 1], pc_scores[, 2],
+     xlab = "PC1", ylab = "PC2",
+     main = "PCA of Stock Returns (Weeks)",
+     pch = 19, col = "gray")
+
+text(pc_scores[, 1], pc_scores[, 2], labels = 1:n, cex = 0.7, pos = 4)
+
+points(pc_scores[63, 1], pc_scores[63, 2], col = "red", pch = 19, cex = 1.5)
+text(pc_scores[63, 1], pc_scores[63, 2], labels = "63", col = "red", cex = 0.9, pos = 3)
+```
+
+It appears that week 63 is an extreme outlier for PC1 and about average for PC2.
+
+# Question 3
+```{r}
+S <- matrix(c(
+  6.59, 6.87, 7.01, 6.56, 6.67, 6.83, 5.97, 7.12,
+  6.87, 9.79, 10.79, 10.72, 10.42, 11.01, 11.36, 13.44,
+  7.01, 10.79, 13.97, 14.63, 14.13, 14.57, 15.77, 18.58,
+  6.56, 10.72, 14.63, 16.72, 16.41, 16.99, 18.82, 21.76,
+  6.67, 10.42, 14.13, 16.41, 17.37, 18.17, 19.62, 22.33,
+  6.83, 11.01, 14.57, 16.99, 18.17, 21.52, 25.79, 29.68,
+  5.97, 11.36, 15.77, 18.82, 19.62, 25.79, 39.47, 48.76,
+  7.12, 13.44, 18.58, 21.76, 22.33, 29.68, 48.76, 75.14),
+  nrow = 8, ncol = 8, byrow = TRUE)
+print("Covariance matrix S:")
+print(S)
+
+mean_vec <- c(5.96, 9.07, 12.18, 14.89, 18.26, 20.47, 20.13, 14.59)
+
+lambda1 <- 159.28
+lambda2 <- 28.54
+lambda3 <- 6.59
+
+e1 <- c(-0.11, -0.18, -0.24, -0.28, -0.28, -0.34, -0.47, -0.63)
+e2 <- c(-0.27, -0.32, -0.37, -0.36, -0.36, -0.22,  0.16,  0.59)
+e3 <- c( 0.46,  0.39,  0.21, -0.05, -0.19, -0.36, -0.50,  0.41)
+```
+
+
+## a)
+We can use the covariance matrix here becuase all fields are measured in the same units (snow depth) so the variance values are meaningful relative to one another. 
+
+## b)
+159.28
+
+## c)
+0
+
+## d)
+10.79
+
+## e)
+```{r}
+cov_Y1_X1 <- lambda1 * e1[1]
+cov_Y1_X1
+```
+
+## f)
+```{r}
+total_variability <- sum(diag(S))
+explained_variability_PC1_PC2 <- lambda1 + lambda2
+prop_explained <- explained_variability_PC1_PC2 / total_variability
+round(prop_explained * 100, 2)
+```
+
+## g)
+PC1 has consistent direction and magnitude. This indicates that PC1 reflects overall level of the snow pack where end of season periods contribute heavily. Because it is all negative, negative 
+
+## h)
+PC2 has negative loading for early periods and positive for later periods which contrasts early snow accumulation with late season accumulation
+
+## i)
+1991s overall snowpack was average, but the high PC2 indicates that the majority of the snow was late season
+
+## j)
+It looks like 2011 was the best year for rafting as there is a negative pc1 (negative pc1 means large snow pack i think) and a high PC2 which means a lot of the snow came later in the year
+
+## k)
+```{r}
+y8 <- c(-7.50, -2.25, -4.25)
+x8_centered <- y8[1]*e1 + y8[2]*e2 + y8[3]*e3
+x8_reconstructed <- mean_vec + x8_centered
+round(x8_reconstructed, 2)
+```
+
+## l)
+```{r}
+x1 <- c(1.53, 2.47, 2.76, 4.76, 7.32, 11.20, 14.55, 3.11)
+x1_centered <- x1 - mean_vec
+y1_2 <- sum(e2 * x1_centered)
+round(y1_2, 2)
 
 ```
 
