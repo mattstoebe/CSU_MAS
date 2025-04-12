@@ -1,0 +1,57 @@
+---
+title: "574_HW3"
+author: "Matthew Stoebe"
+date: "2025-04-12"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Read in the data
+oil <- read.table("oil.dat", header=TRUE)
+
+# Get dimensions and group indices
+groups <- unique(oil$zone)
+g <- length(groups)      # number of groups (g = 3)
+n_total <- nrow(oil)
+
+# Overall mean vector of the responses:
+xbar <- colMeans(oil[, c("X1","X2","X3","X4","X5")])
+
+# Initialize matrices B and W
+p <- 5
+B <- matrix(0, nrow=p, ncol=p)
+W <- matrix(0, nrow=p, ncol=p)
+
+for (grp in groups) {
+  oil.grp <- subset(oil, zone==grp)
+  n_grp <- nrow(oil.grp)
+  xbar_grp <- colMeans(oil.grp[, c("X1","X2","X3","X4","X5")])
+  
+  # Update B: n_grp*(grp mean - overall mean)(grp mean - overall mean)^T
+  diff <- as.matrix(xbar_grp - xbar)
+  B <- B + n_grp * diff %*% t(diff)
+  
+  # Update W: sum over observations of (x - group mean)(x - group mean)^T
+  for (i in 1:n_grp) {
+    diff_i <- as.matrix(oil.grp[i, c("X1","X2","X3","X4","X5")] - xbar_grp)
+    W <- W + diff_i %*% t(diff_i)
+  }
+}
+
+# Compute A = solve(W) %*% B (assuming W is non-singular)
+A <- solve(W) %*% B
+
+# Eigen decomposition of A
+eigenA <- eigen(A)$values
+# Compute Wilks' lambda from the eigenvalues:
+Lambda <- prod(1/(1 + eigenA))
+
+print(eigenA)
+print(Lambda)
+
+```
+
