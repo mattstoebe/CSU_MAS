@@ -1,0 +1,119 @@
+---
+title: "565_HW_4"
+author: "Matthew Stoebe"
+date: "2025-04-15"
+output: pdf_document
+---
+
+# Question 1
+
+```{r}
+library(dplyr)
+
+site <- c(rep("A", 10), rep("B", 10), rep("C", 10), rep("D", 10))
+
+defective <- c(57, 11, 57, 30, 119, 50, 31, 21, 67, 31,   # Site A
+               39, 42, 133, 86, 3, 76, 41, 12, 114, 39,    # Site B
+               28, 97, 34, 117, 6, 109, 33, 115, 65, 74,     # Site C
+               72, 128, 73, 8, 74, 62, 78, 32, 8, 74)         # Site D
+batch_size <- c(1000, 100, 1000, 500, 2000, 1000, 500, 500, 1000, 500,
+                500, 500, 2000, 1000, 100, 1000, 500, 100, 2000, 500,
+                500, 2000, 500, 2000, 100, 2000, 500, 2000, 1000, 1000,
+                1000, 2000, 1000, 100, 1000, 1000, 1000, 500, 100, 1000)
+
+chips_df <- data.frame(site, defective, batch_size)
+
+agg_data <- chips_df %>%
+  group_by(site) %>%
+  summarize(total_def = sum(defective),
+            total_chips = sum(batch_size),
+            prop = total_def / total_chips)
+
+
+x <- agg_data$total_def
+n <- agg_data$total_chips
+
+# Use the chi-square test for homogeneity (without continuity correction)
+prop_test_result <- prop.test(x, n, correct = FALSE)
+print(prop_test_result)
+
+```
+
+We see that there is a signifficant differences between the factories. the rate at factory 4 and factor 2 is higher than the rate at factory 1 and 3. this is found at a  alpha = .01 level
+
+
+
+# Question 2
+
+Need to get the dataset set uop
+```{r}
+
+gpa_sat <- read.table("gpasat.txt", header = TRUE)
+
+# Compute the correlation (Pearson) between GPA and SAT for all applicants.
+overall_cor <- cor.test(gpa_sat$GPA, gpa_sat$SAT)
+print(overall_cor)
+
+# Select the applicants who attend State College.
+# Acceptance rule: SAT + 200*GPA > 1550; Decline if SAT + 200*GPA > 1850.
+accepted <- subset(gpa_sat, SAT + 200 * GPA > 1550 & SAT + 200 * GPA <= 1850)
+
+# Compute the correlation (Pearson) for the accepted applicants.
+accepted_cor <- cor.test(accepted$GPA, accepted$SAT)
+print(accepted_cor)
+
+
+```
+
+
+
+
+
+
+
+
+# Question 3
+
+```{r}
+beta0 <- 0.5
+beta1 <- 2
+beta2 <- 1.5
+beta3 <- -1
+sigma <- 0.5
+
+x_val <- 1.2
+d_clay <- 1
+expected_height_clay <- beta0 + beta1 * x_val + beta2 * d_clay + beta3 * (x_val * d_clay)
+cat("Expected height for clay soil with 1.2 gallons/week:", expected_height_clay, "inches\n")
+
+x_val <- 1
+expected_height_sandy <- beta0 + beta1 * x_val  # since d=0
+expected_height_clay <- beta0 + beta1 * x_val + beta2 * 1 + beta3 * (x_val * 1)
+cat("At 1 gallon/week:\n")
+cat("  Sandy soil:", expected_height_sandy, "inches\n")
+cat("  Clay soil:", expected_height_clay, "inches\n")
+
+
+x_val <- 2
+expected_height_sandy <- beta0 + beta1 * x_val  # d=0
+expected_height_clay <- beta0 + beta1 * x_val + beta2 * 1 + beta3 * (x_val * 1)
+cat("At 2 gallons/week:\n")
+cat("  Sandy soil:", expected_height_sandy, "inches\n")
+cat("  Clay soil:", expected_height_clay, "inches\n")
+
+
+mu <- beta0 + beta1 * 1 + beta2 * 1 + beta3 * (1 * 1)  # mean = 3.0 inches
+threshold <- 4
+
+p_above4 <- 1 - pnorm(threshold, mean = mu, sd = sigma)
+cat("Probability that grass in clay soil with 1 gallon/week is taller than 4 inches:", p_above4, "\n")
+
+```
+
+
+
+
+
+
+
+# Question 4
