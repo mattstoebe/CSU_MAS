@@ -40,7 +40,7 @@ print(prop_test_result)
 ```
 
 We see that there is a signifficant differences between the factories. the rate at factory 4 and factor 2 is higher than the rate at factory 1 and 3. this is found at a  alpha = .01 level
-
+for this, we are assumign that each batch's defectsa re independent bernouli trials. 
 
 
 # Question 2
@@ -49,11 +49,29 @@ Need to get the dataset set uop
 ```{r}
 
 
+# 1. Load the data (no headers)
+gpasat <- read.table("Data/gpasat.txt", header = FALSE)
+
+# 2. Assign meaningful names
+colnames(gpasat) <- c("GPA", "SAT")
+
+# 3. Correlation in the full applicant pool
+full_cor <- cor.test(gpasat$GPA, gpasat$SAT)
+print(full_cor)
+
+# 4. Determine who ends up at State College:
+#    – admitted if SAT + 200*GPA > 1550
+#    – but those with SAT + 200*GPA > 1850 go elsewhere
+accepted     <- subset(gpasat, SAT + 200*GPA > 1550)
+matriculated <- subset(accepted, SAT + 200*GPA <= 1850)
+
+# 5. Correlation among matriculated students
+stu_cor <- cor.test(matriculated$GPA, matriculated$SAT)
+print(stu_cor)
 
 ```
 
-
-
+Conditioning on the admission rule forces a trade‑off—high SAT plus high GPA both aren’t needed to clear the cutoff—so within that band a higher score on one measure implies a lower score on the other, flipping the sign of the observed correlation
 
 
 
