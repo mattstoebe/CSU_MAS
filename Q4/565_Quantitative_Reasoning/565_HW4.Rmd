@@ -33,7 +33,6 @@ agg_data <- chips_df %>%
 x <- agg_data$total_def
 n <- agg_data$total_chips
 
-# Use the chi-square test for homogeneity (without continuity correction)
 prop_test_result <- prop.test(x, n, correct = FALSE)
 print(prop_test_result)
 
@@ -49,23 +48,16 @@ Need to get the dataset set uop
 ```{r}
 
 
-# 1. Load the data (no headers)
 gpasat <- read.table("Data/gpasat.txt", header = FALSE)
 
-# 2. Assign meaningful names
 colnames(gpasat) <- c("GPA", "SAT")
 
-# 3. Correlation in the full applicant pool
 full_cor <- cor.test(gpasat$GPA, gpasat$SAT)
 print(full_cor)
 
-# 4. Determine who ends up at State College:
-#    – admitted if SAT + 200*GPA > 1550
-#    – but those with SAT + 200*GPA > 1850 go elsewhere
 accepted     <- subset(gpasat, SAT + 200*GPA > 1550)
 matriculated <- subset(accepted, SAT + 200*GPA <= 1850)
 
-# 5. Correlation among matriculated students
 stu_cor <- cor.test(matriculated$GPA, matriculated$SAT)
 print(stu_cor)
 
