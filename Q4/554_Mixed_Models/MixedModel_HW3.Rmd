@@ -24,7 +24,7 @@ library(RLRsim)
 
 ## 1.) 4pts ANOVA procedure
 
-```{r, include=FALSE}
+```{r}
 pulp <- read.csv("Data/pulp.csv")
 
 aov_mod <- aov(bright ~ operator, data = pulp)
@@ -63,7 +63,7 @@ cat("Residual variance estimate:", round(sig,4), "\n")
 :::
 
 ```{r}
-n_per_op <- table(pulp$operator)[1]    # balanced design
+n_per_op <- table(pulp$operator)[1]
 sig_op    <- (anova_res["operator", "Mean Sq"] - sig) / n_per_op
 cat("Operator‐effect variance (EMS):", round(sig_op,4), "\n")
 ```
@@ -89,7 +89,7 @@ null_ml <- lm(bright ~ 1, data = pulp)
 lrt_ml  <- 2*(logLik(ml_mod) - logLik(null_ml))
 p_lrt   <- pchisq(as.numeric(lrt_ml), df = 1, lower.tail = FALSE)
 cat("LRT =", round(as.numeric(lrt_ml),3),
-    ", p =", signif(p_lrt,3), "\n")
+    ", p =", signif(p_lrt,3))
 
 ```
 
@@ -105,7 +105,7 @@ ANOVA all fixed‐operator means equal. ML‐LRT variance = 0 in a random‐effe
 
 ```{r}
 sig_e_ml <- sigma(ml_mod)^2
-cat("Residual variance (ML):", round(sig_e_ml,4), "\n")
+cat("Residual variance (ML):", round(sig_e_ml,4))
 ```
 
 ::: {.taskbox data-latex=""}
