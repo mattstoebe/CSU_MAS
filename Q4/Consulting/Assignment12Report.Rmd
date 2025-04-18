@@ -1,0 +1,68 @@
+---
+title: "STAA 555: Assignment 12"
+author: "Matthew Stoebe"
+output:
+  bookdown::word_document2:
+    fig_caption: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+
+library(knitr)
+library(tidyverse)
+library(kableExtra)
+
+```
+
+# Introduction
+
+Roses are often kept in storage for extended periods before being planted.  During storage, they are at risk of developing fungal spores. The goal of this study is to compare two anti-fungal treatments for roses. It is thought that the effect of the anti-fungal treatment may depend on soil moisture (water level).
+
+This study includes two anti-fungal treatments (A and B) and three water levels (low, medium, and high).  Each combination of treatment and water level was randomly assigned to 10 rose bush plants, for a total of 60 rose bushes included in the study. The response variable is the number of fungal spores per plant at the end of the study period. Soil organic carbon was also measured for each plant at the end of the study period.  The primary objective is to compare the average number of fungus spores per treatment, controlling for water level and soil organic carbon.  
+
+
+```{r spores-summary, echo=FALSE}
+df <- read_csv("RoseFungusData.csv") %>%
+  mutate(
+    Water     = fct_relevel(Water, "Low", "Medium", "High"),
+    Treatment = factor(Treatment)
+  )
+
+summary_stats <- df %>%
+  group_by(Treatment, Water) %>%
+  summarise(
+    Mean = mean(Spores, na.rm = TRUE),
+    SD   = sd(Spores,   na.rm = TRUE),
+    N    = n(),
+    SE   = SD / sqrt(N),
+    .groups = "drop"
+  ) %>%
+  mutate(across(Mean:SE, ~ round(.x, 1)))
+
+knitr::kable(
+  summary_stats,
+  caption   = "Mean number of spores per plant …",
+  col.names = c("Treatment", "Water Level", "Mean", "SD", "N", "SE")
+)
+
+```
+
+
+```{r spores-plot, echo=FALSE, fig.cap="Boxplots of fungal spore counts by water level and antifungal treatment."}
+ggplot(df, aes(x = Water, y = Spores, fill = Treatment)) +
+  geom_boxplot(position = position_dodge(width = 0.75)) +
+  scale_x_discrete(limits = c("Low", "Medium", "High")) +
+  labs(
+    x    = "Water Level",
+    y    = "Spore Count",
+    fill = "Treatment"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+# Appendix
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```

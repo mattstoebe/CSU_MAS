@@ -12,7 +12,6 @@ header-includes:
 mainfont: SourceSansPro
 ---
 
-
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(cache=FALSE,comment=NA, fig.path="/tmp/Figs/", warning=FALSE, message=FALSE)
 options(digits=5,show.signif.stars=FALSE)
@@ -20,95 +19,166 @@ library(faraway)
 library(EMSaov)
 library(lme4)
 library(lmerTest)
+library(RLRsim)
 ```
 
+## 1.) 4pts ANOVA procedure
 
-## 1.)	4pts ANOVA procedure
+```{r, include=FALSE}
+pulp <- read.csv("Data/pulp.csv")
+
+aov_mod <- aov(bright ~ operator, data = pulp)
+summary(aov_mod)
+```
 
 Consider the data: pulp.csv
 
-Paper brightness is explored in relation to the shift operator.  
+Paper brightness is explored in relation to the shift operator.
 
-Analyze this data as a fixed effects one-way ANOVA using anova estimators. Paste a summary of your model below.  (Not shown here, but you can verify the results are equivalent to the ANOVA estimators treating the operator effect as random.)
+Analyze this data as a fixed effects one-way ANOVA using anova estimators. Paste a summary of your model below. (Not shown here, but you can verify the results are equivalent to the ANOVA estimators treating the operator effect as random.)
 
-:::: {.taskbox data-latex=""}
-### a.	(1 pt) Test the null hypothesis that there is no difference in brightness across shift operators.   Report the test statistic and p-value. 
-::::
+::: {.taskbox data-latex=""}
+### a. (1 pt) Test the null hypothesis that there is no difference in brightness across shift operators. Report the test statistic and p-value.
+:::
 
+```{r}
 
+anova_res <- summary(aov_mod)[[1]]
+Fval    <- anova_res["operator", "F value"]
+pval_F  <- anova_res["operator", "Pr(>F)"]
+cat("F = ", round(Fval,3), ", p = ", signif(pval_F,3), "\n")
+```
 
-:::: {.taskbox data-latex=""}
-### b.	(1 pt) Provide an estimate of the residual variance.
-::::
+::: {.taskbox data-latex=""}
+### b. (1 pt) Provide an estimate of the residual variance.
+:::
 
+```{r}
+sig    <- anova_res["Residuals", "Mean Sq"]
+cat("Residual variance estimate:", round(sig,4), "\n")
+```
 
-:::: {.taskbox data-latex=""}
-### c.	(2 pt) Provide an estimate of the variance of the operator effects.  (Hint, consider EMS). 
-::::
+::: {.taskbox data-latex=""}
+### c. (2 pt) Provide an estimate of the variance of the operator effects. (Hint, consider EMS).
+:::
 
+```{r}
+n_per_op <- table(pulp$operator)[1]    # balanced design
+sig_op    <- (anova_res["operator", "Mean Sq"] - sig) / n_per_op
+cat("Operator‐effect variance (EMS):", round(sig_op,4), "\n")
+```
 
+## 2.) 5pts ML estimate
 
-## 2.)	5pts ML estimate
+Estimate the same model as in #1, but using ML and **treating operator as a random effect**. Paste a summary of your output below.
 
-Estimate the same model as in #1, but using ML and **treating operator as a random effect**.  Paste a summary of your output below.
+```{r}
+ml_mod <- lmer(bright ~ 1 + (1|operator),
+               data = pulp,
+               REML = FALSE)
 
+summary(ml_mod)
+```
 
-:::: {.taskbox data-latex=""}
-### a.	(1 pt) Test the null hypothesis that there is no difference in brightness across shift operators.   Report the test statistic and p-value. 
-::::
+::: {.taskbox data-latex=""}
+### a. (1 pt) Test the null hypothesis that there is no difference in brightness across shift operators. Report the test statistic and p-value.
+:::
 
+```{r}
+null_ml <- lm(bright ~ 1, data = pulp)
+lrt_ml  <- 2*(logLik(ml_mod) - logLik(null_ml))
+p_lrt   <- pchisq(as.numeric(lrt_ml), df = 1, lower.tail = FALSE)
+cat("LRT =", round(as.numeric(lrt_ml),3),
+    ", p =", signif(p_lrt,3), "\n")
 
-:::: {.taskbox data-latex=""}
-### b.	(2 pt) Although the verbiage I used in 2a is the same as in 1a, the test carried out addresses a slightly different null hypothesis.  Describe the difference in the null hypothesis statements for the tests carried out in 1a and 2a. 
-::::
+```
 
-:::: {.taskbox data-latex=""}
-### c.	(1 pt) Provide an estimate of the residual variance.
-::::
+::: {.taskbox data-latex=""}
+### b. (2 pt) Although the verbiage I used in 2a is the same as in 1a, the test carried out addresses a slightly different null hypothesis. Describe the difference in the null hypothesis statements for the tests carried out in 1a and 2a.
+:::
 
+ANOVA all fixed‐operator means equal. ML‐LRT variance = 0 in a random‐effects model.
 
-:::: {.taskbox data-latex=""}
-### d.	(1 pt) Provide an estimate of the variance of the operator effects.   How does this estimate compare to Part 1c?  Comment briefly.
-::::
+::: {.taskbox data-latex=""}
+### c. (1 pt) Provide an estimate of the residual variance.
+:::
 
+```{r}
+sig_e_ml <- sigma(ml_mod)^2
+cat("Residual variance (ML):", round(sig_e_ml,4), "\n")
+```
 
-## 3.)	3pts REML procedure
+::: {.taskbox data-latex=""}
+### d. (1 pt) Provide an estimate of the variance of the operator effects. How does this estimate compare to Part 1c? Comment briefly.
+:::
 
-Estimate the same model as in #1, but using REML and treating operator as a random effect.  Paste a summary of your output below. 
+```{r}
+sig_op_ml <- as.data.frame(VarCorr(ml_mod))$vcov[1]
+cat("Operator variance (ML):", round(sig_op_ml,4),
+    " (compare to 1c:", round(sig_op,4), ")\n")
+```
 
+## 3.) 3pts REML procedure
 
-:::: {.taskbox data-latex=""}
-### a.	(1 pt) Test the null hypothesis that there is no difference in brightness across shift operators.   Report the test statistic and p-value. 
-::::
+Estimate the same model as in #1, but using REML and treating operator as a random effect. Paste a summary of your output below.
 
+```{r}
+reml_mod <- lmer(bright ~ 1 + (1 | operator), data = pulp)
+summary(reml_mod)
+```
 
-:::: {.taskbox data-latex=""}
-### b.	(1 pt) Provide an estimate of the residual variance.
-::::
+::: {.taskbox data-latex=""}
+### a. (1 pt) Test the null hypothesis that there is no difference in brightness across shift operators. Report the test statistic and p-value.
+:::
 
+```{r}
+ranova_res <- ranova(reml_mod)
+print(ranova_res)
+lrt_value <- ranova_res[2, "LRT"]
+p_value   <- ranova_res[2, "Pr(>Chisq)"]
 
-:::: {.taskbox data-latex=""}
-### c.	(1 pt) Provide an estimate of the variance of the operator effects.  How does this estimate compare to Part1c?  Comment briefly.
-::::
+cat("LRT statistic =", round(lrt_value, 3), ", p-value =", signif(p_value, 3), "\n")
 
+```
 
-## 4.)  10pts (2pts each) Likelihood Ratio Test via parametric bootstrap. 
+::: {.taskbox data-latex=""}
+### b. (1 pt) Provide an estimate of the residual variance.
+:::
+
+```{r}
+resid_var <- sigma(reml_mod)^2
+cat("Residual variance =", round(resid_var, 4), "\n")
+```
+
+::: {.taskbox data-latex=""}
+### c. (1 pt) Provide an estimate of the variance of the operator effects. How does this estimate compare to Part1c? Comment briefly.
+:::
+
+```{r}
+vc <- as.data.frame(VarCorr(reml_mod))
+operator_var <- vc$vcov[vc$grp == "operator"]
+cat("Operator variance =", round(operator_var, 4), "\n")
+```
+
+This is close to the estimate from 1c but not exactly the same. This is expected behavior.
+
+## 4.) 10pts (2pts each) Likelihood Ratio Test via parametric bootstrap.
 
 We can use the parametric bootstrap approach to obtain a more accurate p-value. We need to estimate the probability, given that the null hypothesis is true, of observing an LRT of our observed value or greater. Under the null hypothesis, $y \sim N(\mu, \sigma^2)$. A simulation approach generates data under this model, fits the null and alternative models and computes the LRT statistic. The process is repeated a large number of times and the proportion of LRT statistics exceeding the observed value is used to estimate the p-value. In practice, we do not know the true values of $\mu$ and $\sigma$, but we can use the estimated values; this distinguishes the parametric bootstrap from the purely simulation approach. The simulate function makes it simple to generate a sample from a model:
 
-* Our null model would be:
+-   Our null model would be:
 
 `nullmod = lm(bright~ 1, pulp)`
 
-* Our alternative model would be as in question 3. 
+-   Our alternative model would be as in question 3.
 
-* Calculate the observed LRT:  
+-   Calculate the observed LRT:
 
 `as.numeric(2*(logLik(REMLmod, REML = TRUE) – logLik(nullmod, REML=TRUE)))`
 
-Use a parametric bootstrap as outlined below to determine the null distribution for the LRT statistic calculated.  
+Use a parametric bootstrap as outlined below to determine the null distribution for the LRT statistic calculated.
 
-```
+```         
 1.) Simulate data under the null
 y = unlist(simulate(nullmod))
 2.) Fit the null model to the data generated in 1.
@@ -117,68 +187,114 @@ y = unlist(simulate(nullmod))
 5.) Repeat steps 1 -4  1000 times.  
 ```
 
+```{r}
+nullmod  <- lm(bright ~ 1, data = pulp)
+reml_mod <- lmer(bright ~ 1 + (1 | operator), data = pulp, REML = TRUE)
 
-:::: {.taskbox data-latex=""}
-### a.	 Include a histogram of the LRT statistics generated.  
-::::
+lrt_obs <- as.numeric(2 * (logLik(reml_mod) - logLik(nullmod)))
 
+set.seed(123)
+B       <- 1000
+lrt_sim <- numeric(B)
 
-:::: {.taskbox data-latex=""}
-### b.	 Include a summary of the LRT statistics generated (min, 1st quartile, median, mean, 3rd qu., max)
-::::
+for (i in seq_len(B)) {
+  pulp$bright_sim <- unlist(simulate(nullmod))
+  m0 <- lm(bright_sim ~ 1, data = pulp)
+  
+  m1 <- try(
+    lmer(bright_sim ~ 1 + (1 | operator), data = pulp, REML = TRUE),
+    silent = TRUE
+  )
+  
+  if (inherits(m1, "try-error") || isSingular(m1)) {
+    lrt_sim[i] <- NA
+  } else {
+    lrt_sim[i] <- as.numeric(2 * (logLik(m1) - logLik(m0)))
+  }
+}
 
+lrt_sim2 <- na.omit(lrt_sim)
+```
 
+::: {.taskbox data-latex=""}
+### a. Include a histogram of the LRT statistics generated.
+:::
 
-:::: {.taskbox data-latex=""}
-### c.	 What proportion of LRT statistics generated under the null fall above the observed test statistic for the pulp data? (i.e. your p-value). 
-::::
+```{r}
+hist(
+  lrt_sim2,
+  main = "Parametric Bootstrap: LRT under Null",
+  xlab = "LRT statistic",
+  breaks = 30
+)
+```
 
+::: {.taskbox data-latex=""}
+### b. Include a summary of the LRT statistics generated (min, 1st quartile, median, mean, 3rd qu., max)
+:::
 
-:::: {.taskbox data-latex=""}
-### d.	 You likely got an error “boundary (singular) fit: see ?isSingular”.  Look this up.  Why is it not surprising to see this in this setting?
-::::
+```{r}
+print(summary(lrt_sim2))
 
+```
 
-:::: {.taskbox data-latex=""}
-### e.	 Load (install) the package RLRsim.  Then run the command exactRLRT(REMLmod), replacing REMLmod with the appropriate name of your model.  Compare with part c.  (Note, this command is only useful for testing random effects). 
-::::
+::: {.taskbox data-latex=""}
+### c. What proportion of LRT statistics generated under the null fall above the observed test statistic for the pulp data? (i.e. your p-value).
+:::
 
+```{r}
+p_empirical <- mean(lrt_sim2 >= lrt_obs)
+cat("Observed LRT   =", round(lrt_obs, 3), "\n")
+cat("Bootstrap p‐value =", signif(p_empirical, 3), "\n")
 
-## 5.)   0 pts (Practice, Solutions will be posted) Analysis of Egg production
+```
+
+::: {.taskbox data-latex=""}
+### d. You likely got an error “boundary (singular) fit: see ?isSingular”. Look this up. Why is it not surprising to see this in this setting?
+:::
+
+When sigma\^2_operator = 0 under H0, the random‐effect variance is on the boundary of the parameter space (zero), so in many bootstrap samples lmer estimates a zero variance and flags the fit as singular. This is expected under H0.
+
+::: {.taskbox data-latex=""}
+### e. Load (install) the package RLRsim. Then run the command exactRLRT(REMLmod), replacing REMLmod with the appropriate name of your model. Compare with part c. (Note, this command is only useful for testing random effects).
+:::
+
+```{r}
+
+ex_rlrt <- exactRLRT(reml_mod)
+print(ex_rlrt)
+```
+
+The exactRLRT p‑value (0.024) is smaller than the bootstrap p‑value (0.046). This reflects the finite‐sample distribution under Null and the correction.
+
+## 5.) 0 pts (Practice, Solutions will be posted) Analysis of Egg production
 
 The eggprod.csv dataset concerns an experiment where six pullets were placed into each of 12 pens. Four blocks were formed from groups of three pens based on location. Three treatments were applied. The number of eggs produced was recorded.
 
-:::: {.taskbox data-latex=""}
-### a.	Make suitable plots of the data and comment. 
-::::
+::: {.taskbox data-latex=""}
+### a. Make suitable plots of the data and comment.
+:::
 
+::: {.taskbox data-latex=""}
+### b. Fit a fixed effects model for the number of eggs produced with the treatments and blocks as predictors. Determine the significance of the two predictors and perform a basic diagnostic check.
+:::
 
-:::: {.taskbox data-latex=""}
-### b.	 Fit a fixed effects model for the number of eggs produced with the treatments and blocks as predictors. Determine the significance of the two predictors and perform a basic diagnostic check.
-::::
+::: {.taskbox data-latex=""}
+### c. Fit a model for the number of eggs produced with the treatments as fixed effects and the blocks as random effects. Which treatment is best in terms of maximizing production according to the model? Are you sure it is better than other two treatments?
+:::
 
+::: {.taskbox data-latex=""}
+### d. Use the Kenward-Roger procedure for an F-test to check for differences between the treatments. How does the result compare to the fixed effects result?
+:::
 
-:::: {.taskbox data-latex=""}
-### c.	Fit a model for the number of eggs produced with the treatments as fixed effects and the blocks as random effects. Which treatment is best in terms of maximizing production according to the model? Are you sure it is better than other two treatments?
-::::
+::: {.taskbox data-latex=""}
+### e. Perform the same test of the fixed effect for treatment, but using a bootstrap method with LRT as outlined in question 4. How do the results compare to part d?
+:::
 
+::: {.taskbox data-latex=""}
+### f. The parametric bootstrap method can be implemented using PBmodcomp(modFULL, modREDUCED). Run this command and compare the results.
+:::
 
-:::: {.taskbox data-latex=""}
-### d.	Use the Kenward-Roger procedure for an F-test to check for differences between the treatments. How does the result compare to the fixed effects result?
-::::
-
-
-:::: {.taskbox data-latex=""}
-### e.	Perform the same test of the fixed effect for treatment, but using a bootstrap method with LRT as outlined in question 4. How do the results compare to part d?
-::::
-
-
-:::: {.taskbox data-latex=""}
-### f.	The parametric bootstrap method can be implemented using PBmodcomp(modFULL, modREDUCED).  Run this command and compare the results.  
-::::
-
-
-:::: {.taskbox data-latex=""}
-### g.	Test for the significance of the blocks. Does the outcome agree with the fixed effects result?    (Use exactRLRT() as in 4e).
-::::
-
+::: {.taskbox data-latex=""}
+### g. Test for the significance of the blocks. Does the outcome agree with the fixed effects result? (Use exactRLRT() as in 4e).
+:::
