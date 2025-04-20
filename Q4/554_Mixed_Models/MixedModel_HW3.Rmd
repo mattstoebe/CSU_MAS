@@ -188,32 +188,31 @@ y = unlist(simulate(nullmod))
 ```
 
 ```{r}
-nullmod  <- lm(bright ~ 1, data = pulp)
-reml_mod <- lmer(bright ~ 1 + (1 | operator), data = pulp, REML = TRUE)
 
-lrt_obs <- as.numeric(2 * (logLik(reml_mod) - logLik(nullmod)))
+pulp <- read.csv("Data/pulp.csv")
 
-set.seed(123)
-B       <- 1000
-lrt_sim <- numeric(B)
+alt_ml  <- lmer(bright ~ 1 + (1|operator), data = pulp, REML = FALSE)
+null_ml <- lm  (bright ~ 1,                data = pulp)   # ML by default
 
-for (i in seq_len(B)) {
-  pulp$bright_sim <- unlist(simulate(nullmod))
-  m0 <- lm(bright_sim ~ 1, data = pulp)
-  
-  m1 <- try(
-    lmer(bright_sim ~ 1 + (1 | operator), data = pulp, REML = TRUE),
-    silent = TRUE
-  )
-  
-  if (inherits(m1, "try-error") || isSingular(m1)) {
-    lrt_sim[i] <- NA
-  } else {
-    lrt_sim[i] <- as.numeric(2 * (logLik(m1) - logLik(m0)))
-  }
+lrt_obs <- as.numeric( 2 * (logLik(alt_ml) - logLik(null_ml)) )
+cat("Observed LR statistic =", round(lrt_obs, 3), "\n")
+
+set.seed(468)
+B         <- 1000
+lrt_sim   <- numeric(B)
+
+for (b in seq_len(B)) {
+
+  ysim <- simulate(null_ml)[[1]] 
+
+  d         <- transform(pulp, bright = ysim)
+
+  m0 <- lm  (bright ~ 1,                 data = d)
+  m1 <- lmer(bright ~ 1 + (1|operator),  data = d, REML = FALSE)
+
+  lr <- 2 * (logLik(m1) - logLik(m0))
+  lrt_sim[b] <- lr
 }
-
-lrt_sim2 <- na.omit(lrt_sim)
 ```
 
 ::: {.taskbox data-latex=""}
@@ -221,12 +220,10 @@ lrt_sim2 <- na.omit(lrt_sim)
 :::
 
 ```{r}
-hist(
-  lrt_sim2,
-  main = "Parametric Bootstrap: LRT under Null",
-  xlab = "LRT statistic",
-  breaks = 30
-)
+hist(lrt_sim, breaks = 30,
+     main = "Parametric‑bootstrap null distribution",
+     xlab  = "Likelihood‑ratio statistic")
+abline(v = lrt_obs, lwd = 2)
 ```
 
 ::: {.taskbox data-latex=""}
@@ -234,8 +231,7 @@ hist(
 :::
 
 ```{r}
-print(summary(lrt_sim2))
-
+print(summary(lrt_sim))
 ```
 
 ::: {.taskbox data-latex=""}
@@ -243,7 +239,7 @@ print(summary(lrt_sim2))
 :::
 
 ```{r}
-p_empirical <- mean(lrt_sim2 >= lrt_obs)
+p_empirical <- mean(lrt_sim >= lrt_obs)
 cat("Observed LRT   =", round(lrt_obs, 3), "\n")
 cat("Bootstrap p‐value =", signif(p_empirical, 3), "\n")
 
@@ -265,7 +261,7 @@ ex_rlrt <- exactRLRT(reml_mod)
 print(ex_rlrt)
 ```
 
-The exactRLRT p‑value (0.024) is smaller than the bootstrap p‑value (0.046). This reflects the finite‐sample distribution under Null and the correction.
+The exactRLRT p‑value (0.021) is very similar to the bootstrap p‑value (0.025). This indicates that our bootstrapping procedure is pretty accurate.
 
 ## 5.) 0 pts (Practice, Solutions will be posted) Analysis of Egg production
 
