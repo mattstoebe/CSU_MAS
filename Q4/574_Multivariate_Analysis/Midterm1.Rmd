@@ -1,0 +1,22 @@
+---
+title: "Midterm1"
+author: "Matthew Stoebe"
+date: "2025-04-21"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse) 
+library(car) 
+library(heplots) 
+library(MVN)
+library(Hotelling) 
+
+install.packages("heplots")
+
+set.seed(123)        # reproducibility where applicable
+
+load("Data/plasticDat.RData")  # loads object `dat`
+dat <- as_tibble(dat)
+```
+

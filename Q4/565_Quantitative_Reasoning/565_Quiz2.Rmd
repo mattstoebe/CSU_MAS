@@ -1,0 +1,134 @@
+---
+title: "Quiz2"
+author: "Matthew Stoebe"
+date: "2025-04-20"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+
+## a
+```{r}
+fiz <- read.table("Data/fizzergy.txt",
+                  header = FALSE,
+                  col.names = c("consume","age","chol"))
+
+mod0 <- lm(chol ~ consume, data=fiz)
+summary(mod0)
+
+```
+There is a signifficant relationship between consumption and cholesteral levels before controlling for other covariates.
+
+## b
+```{r}
+mod1 <- lm(chol ~ consume + age, data=fiz)
+summary(mod1)
+
+```
+After we control for age, we see that consumption no longer has a significant relationship with cholesteral levels
+
+# c
+```{r}
+library(ggplot2)
+
+mod1  <- lm(chol ~ consume + age, data = fiz)
+coefs <- coef(mod1)
+slope <- coefs["age"]
+int0  <- coefs["(Intercept)"]
+int1  <- int0 + coefs["consume"]
+
+# Create a little data‐frame for the two lines
+line_df <- data.frame(
+  consume   = factor(c(0, 1)),
+  intercept = c(int0, int1),
+  slope     = slope
+)
+
+ggplot(fiz, aes(x = age, y = chol, color = factor(consume))) +
+  geom_point(alpha = 0.6) +
+  geom_abline(aes(intercept = intercept, slope = slope, color = consume),
+              data = line_df,
+              size = 1) +
+  scale_color_manual(
+    name   = "Regular consumer",
+    values = c("0" = "steelblue", "1" = "tomato"),
+    labels = c("No", "Yes")
+  ) +
+  labs(
+    x     = "Age",
+    y     = "Total cholesterol",
+    title = "Cholesterol vs Age with Age‑Adjusted Fits"
+  ) +
+  theme_minimal()
+
+
+```
+
+## d
+Age is related to both energy drink consumption habits and cholesterol. As such, omitting it biases the comparison to show non-existant relationships between teh two variables. 
+
+# Question 2
+
+## a
+```{r}
+df <- read.table("Data/tea.txt", header=TRUE)
+
+df$teaF <- factor(df$tea, levels=0:2, labels=c("rarely","sometimes","frequently"))
+anova_res <- aov(noreph ~ teaF, data=df)
+summary(anova_res)
+```
+There is a signifficant relationship between drinking tea and norepinephrine levels which I assume are related to migrane levels..
+
+## b
+
+We cannot make a causal conclusion such are recommending tea drinking based on this data because it is an observational study AND does not apply any more advanced causal techniques to attempt to measure causality. We can merely say that these two things appear to be related. We cannot drive recomendations.
+
+# Question 3
+
+##a 
+```{r}
+schools <- read.table("Data/schoolscore.txt", header=TRUE)
+
+res <- t.test(schools$sc24, schools$sc23,
+              paired      = TRUE,
+              alternative = "greater")
+print(res)
+```
+
+The pass rates ARE significantly higher in 2024 than in 2023 with a p value of 5.081e-06. 
+
+## b
+No. this is not an RCT and does not apply more advanced causal techniques. Additionall by sampling the lowest performing schools and remeasuring without controll group, regression to the mean is likely to have occured and may explain the observed gain. Without randomized assigment or comparable controll, we cannot attribute the improvement to smaller class sizes.
+
+# Question 4
+
+```{r}
+hosp <- read.table("Data/hosps.txt", header = TRUE)
+                
+hosp$publicF <- factor(hosp$public,
+                       levels = c(0, 1),
+                       labels = c("private", "public"))
+
+aggregate(percinf ~ publicF, data = hosp,
+          FUN = function(x) c(n=length(x),
+                              mean=round(mean(x),1),
+                              sd=round(sd(x),1)))
+
+tt <- t.test(percinf ~ public,
+             data        = hosp,
+             var.equal   = FALSE)
+tt
+
+
+```
+```{r}
+lm_mod <- lm(percinf ~ public + pmedicaid + npat, data = hosp)
+summary(lm_mod)
+```
+
+A non - adjusted test comparing public to private hospitals does show significantly higher infection rates at public hospitals (p <.05). However, accounting for hospital size and medicad mix removes this significance. After controlling for these factors, we see that the number of patients has the significant relationship with the infection rate, but whether the hospital is public or private does not. all signifficance drawn at .05 level.
