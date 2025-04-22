@@ -8,15 +8,89 @@ output: pdf_document
 ```{r}
 library(tidyverse) 
 library(car) 
-library(heplots) 
 library(MVN)
 library(Hotelling) 
 
-install.packages("heplots")
+set.seed(123) 
 
-set.seed(123)        # reproducibility where applicable
+load("Data/plasticDat.RData")
 
-load("Data/plasticDat.RData")  # loads object `dat`
+
 dat <- as_tibble(dat)
+
+head(dat)
+
+```
+
+# a
+```{r}
+load("Data/plasticDat.RData")
+names(dat)
+str(dat)
+head(dat)
+
+man <- manova(cbind(tearResist, gloss, opacity) ~ setting, data=dat)
+man_sum <- summary(man, test="Wilks")
+print(man_sum)
+pval <- man_sum$stats["setting","Pr(>F)"]
+cat("MANOVA p‑value =", pval, "\n")
+
+
+```
+
+
+# b
+
+```{r}
+library(biotools)
+
+print(boxM(dat[,c("tearResist","gloss","opacity")], dat$setting))
+res <- residuals(man)
+sw  <- sapply(as.data.frame(res), function(x) shapiro.test(x)$p.value)
+print(sw) 
+
+```
+
+# c, d
+```{r}
+settings <- sort(unique(dat$setting))
+pairs    <- combn(settings, 2, simplify = FALSE)
+
+raw_p <- sapply(pairs, function(p) {
+  mv  <- manova(cbind(tearResist, gloss, opacity) ~ factor(setting),
+                data = subset(dat, setting %in% p))
+  sum <- summary(mv, test = "Wilks")
+  sum$stats[1, "Pr(>F)"]
+})
+
+adj_p <- p.adjust(raw_p, method = "bonferroni")
+
+pairwise_df <- data.frame(
+  Comparison   = sapply(pairs, function(p) paste(p, collapse = " vs ")),
+  raw_p_value  = raw_p,
+  adj_p_value  = adj_p
+)
+
+pairwise_df
+```
+
+# e
+```{r}
+sub03 <- subset(dat, setting %in% c("0","3"))
+lapply(sub03[c("tearResist","gloss","opacity")], function(x) {
+  t.test(x ~ setting, data = sub03)
+})
+
+
+```
+
+
+```{r}
+print(summary.aov(man))
+```
+
+```{r}
+tw <- manova(cbind(tearResist, gloss, opacity) ~ V1 * V2, data=dat)
+print(summary(tw, test="Wilks"))
 ```
 
