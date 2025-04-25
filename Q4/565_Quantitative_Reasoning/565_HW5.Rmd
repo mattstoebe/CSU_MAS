@@ -1,0 +1,77 @@
+---
+title: "565_HW5"
+author: "Matthew Stoebe"
+date: "2025-04-25"
+output: pdf_document
+---
+
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+
+analyze_inflam <- function(fn) {
+  # 1) read with header (columns: trt, y, age)
+  dat <- read.table(fn, header = TRUE)
+  
+  # 2) make sure treatment is a factor
+  dat$trt <- factor(dat$trt)
+  
+  cat("\n\n====================\nDataset:", fn, "\n====================\n")
+  
+  # (a) one-way ANOVA: y ~ trt
+  cat("\n(a) One-way ANOVA\n")
+  a1 <- aov(y ~ trt, data = dat)
+  print(summary(a1))
+  print(TukeyHSD(a1), digits = 4)
+  
+  # (b) add covariate age, test for interaction
+  cat("\n(b) Covariate + interaction test\n")
+  m_full <- lm(y ~ trt * age, data = dat)
+  m_add  <- lm(y ~ trt + age,   data = dat)
+  itest  <- anova(m_add, m_full)
+  print(itest)
+  
+  if (itest$`Pr(>F)`[2] > 0.05) {
+    cat("→ no significant interaction; using additive model\n")
+    best <- m_add
+  } else {
+    cat("→ significant interaction; using full model\n")
+    best <- m_full
+  }
+  cat("\nSummary of selected model:\n")
+  print(summary(best))
+  
+  # (c) scatter + best-fit lines
+  cat("\n(c) Plotting\n")
+  newdat <- expand.grid(
+    age = seq(min(dat$age), max(dat$age), length = 100),
+    trt = levels(dat$trt)
+  )
+  newdat$pred <- predict(best, newdat)
+  
+  p <- ggplot(dat, aes(x = age, y = y, color = trt)) +
+       geom_point(size = 2) +
+       geom_line(data = newdat, aes(x = age, y = pred), size = 1) +
+       labs(title = paste("Dataset:", fn),
+            x     = "Age",
+            y     = "Reduction in CRP (mg/dL)") +
+       theme_minimal()
+  print(p)
+  
+  invisible(list(
+    raw    = dat,
+    aov    = a1,
+    add    = m_add,
+    full   = m_full,
+    final  = best
+  ))
+}
+
+# run for each file:
+files <- c("Data/inflam1.txt","Data/inflam2.txt","Data/inflam3.txt")
+results <- lapply(files, analyze_inflam)
+
+```
+
