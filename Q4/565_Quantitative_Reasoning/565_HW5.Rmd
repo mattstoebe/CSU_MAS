@@ -11,67 +11,132 @@ output: pdf_document
 library(ggplot2)
 library(dplyr)
 
-analyze_inflam <- function(fn) {
-  # 1) read with header (columns: trt, y, age)
-  dat <- read.table(fn, header = TRUE)
-  
-  # 2) make sure treatment is a factor
+one_way_anova <- function(dat) {
   dat$trt <- factor(dat$trt)
-  
-  cat("\n\n====================\nDataset:", fn, "\n====================\n")
-  
-  # (a) one-way ANOVA: y ~ trt
-  cat("\n(a) One-way ANOVA\n")
-  a1 <- aov(y ~ trt, data = dat)
-  print(summary(a1))
-  print(TukeyHSD(a1), digits = 4)
-  
-  # (b) add covariate age, test for interaction
-  cat("\n(b) Covariate + interaction test\n")
-  m_full <- lm(y ~ trt * age, data = dat)
-  m_add  <- lm(y ~ trt + age,   data = dat)
-  itest  <- anova(m_add, m_full)
-  print(itest)
-  
-  if (itest$`Pr(>F)`[2] > 0.05) {
-    cat("→ no significant interaction; using additive model\n")
-    best <- m_add
-  } else {
-    cat("→ significant interaction; using full model\n")
-    best <- m_full
-  }
-  cat("\nSummary of selected model:\n")
-  print(summary(best))
-  
-  # (c) scatter + best-fit lines
-  cat("\n(c) Plotting\n")
-  newdat <- expand.grid(
-    age = seq(min(dat$age), max(dat$age), length = 100),
-    trt = levels(dat$trt)
-  )
-  newdat$pred <- predict(best, newdat)
-  
-  p <- ggplot(dat, aes(x = age, y = y, color = trt)) +
-       geom_point(size = 2) +
-       geom_line(data = newdat, aes(x = age, y = pred), size = 1) +
-       labs(title = paste("Dataset:", fn),
-            x     = "Age",
-            y     = "Reduction in CRP (mg/dL)") +
-       theme_minimal()
-  print(p)
-  
-  invisible(list(
-    raw    = dat,
-    aov    = a1,
-    add    = m_add,
-    full   = m_full,
-    final  = best
-  ))
+  aov_mod <- aov(y ~ trt, data = dat)
+  print(summary(aov_mod))
+  print(TukeyHSD(aov_mod))
+  invisible(aov_mod)
 }
 
-# run for each file:
+covariate_analysis <- function(dat, p=.05) {
+  dat$trt <- factor(dat$trt)
+  
+  m_add  <- lm(y ~ trt + age,  data = dat)
+  m_full <- lm(y ~ trt * age,  data = dat)
+  
+  full_sum   <- summary(m_full)
+  int_rows   <- grep(":", rownames(full_sum$coefficients))        # rows with “trt:age”
+  int_pvals  <- full_sum$coefficients[int_rows, "Pr(>|t|)"]
+  
+  if (any(int_pvals < p)) {
+    cat("Significant interaction(s) detected; using full model.\n")
+    print(full_sum)
+    best <- m_full
+  } else {
+    cat("No significant interactions; using additive model.\n")
+    print(summary(m_add))
+    best <- m_add
+  }
+  
+  invisible(best)
+}
+
+
+plot_results <- function(dat, model) {
+  dat$trt <- factor(dat$trt)
+  grid <- expand.grid(
+    age = seq(min(dat$age), max(dat$age), length.out = 100),
+    trt = levels(dat$trt)
+  )
+  grid$pred <- predict(model, grid)
+  
+  library(ggplot2)
+  ggplot(dat, aes(x = age, y = y, color = trt)) +
+    geom_point() +
+    geom_line(data = grid, aes(y = pred)) +
+    labs(x = "Age", y = "Reduction in CRP (mg/dL)", color = "Treatment") +
+    theme_minimal()
+}
+
 files <- c("Data/inflam1.txt","Data/inflam2.txt","Data/inflam3.txt")
-results <- lapply(files, analyze_inflam)
+
 
 ```
 
+# Dataset 1
+
+## a
+```{r}
+dat1    <- read.table(files[1], header = TRUE)   
+aov_m  <- one_way_anova(dat1)
+```
+For Dataset 1, we get a p value of .0715 meaning that we fail to reject our null hypothesis that there is no significant evidence of treatment differences at a .05 level.
+
+## b
+```{r}
+aov_m  <- covariate_analysis(dat1)
+
+```
+The interaction was not significant, So I relied on the additive model with treatment 1 as the reference. The age predictor is significant, and after adjusting for it, treatment 2 is the clear recommendable treatment as it has a positive estimate and is signifficant at a .05 level. treatment 3 is not different from treatment 1 after adjusting for age.
+
+## c
+```{r}
+plot_results(dat1, aov_m)
+
+```
+
+
+## d
+Age is a strong negative predictor and is statistically significant. This tells us that older subjects on average experience less reduction in CRP. By adjusting for it, we improve the fit of our model, and protect against confounding in the case where age distributions vary accross treatments.
+
+# Dataset 2
+
+## a
+```{r}
+dat2    <- read.table(files[2], header = TRUE)   
+aov_m  <- one_way_anova(dat2)
+```
+For Dataset 2, we get a p value of .00428 meaning that we reject the null hypothesis that all treatment means are equal. When we do a pairwise comparison, it is clear that treatment 2-1 and 3-2 are significantly different with p values both below .05. Specifically, Treatment two performs significantly worse than both treatments 1 and 3 but treatments 1 and 3 do not differ.
+
+## b
+```{r}
+aov_m  <- covariate_analysis(dat2)
+
+```
+There is no significant interaction so we use the additive model. Once again, age is significant, and after adjusting for age we see that Treatment 2 yields the largest and only significant boost in CRP reduction at the p=.05 level. As such, I would recommend treatment 2.  
+
+## c
+```{r}
+plot_results(dat2, aov_m)
+
+```
+
+
+## d
+In this model, age is once again added additive because it shows a significant relationship with CRP reduction. As such, we include it to improve the fit of our model and fix confounding. In this case, it actually flips the sign of the relationship removing the confounding 
+
+# Dataset 3
+## a
+```{r}
+dat3    <- read.table(files[3], header = TRUE)   
+aov_m  <- one_way_anova(dat3)
+
+```
+For Dataset 3, we get a p value of 0.00945 meaning that there evidence against the null hypothesis that all treatment means are equal. When we do a pairwise comparison, it is clear that treatment 2 is significantly worse at reducing CRP than treatment 1 with a p value of .0116. treatments 1 - 3 and treatmetns 2-3 do not differ significantly although 1 - 3 is close with a p value of .0656
+
+## b
+```{r}
+best_mod3 <- covariate_analysis(dat3)
+
+```
+When looking at interactions, all interactions were significant at a .05 level so we keep the whole model. In this case, we choose our treatment based on the subjects age. This can be extracted from the coefficients but if you look at the plot below, younger subjects below the age of 70 do best receiving treatment 1, and older subjects over the age of 70 do best receiving treatment 2. This can also be derived by setting fit 1 equal to fit 3 and solving for age but manual inspection is sufficient. 
+
+## c
+```{r}
+plot_results(dat3, best_mod3)
+
+```
+
+## d
+there is a significant interaction meaning that treatment efficacy depends on age. without this interaction in the model, we would miss this relationship and fall victim to confounding. Including the interaction prevents masking this crossover and yeilds actionable age-specific guidance.
