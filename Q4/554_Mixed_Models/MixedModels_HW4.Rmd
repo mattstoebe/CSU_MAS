@@ -22,6 +22,7 @@ library(lme4)
 library(lmerTest)
 library(ggplot2)
 data(pulp)
+
 ```
 
 
@@ -35,6 +36,14 @@ The coagulation dataset comes from a study of blood coagulation times. Twenty-fo
 ## (a) 2pts Plot the data.
 ::::
 
+```{r}
+df1 <- read.csv("Data/coagulation.csv")
+ggplot(df1, aes(diet, coag)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1) +
+  labs(x = "Diet", y = "Coagulation time")
+
+```
 
 
 :::: {.taskbox data-latex=""}
@@ -42,17 +51,42 @@ The coagulation dataset comes from a study of blood coagulation times. Twenty-fo
 Fit a fixed effects model and construct a prediction together with a 95% prediction interval for the response of a new animal assigned to diet D.
 ::::
 
+```{r}
+mod1b <- lm(coag ~ diet, data = df1)
+new1b <- data.frame(diet = "D")
+predict(mod1b, new1b, interval = "prediction", level = 0.95)
+
+```
+
 
 :::: {.taskbox data-latex=""}
 ## (c) 4pts
 Now fit a random effects model using REML. A new animal is assigned to diet D. Predict the blood coagulation time for this animal along with a 95% prediction interval.
 :::
+```{r}
+mod1c   <- lmer(coag ~ 1 + (1 | diet), data = df1, REML = TRUE)
+intcpt   <- fixef(mod1c)[1]
+resid_sd <- sigma(mod1c)
+diet_sd  <- attr(VarCorr(mod1c)$diet, "stddev")
+
+diet_re  <- ranef(mod1c)$diet["D", "(Intercept)"]
+pred_D   <- intcpt + diet_re 
+pi_D     <- pred_D + c(lower = -1.96, fit = 0, upper = 1.96) * resid_sd
+pi_D
+
+```
 
 
 :::: {.taskbox data-latex=""}
 ## (d) 4pts
 A new diet is given to a new animal. Predict the blood coagulation time for this animal along with a 95% prediction interval
 ::::
+```{r}
+pred_Z   <- intcpt 
+se_Z     <- sqrt(resid_sd^2 + diet_sd^2)
+pi_Z     <- pred_Z + c(lower = -1.96, fit = 0, upper = 1.96) * se_Z
+pi_Z
+```
 
 
 :::: {.taskbox data-latex=""}
@@ -60,22 +94,45 @@ A new diet is given to a new animal. Predict the blood coagulation time for this
 A new diet is given to the first animal in the dataset. Predict the blood coagulation time for this animal with a prediction interval. You may assume that the effects of the initial diet for this animal have washed out.  (Open for discussion – how to get at the animal effect for this prediction?)
 ::::
 
+```{r}
+pred  <- fixef(mod1c)[1]
+se    <- sqrt(sigma(mod1c)^2 + attr(VarCorr(mod1c)$diet,"stddev")^2)
+pi    <- pred + c(lower = -1.96, fit = 0, upper = 1.96) * se
+round(pi, 2)
+```
+This Prediction is the same as part d because we are assuming that each animal only has one reading. as such the baseline and residual error are confounded. this means that we dont have a way to isolate the baseline, and have to predict the grand mean with a confidence interval of a new animal. We would need multiple records per animal to really isolate the per animal effect.
+
 
 # Q2 Lawnmowers and cutoff times.
 
-Data on the cutoff times of lawnmowers may be found in the dataset lawn. Three machines were randomly selected from those produced by manufacturers A and B. Each machine was tested twice at low speed and high speed.
+Data on the cutoff times of lawnmowers may be found in the data set lawn. Three machines were randomly selected from those produced by manufacturers A and B. Each machine was tested twice at low speed and high speed.
 
 ::::{.taskbox data-latex=""}
 ## (a) 2pts
 Make plots of the data and comment. 
 ::::
 
+```{r}
+df2 <- read.csv("Data/lawn.csv")
+
+ggplot(df2, aes(speed, time, color = manufact)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1, size = 2) +
+  facet_wrap(~ manufact) +
+  labs(x = "Speed", y = "Cutoff time")
+```
+Going from Low to High speed adds about 1 minute of cutoff time for both manufacturers. there does appear to be a manufacturer difference as well, especially at high speed, but this effect is smaller around 30-40 seconds.
 
 ::::{.taskbox data-latex=""}
 ## (b) 2pts 
 Fit a fixed effects model for the cutoff time response using just the main effects of the three predictors. Explain why not all effects can be estimated.
 ::::
 
+```{r}
+mod2b <- lm(time ~ manufact + machine + speed, data = df2)
+summary(mod2b)
+```
+Machine is not always estimated because it is nested within manufacturer.  when nested factors are included additively, the fixed effect columns for machine add up to the manufacturer level meaning that the design matrix is rank-deficient. to address this we do not get a coefficient for machine6. We would address this by explicitly nesting machine within manufacturer or using random effects
 
 ::::{.taskbox data-latex=""}
 ## (c) 2pts
@@ -86,30 +143,98 @@ Fit a mixed effects model with manufacturer and speed as main effects along with
 * If different machines were sampled from the same manufacturer and tested at the same speed once only, what would be the SD of the times observed?
 ::::
 
+```{r}
+mod2c      <- lmer(time ~ manufact * speed + (1 | machine), data = df2, REML = TRUE)
+resid_sd2  <- sigma(mod2c)
+mach_sd2   <- sqrt(as.data.frame(VarCorr(mod2c))$vcov[1])
+c(residual_sd         = resid_sd2,
+  different_machine_sd = sqrt(resid_sd2^2 + mach_sd2^2))
+```
+
+* If the machine were tested at the same  speed, the standard deviation would be 11.5s
+* if different machines were sampled from the same manufacturer, the standard deviation would be 16.659s
 
 ::::{.taskbox data-latex=""}
 ## (d) 3 pts
 Test whether the interaction term of the model can be removed. If so, go on to test the two main fixed effects terms.
 ::::
 
+```{r}
+mod2c_ML  <- lmer(time ~ manufact * speed + (1 | machine),
+                  data = df2, REML = FALSE)
+mod2d1_ML <- update(mod2c_ML, . ~ manufact + speed + (1 | machine))   # no interaction
+mod2d2_ML <- update(mod2d1_ML, . ~ manufact + (1 | machine))          # drop speed
+mod2d3_ML <- update(mod2d1_ML, . ~ speed + (1 | machine))             # drop manufact
+
+print("Interaction Term")
+anova(mod2c_ML, mod2d1_ML)
+
+
+
+print("Speed as Main effect")
+anova(mod2d1_ML, mod2d2_ML)
+
+
+
+print("Manufacturer as main effect")
+anova(mod2d1_ML, mod2d3_ML)
+```
+We see that the interaction can be dropped with a p value of .76. Speed maters a lot both as seen in our plots and here with a very small p value, and the machine fixed effect is significant at a p = .1 level but borderline not signifficant at a p=.051 level. In this case, I would retain manufacturer as it is borderline significant. This makes my final recommended model to be time ~ speed + manufacturer + (1 | machine). Additionally AIC prefers retaining manufacturer by a small margine while BIC does not.
 
 ::::{.taskbox data-latex=""}
 ## (e) 2pts 
 Test whether there is any variation between machines. Use the model from part (d) with non-significant terms removed.
 ::::
+```{r}
+m_with <- lmer(time ~ speed + manufact + (1 | machine),
+               data = df2, REML = FALSE)
 
+rand(m_with)
+
+```
+There is significant variance between machines at a .05 level as shown above (p = .023).
 
 ::::{.taskbox data-latex=""}
 ## (f) 2pts
 Fit a model with speed as the only fixed effect and manufacturer as a random effect with machines also as a random effect nested within manufacturer. Compare the variability between machines with the variability between manufacturers.
 ::::
 
+```{r}
+mod2f <- lmer(time ~ speed + (1 | manufact/machine), data = df2, REML = TRUE)
+
+vc <- as.data.frame(VarCorr(mod2f))
+
+var_manuf <- vc$vcov[vc$grp == "manufact"]
+var_mach  <- vc$vcov[vc$grp == "machine:manufact"]
+var_resid <- vc$vcov[vc$grp == "Residual"]
+
+tot_var   <- var_manuf + var_mach + var_resid
+
+pct_manuf <- 100 * var_manuf / tot_var
+pct_mach  <- 100 * var_mach  / tot_var
+pct_resid <- 100 * var_resid / tot_var
+
+out <- data.frame(
+  source    = c("manufacturer", "machine:manufacturer", "residual"),
+  variance  = c(var_manuf, var_mach, var_resid),
+  percent   = c(pct_manuf, pct_mach, pct_resid)
+)
+
+out
+```
+Manufacturer-manufacturer variability is very similar to machine-machine variability. when we look at total unexplained variance, manufacturers account for 35.6%, machine:manufacturer for 34.8% and residual variance is 29.6%.
+
 
 ::::{.taskbox data-latex=""}
 ## (g) 2pts
 Construct bootstrap confidence intervals for the terms of the previous model. Discuss whether the variability can be ascribed solely to manufacturers or to machines. *hint: the confint() command allows a variety of method options.*
 ::::
+```{r}
+set.seed(420)
+confint(mod2f, method = "boot", nsim = 1000, parm = "theta_")
 
+```
+Because the first two intervals include zero, the amount of data we have is too small to exclude the possibility that either the manufacturer of machine differences are zero. Our SD estimates suggest that if the effects are real, the variability is approximately equal but we cannot attribute this to one of the other statistically.
 
 ::::{.taskbox data-latex=""}
 # Q3 5 pts  Normality assumption of random effects
@@ -145,5 +270,40 @@ sd(coef(mod)$schools[,1] – sorted.data$mu)
 
 c.	Report the estimated school variance component, and the true value. (Please use standard deviation.)
 ::::
+
+```{r}
+set.seed(123)
+n_schools      <- 50
+obs_per_school <- 10
+true_effect    <- rgamma(n_schools, shape = 2, scale = 5)
+
+sim <- data.frame(
+  school = rep(paste0("S", 1:n_schools), each = obs_per_school),
+  y      = unlist(lapply(true_effect,
+                         function(m) rnorm(obs_per_school, mean = m, sd = 3)))
+)
+
+sim$school <- factor(sim$school, levels = paste0("S", 1:n_schools))
+mod3 <- lmer(y ~ 1 + (1 | school), data = sim, REML = TRUE)
+
+# a
+hist(true_effect, main = "True school effects")
+
+# b
+beta0 <- fixef(mod3)[1]
+err   <- (beta0 + ranef(mod3)$school[,1]) - true_effect
+hist(err, main = "EB estimate error (centred)")
+sd(err)
+
+# c
+
+
+est_sd  <- sqrt(as.data.frame(VarCorr(mod3))$vcov[1])
+true_sd <- sd(true_effect)
+c(estimated_school_sd = est_sd,
+  true_school_sd      = true_sd)
+```
+
+
 
 
