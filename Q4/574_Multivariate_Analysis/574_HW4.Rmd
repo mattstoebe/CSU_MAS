@@ -1,0 +1,32 @@
+---
+title: "Multivar_HW4"
+author: "Matthew Stoebe"
+date: "2025-04-27"
+output: pdf_document
+---
+
+
+```{r}
+library(psych)      # scree plot, communalities
+library(stats)      # factanal()
+
+dat  <- read.table("Data/testData.txt", header = FALSE)
+colnames(dat) <- paste0("T", 1:6)        # six test scores
+R <- cor(dat)
+
+## ----- (a)  number of factors & unrotated solution -----
+psych::fa.parallel(dat, fa = "fa")       # scree & parallel analysis
+
+m <- 2                                   # (example) eigenvalues > 1 and elbow
+fa_raw <- factanal(dat, factors = m, rotation = "none", scores = "regression")
+
+print(fa_raw, digits = 3, cutoff = 0.3)  # loadings ≥.30 only
+communalities <- 1 - fa_raw$uniquenesses
+specificities <- fa_raw$uniquenesses
+```
+
+
+```{r}
+
+```
+
