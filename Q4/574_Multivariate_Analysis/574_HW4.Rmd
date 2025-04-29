@@ -4,29 +4,212 @@ author: "Matthew Stoebe"
 date: "2025-04-27"
 output: pdf_document
 ---
+# Question 1
+
+With the information provided,
+\[
+\begin{aligned}
+\operatorname{Cov}(X)
+        &= \operatorname{Cov}(\lambda F + e)                        \\[2pt]
+        &= \lambda\lambda^{\top}\operatorname{Var}(F) + \Psi         \\[2pt]
+        &= \lambda\lambda^{\top} + \Psi.
+\end{aligned}
+\]
+
+For i != j
+\[
+=(\lambda\lambda^{\top})_{ij}= \lambda_i\lambda_j .
+\]
+
+Hence the \(i\)-th row ignoring its diagonal element is  
+\[
+\bigl(\lambda_i\lambda_1,\;\lambda_i\lambda_2,\;\dots,\;\lambda_i\lambda_p\bigr)
+     = \lambda_i\,\lambda^{\top},
+\]
+which is  the vector \(\lambda^{\top}\) scaled by the constant \(\lambda_i\).  
+Therefore every off-diagonal row of \(\Sigma_X\) is proportional to every other, as required.
+
+
+# Question 2
+
+## a
+```{r}
+library(psych)
+library(stats)
+library(tidyverse)
+
+dat_raw <- read.table("Data/testData.txt", header = TRUE,
+                      stringsAsFactors = FALSE)
+
+tests <- dat_raw[, 1:6]
+colnames(tests) <- paste0("T", 1:6)
+
+R      <- cor(tests)
+eigval <- eigen(R)$values
+prop   <- eigval / sum(eigval)
+
+print(round(cbind(eigval, prop, cumsum(prop)), 3),
+      quote = FALSE,
+      col.names = c("eigen", "prop", "cumprop"))
+
+m <- 3
+
+
+fa_raw <- principal(tests,
+                    nfactors = m,
+                    rotate   = "none",
+                    scores   = TRUE)
+
+cat("\n=== (a)  Unrotated loadings ===\n")
+print(fa_raw$loadings, cutoff = .30, digits = 3)
+```
+I selected 3 factors becuase togeter they reach 70% cumulitive variance which is a common threshold
+
+Factor 1 covers 29.6% of variance and seems to contrast t5 against t 1,3,4,6 as it has positive wieghts for those and a negative weight for t5.. Factor 2 accounts for 22.6% of variance is largely accounting for T2 and has opposite sighns for t 4 and 5.. PC3 accounts for another 17% of variance, and contrasts t3 agaisnt t1,5 and 6. Altogether thses are hard to interpret.
 
 
 ```{r}
-library(psych)      # scree plot, communalities
-library(stats)      # factanal()
+communalities  <- fa_raw$communality
+specificities  <- 1 - communalities
 
-dat  <- read.table("Data/testData.txt", header = FALSE)
-colnames(dat) <- paste0("T", 1:6)        # six test scores
-R <- cor(dat)
+cat("\nCommunalities:\n");   print(round(communalities, 3))
+cat("\nSpecificities:\n");   print(round(specificities, 3))
 
-## ----- (a)  number of factors & unrotated solution -----
-psych::fa.parallel(dat, fa = "fa")       # scree & parallel analysis
 
-m <- 2                                   # (example) eigenvalues > 1 and elbow
-fa_raw <- factanal(dat, factors = m, rotation = "none", scores = "regression")
-
-print(fa_raw, digits = 3, cutoff = 0.3)  # loadings ≥.30 only
-communalities <- 1 - fa_raw$uniquenesses
-specificities <- fa_raw$uniquenesses
 ```
 
+The three components accoutn for a lot of the variance. we see that 4 of 6 commonalities are above .7 meaning that 70% of their variance is accounted for. T2 is the most explained, and T3 is the least explained with .529 commonality.
+
+T3 has a high specificity which indicates that the test has unique variance that the selected factors do not capture. 
+
+
+## b
+```{r}
+fa_rot <- factanal(tests, factors = m,
+                   rotation = "varimax", scores = "regression")
+print(fa_rot, digits = 3, cutoff = 0.30)
+
+obs26_scores <- fa_rot$scores[26, ]
+obs26_scores
+
+```
+
+This is now easier to interpret because there are clear factors for certain items. 
+
+Factor 1 is clearly accountign fo T1 variance wiht some T6, Factor 2, is focused on T5 with some negative T2 and factor 3 is spread across several. Now, T1, T5 and T4 are only tied to one matrix which makes things simpler. 
+
+
+## c
+```{r}
+scores_all <- fa_rot$scores         # n  × 3 matrix (n = number of students)
+
+obs26 <- scores_all[26, ]           # a named vector
+print(obs26, digits = 3)
+```
+
+Student 26 is very weak for factor 1 focused on T1 and T6. They are slightly below average for T5 (with some signal from T2), and moderately above average for T4  with some loading from T3 and T6. Altogether it is hard to give a text interpretation here without knowing whwat each test asks. 
+
+# Question 2
+
+##a
+```{r}
+load("Data/admission.RData")
+colnames(admission) <- c("GPA","GMAT","status")
+admission <- as_tibble(admission) %>% mutate(status = factor(status))
+
+g1 <- filter(admission, status == 1)
+g2 <- filter(admission, status == 2)
+
+ggplot(admission, aes(GPA, GMAT, colour = status)) + geom_point() +
+  labs(title = "MBA admissions")
+
+xbar1 <- colMeans(dplyr::select(g1, GPA, GMAT))
+xbar2 <- colMeans(dplyr::select(g2, GPA, GMAT))
+S1    <- cov(dplyr::select(g1, GPA, GMAT))
+S2    <- cov(dplyr::select(g2, GPA, GMAT))
+Spooled <- ((nrow(g1)-1)*S1 + (nrow(g2)-1)*S2)/(nrow(g1)+nrow(g2)-2)
+
+cat("\nGroup means:\n")
+print(round(rbind(Admit = xbar1, Deny = xbar2), 2))
+
+cat("\nGroup covariance matrices:\n\nS1 (Admit):\n")
+print(round(S1, 3))
+
+cat("\nS2 (Deny):\n")
+print(round(S2, 3))
+
+cat("\nPooled covariance (Spooled):\n")
+print(round(Spooled, 3))
+
+```
+
+## b
 
 ```{r}
+a <- solve(Spooled, xbar1 - xbar2)
+a
 
 ```
 
+## c
+```{r}
+Z <- as.matrix(dplyr::select(admission, GPA, GMAT)) %*% a   # n×1
+admission$z <- drop(Z)
+
+ggplot(admission, aes(x = z, fill = status)) +
+  geom_histogram(alpha = 0.4, bins = 20, position = "identity") +
+  labs(title = "Discriminant scores")
+```
+
+## d
+```{r}
+z_cut <- as.numeric(crossprod(a, (xbar1 + xbar2)/2))  # midpoint
+
+ggplot(admission, aes(x = z, fill = status)) +
+  geom_histogram(alpha = 0.4, bins = 20, position = "identity") +
+  geom_vline(xintercept = z_cut, linetype = "dashed", linewidth = 0.8) +
+  labs(title = "Discriminant scores", x = "z-score") +
+  theme_minimal()
+
+```
+## e
+```{r}
+
+## ----- (e)  classify (3, 500) -----
+new_pt <- c(3, 500)
+z_new  <- crossprod(a, new_pt)
+group  <- ifelse(z_new > z_cut, "Admit", "Reject")     # 1 = admit
+
+print(group)
+
+```
+
+This person should be Admitted.
+
+## f
+```{r}
+# direction vector
+slope <- -a[1]/a[2]
+intercept <- z_cut/a[2]
+
+ggplot(admission, aes(GPA, GMAT, colour = status)) +
+  geom_point() +
+  geom_abline(slope = slope, intercept = intercept, lty = 2) +
+  geom_point(aes(x = new_pt[1], y = new_pt[2]), colour = "black",
+             shape = 21, size = 4, fill = "yellow") +
+  labs(title = "LDA decision boundary and new applicant")
+```
+
+## g
+```{r}
+
+library(MASS)
+lda_fit <- lda(status ~ GPA + GMAT, data = admission)
+lda_fit$scaling
+
+
+cat("scaling", a/lda_fit$scaling)
+
+```
+
+This appears to be a scaled and flipped version of my coefficients. specifically, my coefficients are equal to -2.327 times the LDA library coefficients. This is because of the way variance scaling is maanged in LDA. 
