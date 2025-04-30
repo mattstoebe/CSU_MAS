@@ -1,0 +1,52 @@
+---
+title: "574_HW5"
+output: pdf_document
+---
+
+# Question 1
+
+
+## a
+```{r}
+library(MASS)
+
+root <- read.table("Data/rootstock.txt", header = TRUE, stringsAsFactors = FALSE)
+
+root$RootStock <- factor(root$RootStock)   # grouping variable must be a factor
+str(root)
+
+lda_fit <- lda(RootStock ~ Y1 + Y2 + Y3 + Y4, data = root)
+
+lda_fit$scaling
+
+```
+## b
+```{r}
+prop_var <- lda_fit$svd^2 / sum(lda_fit$svd^2)
+round(prop_var, 3)      # prints proportion of between-group var. explained
+cumsum(prop_var)        # cumulative; stop at ≈ 0.90 to justify # of DFs kept
+```
+
+## c
+```{r}
+
+scores <- as.data.frame(predict(lda_fit)$x)   # columns LD1, LD2, …
+scores$RootStock <- root$RootStock            # add labels
+
+ggplot(scores, aes(LD1, LD2, colour = RootStock)) +
+  geom_point(size = 2) +
+  labs(title = "Root-stock study: LD1 vs LD2") +
+  theme_bw()
+
+```
+
+```{r}
+
+new_tree <- data.frame(Y1 = 1.09, Y2 = 2.69, Y3 = 3.88, Y4 = 0.93)
+
+pred <- predict(lda_fit, new_tree)
+pred$class       # most-likely root-stock
+pred$posterior   # posterior probability vector (one entry per group)
+
+```
+
