@@ -44,28 +44,21 @@ dat_raw <- read.table("Data/testData.txt", header = TRUE,
 tests <- dat_raw[, 1:6]
 colnames(tests) <- paste0("T", 1:6)
 
-R      <- cor(tests)
-eigval <- eigen(R)$values
-prop   <- eigval / sum(eigval)
-
-print(round(cbind(eigval, prop, cumsum(prop)), 3),
-      quote = FALSE,
-      col.names = c("eigen", "prop", "cumprop"))
+fa.parallel(tests, fa = "fa", fm = "ml", n.iter = 100)
 
 m <- 3
 
 
-fa_raw <- principal(tests,
+fa_raw <- fa(tests,
                     nfactors = m,
                     rotate   = "none",
                     scores   = TRUE)
 
-cat("\n=== (a)  Unrotated loadings ===\n")
 print(fa_raw$loadings, cutoff = .30, digits = 3)
 ```
-I selected 3 factors becuase togeter they reach 70% cumulitive variance which is a common threshold
+I selected 3 but unfortunately this only exlains 55% of the variance. I chose this becasue two factors just isnt enough and more than 3 makes interpretaiton hard. 
 
-Factor 1 covers 29.6% of variance and seems to contrast t5 against t 1,3,4,6 as it has positive wieghts for those and a negative weight for t5.. Factor 2 accounts for 22.6% of variance is largely accounting for T2 and has opposite sighns for t 4 and 5.. PC3 accounts for another 17% of variance, and contrasts t3 agaisnt t1,5 and 6. Altogether thses are hard to interpret.
+Factor 1 covers 24% of variance and seems to contrast t5 against t 1,4,6 as it has positive weights for those and a negative weight for t5.. Factor 2 accounts for 16% of variance is largely accounting for T5 and T1. Factor 3 accounts for another 15% of variance, and contrasts t4 against t1 and 2. Altogether thses are hard to interpret.
 
 
 ```{r}
@@ -77,10 +70,7 @@ cat("\nSpecificities:\n");   print(round(specificities, 3))
 
 
 ```
-
-The three components accoutn for a lot of the variance. we see that 4 of 6 commonalities are above .7 meaning that 70% of their variance is accounted for. T2 is the most explained, and T3 is the least explained with .529 commonality.
-
-T3 has a high specificity which indicates that the test has unique variance that the selected factors do not capture. 
+Tests 1 and 5 are almost redundant with the factors. Tests 2,3,and 6 carry substantial test specific variance as shown with high specificity. This is especially true for T3 as it has the highest specificity.
 
 
 ## b

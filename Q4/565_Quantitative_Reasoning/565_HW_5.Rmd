@@ -1,0 +1,25 @@
+---
+title: "565_HW_5"
+output: pdf_document
+---
+
+# Quetion 1
+
+## a
+```{r}
+rem <- read.table("Data/remission.txt", header = TRUE)   # columns: trt (A/B), stage, remit (0/1)
+
+tab <- with(rem, table(trt, rem))
+chisq.test(tab)
+
+
+```
+```{r}
+
+## Equivalent logistic model
+m0 <- glm(rem ~ trt, family = binomial, data = rem)
+summary(m0)               # Wald p-value for trtB
+confint(m0)               # 95 % CI for odds-ratio
+exp(coef(m0))
+```
+
