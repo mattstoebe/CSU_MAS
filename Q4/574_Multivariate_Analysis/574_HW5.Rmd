@@ -9,10 +9,11 @@ output: pdf_document
 ## a
 ```{r}
 library(MASS)
+library(ggplot2)
 
 root <- read.table("Data/rootstock.txt", header = TRUE, stringsAsFactors = FALSE)
 
-root$RootStock <- factor(root$RootStock)   # grouping variable must be a factor
+root$RootStock <- factor(root$RootStock)
 str(root)
 
 lda_fit <- lda(RootStock ~ Y1 + Y2 + Y3 + Y4, data = root)
@@ -23,16 +24,16 @@ lda_fit$scaling
 ## b
 ```{r}
 prop_var <- lda_fit$svd^2 / sum(lda_fit$svd^2)
-round(prop_var, 3)      # prints proportion of between-group var. explained
-cumsum(prop_var)        # cumulative; stop at ≈ 0.90 to justify # of DFs kept
+round(prop_var, 3)  
+cumsum(prop_var)
 ```
+Because DF1 + DF2 explain 91 % of the between-group variance, I retain two discriminant functions.
 
 ## c
 ```{r}
 
-scores <- as.data.frame(predict(lda_fit)$x)   # columns LD1, LD2, …
-scores$RootStock <- root$RootStock            # add labels
-
+scores <- as.data.frame(predict(lda_fit)$x) 
+scores$RootStock <- root$RootStock   
 ggplot(scores, aes(LD1, LD2, colour = RootStock)) +
   geom_point(size = 2) +
   labs(title = "Root-stock study: LD1 vs LD2") +
@@ -40,13 +41,65 @@ ggplot(scores, aes(LD1, LD2, colour = RootStock)) +
 
 ```
 
+Stocks 1 and 6 cluster on the left of LD1 and around the midpoint of LD2. Stocks 2 and 3 cluster on the right of LD1 and spread across most of LD2. These two seem well separated. Stocks 4 and 5 are more mixed in with the rest and more difficult to separate.
+
+## d
 ```{r}
 
-new_tree <- data.frame(Y1 = 1.09, Y2 = 2.69, Y3 = 3.88, Y4 = 0.93)
+new_tree <- data.frame(Y1 = 1.09, Y2 = 2.69, Y3 = 4.38, Y4 = 1.29)
 
 pred <- predict(lda_fit, new_tree)
-pred$class       # most-likely root-stock
-pred$posterior   # posterior probability vector (one entry per group)
+pred$class
+pred$posterior
+```
+Rootstock 3 has the largest posterior probability, but the model is not super confident between stocks 3 and 5 both having a probability around .3
+
+
+# Question 2
+Basic Data
+```{r}
+a <- c(0.32, 0.05, 0.19, -2.13, -0.14)
+
+bird1 <- c(156, 245, 31.60, 18.50, 20.50) 
+
+mean_surv <- c(157.3, 241.0, 31.4, 18.5, 20.8)
+mean_died <- c(158.4, 241.5, 31.4, 18.4, 20.8)
+
+pi <- c(surv = 0.43, died = 0.57)
+```
+
+## a
+
+```{r}
+Z  <- sum(a * bird1)    
+cat("Bird 1 Z score is", Z)
+```
+
+## b
+
+```{r}
+Z_surv <- sum(a * mean_surv)
+Z_died <- sum(a * mean_died)
+
+cat("Survived mean is", Z_surv, " \nDied mean is 
+    ", Z_died)
 
 ```
 
+## c
+```{r}
+midpt   <- 0.5 * (Z_surv + Z_died)          # 26.33
+class_eq <- ifelse(Z < midpt, "survived", "died")
+
+cat("The Midpoint is", midpt, "\nGiven this data, Bird 1 ", class_eq)
+```
+
+## d
+
+The Probaibliteis provided classify the bird as dead, but differs from the midpoint rule where the bird survives. This is because predict uses a larger prior for "died" which shifts the decision boundary.
+
+## e
+We assume that the sample rates accurately represent the true population class probabilities for sparrows that strike windows
+
+## f
+No. LDA uses the pooled covariance matrix and effectively rescales each variable naturally.
