@@ -81,8 +81,7 @@ cat("Bird 1 Z score is", Z)
 Z_surv <- sum(a * mean_surv)
 Z_died <- sum(a * mean_died)
 
-cat("Survived mean is", Z_surv, " \nDied mean is 
-    ", Z_died)
+cat("Survived mean is", Z_surv, " \nDied mean is", Z_died)
 
 ```
 
@@ -99,7 +98,7 @@ cat("The Midpoint is", midpt, "\nGiven this data, Bird 1 ", class_eq)
 The Probaibliteis provided classify the bird as dead, but differs from the midpoint rule where the bird survives. This is because predict uses a larger prior for "died" which shifts the decision boundary.
 
 ## e
-We assume that the sample rates accurately represent the true population class probabilities for sparrows that strike windows
+We assume that the sample rates accurately represent the true population rates for sparrows that strike windows
 
 ## f
 No. LDA uses the pooled covariance matrix and effectively rescales each variable naturally.
