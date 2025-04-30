@@ -14,12 +14,60 @@ chisq.test(tab)
 
 
 ```
+There is no significant difference at alpha = .05.
+
+## b
+```{r}
+library(ggplot2)
+
+m1 <- glm(rem ~ trt*prog, family = binomial, data = rem)
+
+m2 <- glm(rem ~ trt + prog, family = binomial, data = rem)
+anova(m1, m2, test = "LRT")
+
+```
+The model with interaction is significantly better than the model without so we will use that going forward
+
 ```{r}
 
-## Equivalent logistic model
-m0 <- glm(rem ~ trt, family = binomial, data = rem)
-summary(m0)               # Wald p-value for trtB
-confint(m0)               # 95 % CI for odds-ratio
-exp(coef(m0))
-```
+newdat <- expand.grid(
+  trt   = c("A", "B"),
+  prog = seq(min(rem$prog), max(rem$prog), length.out = 100)
+)
 
+newdat$pr <- predict(m1, newdata = newdat, type = "response")
+
+ggplot(rem, aes(prog, rem, colour = trt)) +
+  geom_jitter(height = .03, width = 0) +
+  geom_line(data = newdat, aes(prog, pr, colour = trt), size = 1) +
+  labs(x = "Baseline cancer stage",
+       y = "Pr(remission)",
+       colour = "Treatment") +
+  theme_classic()
+
+```
+It appears that there is a strong interaction meaning that the treatment effect depends on the baseline stage of the cancer. For cancer stage 1-4, treatment A has a significantly higher remission probability than treatment b. Then after treatment4, treatment b performs better than tretament A.
+
+
+## c
+In this case, the covariate was added for the third reason, because it interacts with the main predictor of interest and must be added so that we can properly measure the effect.
+
+# Question 2
+
+## a
+People who choose the Mediterranean diet may drink more red wine, and moderate wine is thought to lower cardiac risk. If we compare diets without adjusting for wine, the Mediterranean plan may look protective simply because its followers drink more wine. For example, 70 % of Mediterranean-diet participants average two glasses/day, whereas only 15 % of the “current diet” group drink that much; lower recurrence among the Mediterranean group could be driven by wine, not food.
+
+
+## b
+The benefit of a Mediterranean diet might be substantial for non-drinkers but negligible (or even harmful) for heavy drinkers because high alcohol could offset diet gains. Specific example: among abstainers the Mediterranean diet cuts relapse risk from 25 % to 10 %, but among people drinking ≥3 glasses/day every diet has ≈30 % recurrence.
+
+
+
+# Question 3
+
+## a
+Why it could occur: marketing rolls out the cartoon only in college-town papers where ≥30 % of residents are students, and students already order more late-night pizza. Higher sales might be due to student density, not the cartoon. Specific example: the five cities with the cartoon average $42 k sales and 35 % students; the fifteen without average $28 k and 12 % students—sales differ because audiences differ.
+
+## b
+Why it could occur: the cartoon mascot may resonate with students but annoy older customers.
+Specific example: in cities where students are <10 % of the population, ads with the cartoon raise sales by only $1 k; when students exceed 40 %, the same ad lifts sales by $8 k. The cartoon’s effectiveness varies with student proportion—an interaction.
