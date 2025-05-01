@@ -130,16 +130,18 @@ Predict how the acceleration varied for the first event where only one observati
 ::::
 
 ```{r}
-event1_re   <- ranef(m2)$event[1, ]
-station_re0 <- 0 
-newdata$pred_evt1 <- with(newdata,
-  pred + event1_re + station_re0)
+event1_re   <- ranef(m2)$event["1", "(Intercept)"]
+station1    <- attenu2$station[1] 
+station_re0 <- ranef(m2)$station[station1, "(Intercept)"]
+
+newdata$pred_evt1 <- with(newdata, pred + event1_re + station_re0)
 
 ggplot() +
   geom_line(data = newdata, aes(log_dist, pred_evt1),
             colour = "blue", size = 1) +
-  geom_point(data = attenu2 %>% filter(event == unique(event)[1]),
-             aes(log_dist, log_accel), colour = "black", size = 3) +
+  geom_point(data = attenu2 %>% filter(event == 1),
+             aes(log_dist, log_accel),
+             colour = "black", size = 3) +
   labs(y = "log(Acceleration, g)", x = "log(Distance, mi)")
 
 ```
@@ -191,7 +193,7 @@ iii. The intercept random effect SD.
 
 ```{r}
 m1 <- lmer(wt ~ treat*weeks + (weeks | subject), data = rats, REML = FALSE)
-summary(m1)$coef[ ,1:2]   # estimate & SE for brevity
+summary(m1)$coef[ ,1:2]
 
 ```
 ### i 
@@ -453,16 +455,18 @@ m_yearFac <- glmer(
   nAGQ   = 10
 )
 
+
+
 lrt_d   <- anova(m_nosex, m_yearFac)
-aic_d   <- AIC(m_nosex, m_yearFac)
 print(lrt_d)
-print(aic_d)
+
+summary(m_yearFac)$coefficients
 
 ```
 ## i
 
-The linear trend is inadequate to capture year to year differences.; retain the factor model to capture a year-linear pattern.
+The linear trend is inadequate to capture year to year differences. We should retain the factor model to capture a year-linear pattern.
 
 ### ii
 
-Use climbed steeply through 1978, plateaued in 1979, then fell in 1980—mirroring national survey data of the late-1970s “peak” in teen marijuana use. Sex differences remain constant across years because the interaction is nonsignificant.
+Use was low in the baseline year, then grows substantially each year when compared to 1976. The year to year increases are not uniform and the factor model is able to capture this. Practically, grwoth was large 1976-1977, plateaued in 1978 then picked up again through 1980.
