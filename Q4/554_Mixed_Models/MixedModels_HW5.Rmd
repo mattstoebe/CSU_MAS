@@ -27,6 +27,7 @@ library(lme4)
 library(pbkrtest)
 library(RLRsim)
 library(lmerTest)
+library(nlme)
 ```
 
 
@@ -39,6 +40,20 @@ The attenu.csv data gives peak accelerations measured at various observation sta
 Plot lines showing how the acceleration changes with distance for each quake. Make transformations of both axes so that the relationship is easier to see and replot.
 ::::
 
+```{r}
+attenu  <- read.csv("Data/attenu.csv")
+attenu <- na.omit(attenu)
+attenu2 <- attenu %>% 
+  mutate(log_accel = log(accel),  # natural log
+         log_dist  = log(dist))
+
+ggplot(attenu2, aes(x = log_dist, y = log_accel,
+                    group = event, colour = factor(event))) +
+  geom_line(alpha = .5) +
+  labs(x = "log(Distance, mi)", y = "log(Acceleration, g)",
+       colour = "Event")
+
+```
 
 
 :::: {.taskbox data-latex=""}
@@ -46,17 +61,47 @@ Plot lines showing how the acceleration changes with distance for each quake. Ma
 Fit a mixed effects model with the transformed variables which takes account of both events and stations as random effects; include magnitude as a fixed effect. Express the effect of magnitude on the acceleration.
 ::::
 
+```{r}
+m1 <- lmer(log_accel ~ mag + log_dist + (1 | event) + (1 | station),
+           data = attenu2, REML = FALSE)
+summary(m1)$coef              # fixed effects table
+
+```
+Each 1 point increase in magnitude increases log_acceleration by .438.
 
 :::: {.taskbox data-latex=""}
 ## (c) 2pt  Quadratic Term
 Does adding a quadratic term in distance improve the model? 
 ::::
-
+```{r}
+m2 <- update(m1, . ~ . + I(log_dist^2))
+anova(m1, m2)   # LRT because both ML-fitted
+```
+Yes, adding the quadratic form does improve our model significantly. this makes sense as we see a curved relationship between distance and acceleration in the plot on part a. To model this non-linearity, we do need a quadratic term.
 
 :::: {.taskbox data-latex=""}
 ## (d) 2pt Station variance component
 Can we remove the station variation term? *(hint: attenu2 <-na.omit(attenu) may be useful if you use REML methods for comparisons, recall methods based on likelihoods require the same data for all models)*
 ::::
+
+```{r}
+
+m_full <- lmer(log_accel ~ mag + log_dist + I(log_dist^2) +
+                 (1 | event) + (1 | station),
+               data = attenu2,
+               REML = TRUE)
+
+m_nostat <- lmer(log_accel ~ mag + log_dist + I(log_dist^2) +
+                   (1 | event),
+                 data = attenu2,
+                 REML = TRUE)
+
+
+anova(m_nostat, m_full)
+
+
+```
+We can remove the station variance term because the full model is not signifficantly better (p = .12) than the reduced model.
 
 
 :::: {.taskbox data-latex=""}
@@ -64,17 +109,55 @@ Can we remove the station variation term? *(hint: attenu2 <-na.omit(attenu) may 
 Using the model with a quadratic term and random effects for both station and event, as in part c: For a new magnitude 6 quake, predict the acceleration for up to a distance of 200 miles. Make a plot of the data and show your predicted curve on top of the data in a different color.
 ::::
 
+```{r}
+newdata <- data.frame(
+  mag       = 6,
+  log_dist  = log(seq(1, 200, by = 1))
+)
+newdata$pred <- predict(m2, newdata, re.form = NA)   # fixed-effects only
+
+ggplot(attenu2, aes(log_dist, log_accel)) +
+  geom_point(alpha = .3) +
+  geom_line(data = newdata, aes(log_dist, pred), colour = "red", size = 1) +
+  labs(y = "log(Acceleration, g)", x = "log(Distance, mi)")
+
+```
+
 
 :::: {.taskbox data-latex=""}
 ## (f) 3pts Prediction for observation 1
 Predict how the acceleration varied for the first event where only one observation was available. Show the predicted acceleration up to 200 miles in a plot. Add the actual observation to the plot. (just point predictions, no intervals needed)
 ::::
 
+```{r}
+event1_re   <- ranef(m2)$event[1, ]
+station_re0 <- 0 
+newdata$pred_evt1 <- with(newdata,
+  pred + event1_re + station_re0)
+
+ggplot() +
+  geom_line(data = newdata, aes(log_dist, pred_evt1),
+            colour = "blue", size = 1) +
+  geom_point(data = attenu2 %>% filter(event == unique(event)[1]),
+             aes(log_dist, log_accel), colour = "black", size = 3) +
+  labs(y = "log(Acceleration, g)", x = "log(Distance, mi)")
+
+```
 
 
 
 # Q2  Rat Drink Data
 The ratdrink.csv data consist of five weekly measurements of body weight for 27 rats. The first 10 rats are on a control treatment while 7 rats have thyroxine added to their drinking water. Ten rats have thiouracil added to their water.
+
+```{r}
+rats <- read.csv("Data/ratdrink.csv") %>%      # wt, weeks, subject, treat
+  mutate(
+    subject = factor(subject),
+    treat   = factor(treat,        # put control first for clear contrasts
+                     levels = c("control","thyroxine","thiouracil"))
+  )
+
+```
 
 
 :::: {.taskbox data-latex=""}
@@ -82,7 +165,20 @@ The ratdrink.csv data consist of five weekly measurements of body weight for 27 
 Plot the data showing how weight increases with age on a single panel, taking care to distinguish the three treatment groups. Now create a three-panel plot, one for each group. Discuss what can be seen.
 ::::
 
+```{r}
+ggplot(rats, aes(weeks, wt, colour = treat, group = subject)) +
+  geom_line(alpha = 0.4) +
+  labs(x = "Week", y = "Weight (g)", colour = "Treatment")
 
+ggplot(rats, aes(weeks, wt, group = subject)) +
+  geom_line(alpha = 0.4, colour = "steelblue") +
+  facet_wrap(~ treat, nrow = 1) +
+  labs(x = "Week", y = "Weight (g)")
+
+
+```
+
+All three treatment groups display roughly linear weight gain. Control and Thyroxine groups rise in parallel; Thiouracil rats gain weight more slowly which may indicate a treatment, week interaction.
 
 :::: {.taskbox data-latex=""}
 ## (b) 3pt  Mixed Model Interpretation
@@ -93,18 +189,42 @@ ii. The interaction between thiouracil and week.
 iii. The intercept random effect SD.
 ::::
 
+```{r}
+m1 <- lmer(wt ~ treat*weeks + (weeks | subject), data = rats, REML = FALSE)
+summary(m1)$coef[ ,1:2]   # estimate & SE for brevity
+
+```
+### i 
+Intercept = 52.9 g = mean week-0 weight for a control rat. 
+### ii
+Thiouracil × week = –9.37 g/week thiouracil suppresses weekly gain by =9 g relative to control
+### iii
+Random-intercept SD - 5.8 g indicates baseline weights vary ±5.8 g across rats.
 
 :::: {.taskbox data-latex=""}
 ## (c) 2pt Test
 Check whether there is a statistically significant treatment effect. 
 ::::
 
+```{r}
+m0 <- update(m1, . ~ weeks + (weeks | subject))
+anova(m0, m1)
+
+```
+The new model is signifficantly better which indicates that growth grajectories do differ by treatment. This aligns with what we saw in the plots for part a.
 
 :::: {.taskbox data-latex=""}
 ## (d) 2pt  Diagnostic
 Construct diagnostic plots showing the residuals against the fitted values and a QQ plot of the residuals. Interpret.
 ::::
 
+```{r}
+par(mfrow = c(1,2))
+plot(fitted(m1), resid(m1));  abline(h = 0, lty = 2)
+qqnorm(resid(m1)); qqline(resid(m1))
+
+```
+Residual vs fitted shows no fanning so we dont have concerns about inequal varaince. The QQ plot also resembles a straight line indicating that our Normality of residuals assumption remains strong.
 
 :::: {.taskbox data-latex=""}
 ## (e) 2pt Confidence Intervals
@@ -114,13 +234,27 @@ i. Which random effect terms may not be significant?
 ii. Is the thyroxine group significantly different from the control group?
 ::::
 
+```{r}
+confint(m1, oldNames = FALSE)
+
+```
+
+### i 
+The slope–intercept correlation CI covers 0 meaning there is little evidence of a systematic relationship between baseline weight and growth rate
+### ii
+Thyroxine main and interaction CIs both include 0, so Thyroxine does not differ from Control.
 
 :::: {.taskbox data-latex=""}
 ## (f) 2pt Covariance structure
 Fit this same model from (b) using lme() and extract the marginal covariance matrix for observations from a particular rat.  Describe the observed structure and comment on if it makes sense in this context.
 ::::
 
+```{r}
+m1_lme <- lme(wt ~ treat*weeks, random = ~ weeks | subject, data = rats)
+getVarCov(m1_lme, individual = "1")
 
+```
+Positive variances on the diagonal and a small negative covariance between intercept and slope imply slightly slower growth in heavier-starting rats—biologically plausible “catch-up” growth.
 
 :::: {.taskbox data-latex=""}
 ## (g) 3pt Covariance Structure
@@ -130,19 +264,71 @@ i.  fit the same model in (b),  but without the random slope and assume a compou
 ii. fit the same model in (b),  but without the random slope and assume an unstructured covariance matrix.  Describe any general trends in the structure.  
 iii. fit the same model in (b),  but without the random slope and assume an autoregressive 1 structure in the covariance matrix.  Why might we consider this structure in this context?
 ::::
+```{r}
+# have tio fix issue of week 0 for corSymm to work
+rats <- read.csv("Data/ratdrink.csv") %>%
+  arrange(subject, weeks) %>% 
+  group_by(subject) %>%
+  mutate(weekID = row_number()) %>% 
+  ungroup()
+
+```
+
 
 
 ### i.  
+```{r}
+m_cs <- lme(wt ~ treat*weeks, random = ~ 1 | subject,
+            correlation = corCompSymm(form = ~ weeks | subject),
+            data = rats)
+
+m_cs
+
+```
+The Compound symetric forces equal correlations at all lags meaning this structure is too rigid for data where week-1 vs week-2 measurements correlate more than week-1 vs week-5
 
 ### ii.  
+```{r}
+# Had to increase max iterations so the model could converge
+ctrl <- lmeControl(msMaxIter   = 200,
+                   maxIter     = 200,
+                   pnlsMaxIter = 50)
+
+m_un <- lme(wt ~ treat*weeks,
+            random      = ~ 1 | subject,
+            correlation = corSymm(form = ~ weekID | subject),
+            weights     = varIdent(form = ~ 1 | weekID),
+            data        = rats,
+            method      = "REML",
+            control     = ctrl)
+
+m_un
+```
+Unstructured allows each variance and covariance to differ; captures rising variance and declining correlations but at the cost of 22 parameters. we see that correlations are stronger betwen closer weeks and weaker between weaks that are farther apart.
 
 ### iii.  
+
+```{r}
+m_ar1 <- lme(wt ~ treat*weeks, random = ~ 1 | subject,
+             correlation = corAR1(form = ~ weeks | subject),
+             data = rats)
+
+m_ar1
+```
+AR1 does a good job in matching the correlations into lags for equally spaced weeks. 
 
 :::: {.taskbox data-latex=""}
 ## (h) 2pt Compare using information criteria
 Compare the 4 models from f and g using AIC and BIC.  Which model appears best?
 ::::
 
+```{r}
+AIC(m1_lme, m_cs, m_un, m_ar1)
+BIC(m1_lme, m_cs, m_un, m_ar1)
+
+```
+
+In this case, the flexibility of the unstructured approach outweighs its complexity cost as seeing with the lowest AIC so we will proceed with that.  
 
 
 # Q3
@@ -154,12 +340,33 @@ Potuse levels:
 3: “Heavy”
 
 Sex:  1: male. 2: female
+```{r}
+pot <- read.csv("Data/potuse.csv") %>%
+  pivot_longer(cols   = starts_with("year."),
+               names_to  = "year",
+               values_to = "use_lvl") %>%
+  mutate(
+    year_num = as.integer(sub("year\\.", "19", year)),  # 1976–1980
+    sex      = factor(sex, labels = c("Male","Female")),
+    use_lvl  = factor(use_lvl, levels = 1:3,
+                      labels = c("None","Light","Heavy"))
+  )
+```
+
 
 :::: {.taskbox data-latex=""}
 ## (a) 1pt Plot
 Plot the total number of people falling into each usage category as it varies over time separately for each sex.
 ::::
 
+```{r}
+ggplot(pot, aes(year_num, count, fill = use_lvl)) +
+  geom_col(position = "stack") +
+  facet_wrap(~ sex) +
+  labs(x = "Year", y = "Count", fill = "Use level")
+
+
+```
 
 
 
@@ -176,6 +383,36 @@ tidyr::pivot_longer(), newer than gather(), possibly more intuitive?
 dplyr::uncount() function to turn the count data into individual data... very cool little function.
 ```
 
+```{r}
+pot_wide <- read.csv("Data/potuse.csv") %>%
+  mutate(patternID = row_number())
+
+pot_expanded <- pot_wide %>%
+  uncount(count) %>% 
+  mutate(id = row_number())
+
+pot_long <- pot_expanded %>%
+  pivot_longer(
+    cols      = starts_with("year."),
+    names_to  = "year",
+    values_to = "use_lvl"
+  ) %>%
+  mutate(
+    year_num = as.integer(sub("year\\.", "19", year)),
+    sex      = factor(sex, labels = c("Male", "Female")),
+    use_bin  = (use_lvl != 1)
+  )
+
+m_full <- glmer(
+  use_bin ~ sex * scale(year_num) + (1 | id),
+  data   = pot_long,
+  family = binomial,
+  nAGQ   = 10
+)
+
+summary(m_full)$coef
+
+```
 
 
 :::: {.taskbox data-latex=""}
@@ -183,7 +420,22 @@ dplyr::uncount() function to turn the count data into individual data... very co
 Fit a reduced model without sex and use it to test for the significance of sex in the larger model.
 ::::
 
+```{r}
+m_full <- glmer(
+  use_bin ~ sex * scale(year_num) + (1 | id),
+  data   = pot_long,
+  family = binomial,
+  nAGQ   = 10
+)
 
+m_nosex <- update(m_full, . ~ scale(year_num) + (1 | id))
+
+lrt_c <- anova(m_nosex, m_full)
+print(lrt_c)
+
+```
+
+The model with sex is significantly better than the model without it (p = .042). This is clear as the deviance increases when we remove sex. 
 
 :::: {.taskbox data-latex=""}
 ## (d) 3pt Linearity
@@ -193,3 +445,24 @@ i.  Should this model be preferred to the model with year as just a linear term?
 ii.  Interpret the estimated effects of the year in the factor version of the model.   
 ::::
 
+```{r}
+m_yearFac <- glmer(
+  use_bin ~ factor(year_num) + (1 | id),
+  data   = pot_long,
+  family = binomial,
+  nAGQ   = 10
+)
+
+lrt_d   <- anova(m_nosex, m_yearFac)
+aic_d   <- AIC(m_nosex, m_yearFac)
+print(lrt_d)
+print(aic_d)
+
+```
+## i
+
+The linear trend is inadequate to capture year to year differences.; retain the factor model to capture a year-linear pattern.
+
+### ii
+
+Use climbed steeply through 1978, plateaued in 1979, then fell in 1980—mirroring national survey data of the late-1970s “peak” in teen marijuana use. Sex differences remain constant across years because the interaction is nonsignificant.
