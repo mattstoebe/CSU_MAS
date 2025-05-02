@@ -415,7 +415,7 @@ m_full <- glmer(
 summary(m_full)$coef
 
 ```
-
+Being female reduces the log-odds of any pot use by 1.125, in other words, baseline girls are significantly less likely than boys to use marijuana.
 
 :::: {.taskbox data-latex=""}
 ## (c) 2pt Test
