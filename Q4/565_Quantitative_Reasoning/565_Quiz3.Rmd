@@ -1,0 +1,106 @@
+---
+title: "565_Quiz3"
+output: pdf_document
+---
+
+# Question 1
+
+Beta0 is the intercept for group 1 and is negative
+Beta1 is the slope for group 1 and is positive
+Beta2 is the difference in intercept between group 1 and 2 and is positive
+Beta3 is the difference in slope between group 1 and group two and is positive.
+
+
+
+# Question 2
+
+## a. Confounding.
+
+If lactic acetic concentration and lactic acid concentration are correlated across the cheeses, then they are confounded in their effect on the final taste score. It is possible that these two concentrations grow together based on how old the cheese is and do not actually vary independently. As such, they would be correlated and confounding.   
+
+## b. Interaction
+
+It is possible that the impact of lactic acid on tasete varies depending on the acetic acid level. For example, at a high level of acetic acid, high lactic acid may have a negative effect while at a low level of acetic acid, the lactic acid may have a positive effect. 
+
+
+#Question 3 
+```{r}
+library(dplyr)
+library(emmeans)
+library(ggplot2)
+
+diesel1 <- read.table("Data/diesel1.txt", header=TRUE)
+str(diesel1)
+```
+## a
+```{r}
+fit1 <- aov(PM_emission ~ DPF, data=diesel1)
+summary(fit1)
+TukeyHSD(fit1)
+
+```
+There are significant differences between Brands. Specifically, C emits significantly more than brand A and B. Brands A and B are not significantly different than each other
+
+## b
+```{r}
+
+
+fit2 <- aov(PM_emission ~ engine_size + DPF, data=diesel1)
+summary(fit2)
+emmeans(fit2, "DPF") %>% pairs()
+```
+After including the covariate, engine size and brand are both significant.The adjusted pairwise comparisons now suggest that all 3 groups differ. Specifically, A emits more than B, and C emits more than both A and B.   
+
+## c
+```{r}
+ggplot(diesel1, aes(x=engine_size, y=PM_emission, color=DPF)) +
+  geom_point() +
+  geom_smooth(method="lm", aes(fill=DPF), se=FALSE) +
+  labs(title="PM Emissions vs. Engine Size by DPF Brand")
+```
+
+## d
+C has consistently the highest emissions. For engines less than size 10, A has the lowest emissions, and for engines greater than size 10, B has the lowest emissions. 
+
+## e
+In this case, the engine size interacts with the efficiency of each manufacturer meaning that at different sizes, different engines are better for reducing emissions. As such we need to account for it in our model.
+
+
+#Question 4 
+```{r}
+
+diesel2 <- read.table("Data/diesel2.txt", header=TRUE)
+str(diesel2)
+```
+## a
+```{r}
+fit1 <- aov(PM_emission ~ DPF, data=diesel2)
+summary(fit1)
+TukeyHSD(fit1)
+
+```
+There are significant differences between Brands at a .05 level. Specifically, B emits significantly more than brand A. All other brands are not significantly different.
+
+## b
+```{r}
+
+
+fit2 <- aov(PM_emission ~ engine_size + DPF, data=diesel2)
+summary(fit2)
+emmeans(fit2, "DPF") %>% pairs()
+```
+After controlling for Engine size, the brand becomes no longer significant. This implies that the changes we see in emissions are due to engine size not brand. It also follows tha the signifficance seen before was due to certain brands primarily making engines of specific sizes.
+
+## c
+```{r}
+ggplot(diesel2, aes(x=engine_size, y=PM_emission, color=DPF)) +
+  geom_point() +
+  geom_smooth(method="lm", aes(fill=DPF), se=FALSE) +
+  labs(title="PM Emissions vs. Engine Size by DPF Brand")
+```
+
+## d
+No brand differs significantly once engine size is accounted for; none can be recommended over the others on the basis of emissions.
+
+## e
+Engine size is a strong confounder as larger engine sizes mean more emissions. Without adjustment, apparent brand effects simply reflect differences in the engine‐size mix.
