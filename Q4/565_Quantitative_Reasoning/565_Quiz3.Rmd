@@ -16,7 +16,7 @@ Beta3 is the difference in slope between group 1 and group two and is positive.
 
 ## a. Confounding.
 
-If lactic acetic concentration and lactic acid concentration are correlated across the cheeses, then they are confounded in their effect on the final taste score. It is possible that these two concentrations grow together based on how old the cheese is and do not actually vary independently. As such, they would be correlated and confounding.   
+If higher lactic acid concentration results in both better tasting cheese and a higher acetic acid concentration, then these two variables are confounded in their effect on the final taste score.
 
 ## b. Interaction
 
@@ -46,17 +46,24 @@ There are significant differences between Brands. Specifically, C emits signific
 
 
 fit2 <- aov(PM_emission ~ engine_size + DPF, data=diesel1)
-summary(fit2)
+
 emmeans(fit2, "DPF") %>% pairs()
+
+fit3 <- aov(PM_emission ~ engine_size * DPF, data=diesel1)
+summary(fit3)
+anova(fit2, fit3)
+
+
 ```
-After including the covariate, engine size and brand are both significant.The adjusted pairwise comparisons now suggest that all 3 groups differ. Specifically, A emits more than B, and C emits more than both A and B.   
+After including the covariate, engine size and brand are both significant.The adjusted pairwise comparisons now suggest that all 3 groups differ. Specifically, A emits more than B, and C emits more than both A and B. That said, there is a significant interaction between the engine size and the brand. To determine which is best, we must see where the lines intersect in the plot below.  
 
 ## c
 ```{r}
 ggplot(diesel1, aes(x=engine_size, y=PM_emission, color=DPF)) +
   geom_point() +
   geom_smooth(method="lm", aes(fill=DPF), se=FALSE) +
-  labs(title="PM Emissions vs. Engine Size by DPF Brand")
+  labs(title="PM Emissions vs. Engine Size by DPF Brand")     
+
 ```
 
 ## d
@@ -83,11 +90,10 @@ There are significant differences between Brands at a .05 level. Specifically, B
 
 ## b
 ```{r}
-
-
 fit2 <- aov(PM_emission ~ engine_size + DPF, data=diesel2)
 summary(fit2)
 emmeans(fit2, "DPF") %>% pairs()
+
 ```
 After controlling for Engine size, the brand becomes no longer significant. This implies that the changes we see in emissions are due to engine size not brand. It also follows tha the signifficance seen before was due to certain brands primarily making engines of specific sizes.
 
