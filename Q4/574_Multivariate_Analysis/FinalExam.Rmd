@@ -1,0 +1,51 @@
+---
+title: "FinalExam"
+output: pdf_document
+---
+
+# Question 1
+
+## a
+```{r}
+prop_var  <- c(2.90,1.24,0.85,0.72,0.22,0.07)/6
+cumsum(prop_var)
+```
+
+We would keep the first 3 principal components accounting for 83.2% of the variance of the scaled data
+
+## b
+
+The fourth eigenvalue still represents a meaningful amount of information taking explained variance from .83 to .95. It is significantly above the standard cutoff which for 6 eigenvalues would be 1/6 = .17. This woudl provide a much fuller picture and is likely worth the added complexity.
+
+## c
+
+The first principal component appears to represent overall team strength. where positive pc1 means a more complete team and negative pc1 is a more struggling team. We can look at loading and see that DefPts and DefRush are both negative and the Offenseive poitns offenseive rush yards and offensive pass yards are positive. The only exception is that the Defensive pass coefficient is flipped from ush and points which indicates some nuance on defense.
+
+## d
+Principal component 2 contrasts  run heavy offesnses against pass dominant teams with strong pass defense. this is seen with the positive loading on offensive rushing and strong negative loads on defensive points, pass defense, and offensive passing. here a positive score indicates a lot of rushing output but weaker passing offense and defense while a strong neagtive score indicates a pass focused offense with a strong pass defense.
+
+## e
+27 has a slightly above average pc1 indicating that both their offense and defense were above average, and a very strong and high pc2 indicating that they were a rush first team 
+
+## f
+Point 16 representing the chiefs hovers in the middle of the plot for both PC1 and PC2. They are just above average in PC1 indicating that the oferal team is slightly above average, and they also hover right around 0 for PC2 indicating a balanced team between rushing and passing.
+
+## g
+# --- R code you can run locally ---
+
+```{r}
+load("Data/nfl2024.RData")      # gives data frame nfl2024
+vars        <- c("DefPts","DefRush","DefPass","OffPts","OffRush","OffPass")
+X           <- scale(nfl2024[ ,vars])          # centered / scaled
+pca         <- prcomp(X, center = FALSE, scale. = FALSE)  # already scaled
+scores      <- pca$x                            # z_ik
+k           <- 4
+recon1      <- colMeans(nfl2024[ ,vars]) +     # x-bar
+               tcrossprod(scores["Arizona Cardinals",1:k],
+                         pca$rotation[ ,1:k] *
+                         sqrt(pca$sdev[1:k]^2))
+round(recon1,2)
+
+```
+
+
