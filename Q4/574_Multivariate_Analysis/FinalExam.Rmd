@@ -31,10 +31,9 @@ Principal component 2 contrasts  run heavy offesnses against pass dominant teams
 Point 16 representing the chiefs hovers in the middle of the plot for both PC1 and PC2. They are just above average in PC1 indicating that the oferal team is slightly above average, and they also hover right around 0 for PC2 indicating a balanced team between rushing and passing.
 
 ## g
-# --- R code you can run locally ---
 
 ```{r}
-load("Data/nfl2024.RData")      # gives data frame nfl2024
+load("Data/nfl2024.RData")
 
 vars <- c("DefPts","DevRush","DevPass","OffPts","OffRush","OffPass")
 
@@ -77,7 +76,7 @@ round(lda_fit$scaling, 3)
 ```
 ## i
 ```{r}
-scores <- predict(lda_fit)$x             # 1‑D scores (n × 1 matrix)
+scores <- predict(lda_fit)$x
 playoff_teams   <- nfl$Team[nfl$Playoff == 1]
 playoff_scores  <- scores[nfl$Playoff == 1, 1]
 
@@ -106,6 +105,9 @@ predict(lda_fit, newdata = xnew)
 ```
 
 ## l
+
+Im a little confused here so i have recreated the heirarchical clustering appraoch and am using it to produce two groups. 
+
 ```{r}
 hc_cent <- hclust(dist(scale(nfl[ , vars])), method = "centroid")
 groups2 <- cutree(hc_cent, k = 2)
@@ -115,7 +117,7 @@ table(Cluster = groups2, Playoff = nfl$Playoff)
 ```
 
 ## m
-We must standardize because our metrics are on vary different scales. Points range up to maybe 40 and yards range in the undreds. without standardizing, the euclidean distance used for clustering would be dominated by the variable with larger variance and would not really represent waht we want it to. By putting our information on the common scale of standard deviations, euclidean distance is now more appropriate and considers all variables equally.
+We must standardize because our metrics are on vary different scales. Points range up to maybe 40 and yards range in the hundreds. without standardizing, the euclidean distance used for clustering would be dominated by the variable with larger variance and would not really represent waht we want it to. By putting our information on the common scale of standard deviations, euclidean distance is now more appropriate and considers all variables equally.
 
 ## n
 
@@ -127,13 +129,83 @@ table(Cluster = groups2w, Playoff = nfl$Playoff)
 mean(groups2w == nfl$Playoff)
 
 ```
-Heirarchical clustering at level 2 perfors quite well only getting two teams incorrectly.
+Hierarchical clustering at level 2 performs quite well only getting three teams incorrect.
 
 ## o
-It seems group 2 is a strong playoff team as they are teh most positive on pc1.
+It seems group 2 is a strong playoff team as they are teh most positive on pc1. becasue PC2 talks more about play style, it is subjective and we focus on PC1 which leads us to cluster 2. 
 
 ## p
 ```{r}
+library(Hotelling)
+
+hot <- hotelling.test(
+        x = nfl[nfl$Playoff == 1 , vars],
+        y = nfl[nfl$Playoff == 0 , vars])
+
+hot
 
 ```
 
+## q
+```{r}
+pvals <- sapply(vars, \(v)
+           t.test(nfl[[v]] ~ nfl$Playoff)$p.value)
+
+alpha <- 0.05 / length(vars)
+
+data.frame(Variable = vars,
+           p.value  = round(pvals, 5),
+           Significant = pvals <= alpha)
+
+```
+
+## r
+LDA and the means test would have been invalidated if we have inequal variance problems. 
+
+# Question 2
+
+## a
+PCA and Factor analysis may help identify outliers via dimension reduction making it more easily to visually identify them on a plot
+
+Clustering especially heirarchical will give us an indication of how "difficult" it is for some of these things to cluster together which can also help us identify outliers
+
+Hotelling test is designed for comparing groups so is not useful for identifying individual outliers.
+
+## b
+PCA will be great for exploration here, but is likely not used directly for modeling. 
+
+Clustering is the primary useful approach for the traditional customer segmentation. 
+
+If labels are provided which is uncommon for segmentation but common for other similar use cases for this type of analysis, LDA could be used. this would be relevant for target variables like customer churn.
+
+# Question 3
+```{r}
+mu     <- c(1,2,3)
+
+Sigma  <- matrix(c(3,1,-1, 1,2,0, -1,0,3), 3,3)
+
+A      <- matrix(c(2,-1,0, 0,3,1), nrow = 2, byrow = TRUE)
+
+mu_Y   <- A %*% mu
+Sigma_Y<- A %*% Sigma %*% t(A)
+
+mu_Y
+Sigma_Y
+```
+
+\[
+\mathbf Y \;=\;
+\begin{pmatrix}
+Y_{1}\\[2pt] Y_{2}
+\end{pmatrix}
+\;\sim\;
+\mathcal N_{2}\!\left(
+\begin{pmatrix}
+0\\[2pt] 9
+\end{pmatrix},
+\,
+\begin{pmatrix}
+10 & -2\\[2pt]-2 & 21
+\end{pmatrix}
+\right).
+\]
