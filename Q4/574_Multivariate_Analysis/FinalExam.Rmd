@@ -36,19 +36,104 @@ Point 16 representing the chiefs hovers in the middle of the plot for both PC1 a
 ```{r}
 load("Data/nfl2024.RData")      # gives data frame nfl2024
 
-head(nfl)
+vars <- c("DefPts","DevRush","DevPass","OffPts","OffRush","OffPass")
 
-vars        <- c("DefPts","DevRush","DevPass","OffPts","OffRush","OffPass")
-X           <- scale(nfl[ ,vars])          # centered / scaled
-pca         <- prcomp(X, center = FALSE, scale. = FALSE)  # already scaled
-scores      <- pca$x                            # z_ik
-k           <- 4
-recon1      <- colMeans(nfl[ ,vars]) +     # x-bar
-               tcrossprod(scores["Arizona Cardinals",1:k],
-                         pca$rotation[ ,1:k] *
-                         sqrt(pca$sdev[1:k]^2))
-round(recon1,2)
+X   <- scale(nfl[ , vars])
+
+pca <- prcomp(X, center = FALSE, scale. = FALSE)
+scores <- pca$x
+
+team <- "Arizona Cardinals"
+row  <- which(nfl$Team == team) 
+z    <- scores[row, 1:4]  
+
+x_std_hat <- as.numeric(z %*% t(pca$rotation[ , 1:4]))
+
+means <- colMeans(nfl[ , vars])
+sds   <- apply(nfl[ , vars], 2, sd)
+
+x_hat <- means + x_std_hat * sds
+names(x_hat) <- vars
+
+print("Reconstructed Values")
+round(x_hat, 2)
+
+actual <- nfl[nfl$Team == team, vars]
+
+#diff <- actual - x_hat
+#diff
 
 ```
 
+## h
+```{r}
+library(MASS)
+
+lda_fit <- lda(Playoff ~ ., data = nfl[ , c("Playoff", vars)],
+               prior = c(0.5625, 0.4375))
+
+round(lda_fit$scaling, 3)
+
+```
+## i
+```{r}
+scores <- predict(lda_fit)$x             # 1‑D scores (n × 1 matrix)
+playoff_teams   <- nfl$Team[nfl$Playoff == 1]
+playoff_scores  <- scores[nfl$Playoff == 1, 1]
+
+team_low <- playoff_teams[ which.min(playoff_scores) ]
+team_low
+playoff_scores[ which.min(playoff_scores) ]
+```
+
+## j
+```{r}
+prop.table(table(nfl$Playoff))
+```
+
+## k
+```{r}
+xnew <- data.frame(DefPts = 21.89,
+                   DevRush = 124.85,
+                   DevPass = 208.82,
+                   OffPts = 23.69,
+                   OffRush = 132.15,
+                   OffPass = 189.54)
+
+predict(lda_fit, newdata = xnew)
+
+
+```
+
+## l
+```{r}
+hc_cent <- hclust(dist(scale(nfl[ , vars])), method = "centroid")
+groups2 <- cutree(hc_cent, k = 2)
+
+table(Cluster = groups2, Playoff = nfl$Playoff)
+
+```
+
+## m
+We must standardize because our metrics are on vary different scales. Points range up to maybe 40 and yards range in the undreds. without standardizing, the euclidean distance used for clustering would be dominated by the variable with larger variance and would not really represent waht we want it to. By putting our information on the common scale of standard deviations, euclidean distance is now more appropriate and considers all variables equally.
+
+## n
+
+```{r}
+hc_ward <- hclust(dist(scale(nfl[ , vars])), method = "ward.D2")
+groups2w<- cutree(hc_ward, 2)
+table(Cluster = groups2w, Playoff = nfl$Playoff)
+
+mean(groups2w == nfl$Playoff)
+
+```
+Heirarchical clustering at level 2 perfors quite well only getting two teams incorrectly.
+
+## o
+It seems group 2 is a strong playoff team as they are teh most positive on pc1.
+
+## p
+```{r}
+
+```
 
