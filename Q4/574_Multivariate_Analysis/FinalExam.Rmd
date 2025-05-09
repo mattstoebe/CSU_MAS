@@ -35,12 +35,15 @@ Point 16 representing the chiefs hovers in the middle of the plot for both PC1 a
 
 ```{r}
 load("Data/nfl2024.RData")      # gives data frame nfl2024
-vars        <- c("DefPts","DefRush","DefPass","OffPts","OffRush","OffPass")
-X           <- scale(nfl2024[ ,vars])          # centered / scaled
+
+head(nfl)
+
+vars        <- c("DefPts","DevRush","DevPass","OffPts","OffRush","OffPass")
+X           <- scale(nfl[ ,vars])          # centered / scaled
 pca         <- prcomp(X, center = FALSE, scale. = FALSE)  # already scaled
 scores      <- pca$x                            # z_ik
 k           <- 4
-recon1      <- colMeans(nfl2024[ ,vars]) +     # x-bar
+recon1      <- colMeans(nfl[ ,vars]) +     # x-bar
                tcrossprod(scores["Arizona Cardinals",1:k],
                          pca$rotation[ ,1:k] *
                          sqrt(pca$sdev[1:k]^2))
