@@ -19,16 +19,16 @@ The fourth eigenvalue still represents a meaningful amount of information taking
 
 ## c
 
-The first principal component appears to represent overall team strength. where positive pc1 means a more complete team and negative pc1 is a more struggling team. We can look at loading and see that DefPts and DefRush are both negative and the Offenseive poitns offenseive rush yards and offensive pass yards are positive. The only exception is that the Defensive pass coefficient is flipped from ush and points which indicates some nuance on defense.
+The first principal component appears to represent overall team strength. where positive pc1 means a more complete team and negative pc1 is a more struggling team. We can look at loading and see that DefPts and DefRush are both negative (lower is better) and the Offenseive poitns, Offenseive rush yards and offensive pass yards are positive (higher is better). The only exception is that the Defensive pass loading is slightly positive which may indicate some nuance on defense.
 
 ## d
-Principal component 2 contrasts  run heavy offesnses against pass dominant teams with strong pass defense. this is seen with the positive loading on offensive rushing and strong negative loads on defensive points, pass defense, and offensive passing. here a positive score indicates a lot of rushing output but weaker passing offense and defense while a strong neagtive score indicates a pass focused offense with a strong pass defense.
+Principal component 2 contrasts  run heavy offesnses against pass dominant teams with strong pass defense. this is seen with the positive loading on offensive rushing and strong negative loads on defensive points, pass defense, and offensive passing. Here a positive score indicates a lot of rushing output, weaker passing offense and stronger defense while a neagtive score indicates a pass focused offense with a weaker pass defense.
 
 ## e
-27 has a slightly above average pc1 indicating that both their offense and defense were above average, and a very strong and high pc2 indicating that they were a rush first team 
+26 has a slightly above average pc1 indicating that both their offense and defense were above average, and a very strong and high pc2 indicating that they were a rush first team 
 
 ## f
-Point 16 representing the chiefs hovers in the middle of the plot for both PC1 and PC2. They are just above average in PC1 indicating that the oferal team is slightly above average, and they also hover right around 0 for PC2 indicating a balanced team between rushing and passing.
+Point 16 representing the chiefs hovers in the middle of the plot for both PC1 and PC2. They are just above average in PC1 indicating that the overal team is slightly above average, and they also hover right around 0 for PC2 indicating a balanced team between rushing and passing.
 
 ## g
 
@@ -86,6 +86,8 @@ playoff_scores[ which.min(playoff_scores) ]
 ```
 
 ## j
+
+Our prior should be the proportion of teams making the playoffs from the data we have as shown below.
 ```{r}
 prop.table(table(nfl$Playoff))
 ```
@@ -106,7 +108,7 @@ predict(lda_fit, newdata = xnew)
 
 ## l
 
-Im a little confused here so i have recreated the heirarchical clustering appraoch and am using it to produce two groups. 
+Im a little confused about what is being asked here so i have recreated the heirarchical clustering appraoch and am using it to produce two groups to evaluate the results.
 
 ```{r}
 hc_cent <- hclust(dist(scale(nfl[ , vars])), method = "centroid")
@@ -115,24 +117,48 @@ groups2 <- cutree(hc_cent, k = 2)
 table(Cluster = groups2, Playoff = nfl$Playoff)
 
 ```
+Here the result is that we identify 17 /18 non playoff teams correctly, but we do not identify any of the playoff teams correctly. Generally, all teams are in cluster 1 with a single team in cluster two. This is because i think Carolina is such a strong outlier that it creates its own cluster. This is a terrible classification but may not be exactly what the question is asking for  
 
 ## m
-We must standardize because our metrics are on vary different scales. Points range up to maybe 40 and yards range in the hundreds. without standardizing, the euclidean distance used for clustering would be dominated by the variable with larger variance and would not really represent waht we want it to. By putting our information on the common scale of standard deviations, euclidean distance is now more appropriate and considers all variables equally.
+We must standardize because our metrics are on vary different scales. Points range up to maybe 40 and yards range in the hundreds. without standardizing, the euclidean distance used for clustering would be dominated by the variable with larger variance and would not really represent what we want it to. By putting our information on the common scale of standard deviations, euclidean distance is now more appropriate and considers all variables equally.
 
 ## n
 
 ```{r}
+library(ggplot2)
 hc_ward <- hclust(dist(scale(nfl[ , vars])), method = "ward.D2")
 groups2w<- cutree(hc_ward, 2)
 table(Cluster = groups2w, Playoff = nfl$Playoff)
 
-mean(groups2w == nfl$Playoff)
+scores_df <- data.frame(
+  Team    = nfl$Team, 
+  PC1     = pca$x[, 1],
+  PC2     = pca$x[, 2],
+  Cluster = factor(groups2w),
+  Playoff = factor(nfl$Playoff,
+                   levels = c(0, 1),
+                   labels = c("Non‑playoff", "Playoff"))
+)
+scores_df$Pred <- ifelse(scores_df$Cluster == "2", "Playoff", "Non‑playoff")
+scores_df$Color <- ifelse(scores_df$Pred == scores_df$Playoff, "correct", "wrong")
 
+ggplot(scores_df, aes(PC1, PC2)) +
+  geom_point(aes(colour = Color), size = 2) +
+  geom_text(aes(label = Cluster), vjust = -1, fontface = "bold") +
+  scale_colour_manual(values = c(correct = "grey60", wrong = "red")) +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+misclassified <- subset(scores_df, Color == "wrong")
+print(misclassified$Team)
 ```
-Hierarchical clustering at level 2 performs quite well only getting three teams incorrect.
+Hierarchical clustering at level 2 performs quite well only getting three teams incorrect (accuracy = .906). These three teams are the rams, texans, and commanders and on visual inspection do appear cluster more closely with the non playoff teams than the playoff teams. It also looks like my axis are flipped for this analysis from what was done in the assignment but The interpretation remains the same.
+
 
 ## o
-It seems group 2 is a strong playoff team as they are teh most positive on pc1. becasue PC2 talks more about play style, it is subjective and we focus on PC1 which leads us to cluster 2. 
+It seems cluster 2 is a strong playoff team as they are the most positive on pc1. because PC2 talks more about play style, it is subjective and we focus on PC1 which leads us to cluster 2. 
 
 ## p
 ```{r}
@@ -160,7 +186,7 @@ data.frame(Variable = vars,
 ```
 
 ## r
-LDA and the means test would have been invalidated if we have inequal variance problems. 
+LDA and the Hotelling means test would have been invalidated if we have this problem. PCA and Clsutering should stay valid. 
 
 # Question 2
 
@@ -172,7 +198,7 @@ Clustering especially heirarchical will give us an indication of how "difficult"
 Hotelling test is designed for comparing groups so is not useful for identifying individual outliers.
 
 ## b
-PCA will be great for exploration here, but is likely not used directly for modeling. 
+PCA and Factor analysis will be great for exploration here, but is likely not used directly for modeling. 
 
 Clustering is the primary useful approach for the traditional customer segmentation. 
 
