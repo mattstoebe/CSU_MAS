@@ -1,0 +1,27 @@
+# core data science
+pandas>=2.2.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+shap>=0.42.0
+
+# visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# web app
+streamlit>=1.30.0
+
+# utilities
+joblib>=1.3.0
+python-dotenv>=1.0.0
+
+# optional but recommended
+ipykernel>=6.0.0  # for Jupyter notebook support
+
+# GUI
+gradio==4.*          # 4.x has offline mode baked in
+gradio-offline       # ensures no internet needed
+
+# packager (dev-only; don't ship to client)
+pyinstaller
