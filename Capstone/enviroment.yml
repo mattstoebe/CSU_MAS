@@ -1,0 +1,15 @@
+name: tbi-predictor
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - numpy=1.26.4       # ABI that SciPy 1.11+ expects
+  - scipy=1.12.0
+  - pandas=1.5.3
+  - scikit-learn=1.4.2
+  - xgboost=2.0.3
+  - catboost=1.2
+  - shap=0.46.0
+  - matplotlib=3.8.4
+  - seaborn=0.13.2
+  - ipykernel
